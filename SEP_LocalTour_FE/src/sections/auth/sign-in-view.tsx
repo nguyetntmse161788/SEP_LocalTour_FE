@@ -10,6 +10,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { jwtDecode } from 'jwt-decode';
+import { useAuth } from 'src/layouts/components/account-popover'
+import axios from "axios";
 
 interface JwtPayloadWithRole {
   "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
@@ -22,25 +24,46 @@ export function SignInView() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
-    if (token) {
-      const decodedToken = jwtDecode<JwtPayloadWithRole>(token);
-      const userRole = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-
-      if (userRole === 'Visitor') {
-        router.push('/');  // Chuyển hướng nếu người dùng đã đăng nhập
+    const user = localStorage.getItem('user');
+    
+  
+    if (token && user) {
+      try {
+        if (!isAuthenticated) {
+          router.push('/sign-in'); // Điều hướng về trang đăng nhập nếu không có token
+        }
+        const decodedToken = jwtDecode<JwtPayloadWithRole & { exp: number }>(token);
+        const currentTime = Math.floor(Date.now() / 1000);
+  
+        // Kiểm tra token hết hạn
+        if (decodedToken.exp && decodedToken.exp > currentTime) {
+          const userData = JSON.parse(user);
+          console.log('User:', userData); // Hoặc setUser(userData) nếu dùng state quản lý user
+          router.push('/'); // Tự động chuyển hướng về trang chủ nếu hợp lệ
+        } else {
+          localStorage.removeItem('accessToken'); // Xóa token hết hạn
+          localStorage.removeItem('user');
+          localStorage.removeItem('role');
+        }
+      } catch (error) {
+        console.error('Invalid token:', error);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('role');
       }
     }
   }, [router]);
-
+  
   const handleSignIn = useCallback(async () => {
     setLoading(true);
     setError('');
     
     try {
-      const response = await fetch('https://localhost:7274/api/Authen/login', {
+      const response = await fetch('https://api.localtour.space/api/Authen/login', {
         method: 'POST',
         headers: {
           'Accept': '*/*',
@@ -62,12 +85,13 @@ export function SignInView() {
 
       const userRole = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
 
-      if (userRole !== 'Visitor') {
+      if (userRole !== 'Administrator') {
         throw new Error('You do not have permission to access this page');
       }
   
       // Lưu thông tin người dùng và chuyển hướng
       localStorage.setItem('user', JSON.stringify(data));
+      localStorage.setItem('role', userRole);
       router.push('/'); // Redirect to home page after successful login
     } catch (err) {
       setError(err.message || 'Invalid phone number or password');

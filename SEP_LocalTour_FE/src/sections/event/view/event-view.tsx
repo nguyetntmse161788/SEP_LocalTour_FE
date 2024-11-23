@@ -13,17 +13,17 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableNoData } from '../table-no-data';
-import { PlaceTableRow } from '../place-table-row';
-import { PlaceTableHead } from '../place-table-head';
+import { EventTableRow } from 'src/sections/event/event-table-row'; 
+import { EventTableHead } from 'src/sections/event/event-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
-import { PlaceTableToolbar } from '../place-table-toolbar';
+import { EventTableToolbar } from 'src/sections/event/event-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
-import type { UserProps } from '../place-table-row';
+import type { EventProps } from 'src/sections/event/event-table-row';
 
 // ----------------------------------------------------------------------
 
-// Hàm fetchPlaces có sử dụng token từ localStorage
-const fetchPlaces = async (languageCode = 'vi') => {
+// Fetch events instead of places
+const fetchEvents = async (languageCode = 'vi') => {
   const token = localStorage.getItem('accessToken');
   console.log('Access Token:', token);  // Kiểm tra token
   
@@ -33,37 +33,37 @@ const fetchPlaces = async (languageCode = 'vi') => {
   }
 
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Place/getAll?LanguageCode=${languageCode}`, {
+    const response = await axios.get(`https://api.localtour.space/api/Event/getallevent`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }
     });
     console.log('API Response:', response.data);  // Kiểm tra dữ liệu trả về
-    return response.data.items;  // Trả về items chứa danh sách places
+    return response.data.items;  // Trả về items chứa danh sách events
   } catch (error) {
-    console.error("Error fetching places", error);
+    console.error("Error fetching events", error);
     return [];
   }
 };
 
-export function PlaceView() {
-  const [places, setPlaces] = useState<UserProps[]>([]);
+export function EventView() {
+  const [events, setEvents] = useState<EventProps[]>([]);  // Renamed to events
   const [filterName, setFilterName] = useState('');
   const [languageCode, setLanguageCode] = useState<string>('vi'); // Ngôn ngữ mặc định là Vietnamese
 
   // Lấy dữ liệu khi component được render lần đầu
   useEffect(() => {
     const fetchData = async () => {
-      const data = await fetchPlaces(languageCode);  // Lấy places từ API theo languageCode
-      setPlaces(data);  // Cập nhật dữ liệu places
+      const data = await fetchEvents(languageCode);  // Fetch events from API
+      setEvents(data);  // Cập nhật dữ liệu events
     };
     fetchData();
   }, [languageCode]);
 
   const table = useTable();
 
-  const dataFiltered: UserProps[] = applyFilter({
-    inputData: places,
+  const dataFiltered: EventProps[] = applyFilter({
+    inputData: events,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
   });
@@ -74,19 +74,19 @@ export function PlaceView() {
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Places
+          Events  {/* Updated heading */}
         </Typography>
         <Button
           variant="contained"
           color="inherit"
           startIcon={<Iconify icon="mingcute:add-line" />}
         >
-          New place
+          New event  {/* Updated button text */}
         </Button>
       </Box>
 
       <Card>
-        <PlaceTableToolbar
+        <EventTableToolbar  // Updated to EventTableToolbar
           numSelected={table.selected.length}
           filterName={filterName}
           onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,23 +98,23 @@ export function PlaceView() {
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>
-              <PlaceTableHead
+              <EventTableHead  // Updated to EventTableHead
                 order={table.order}
                 orderBy={table.orderBy}
-                rowCount={places.length}
+                rowCount={events.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}
-                onSelectAllRows={(checked) =>
+                onSelectAllRows={(checked: boolean) =>
                   table.onSelectAllRows(
                     checked,
-                    places.map((place) => place.id)
+                    events.map((event) => event.id.toString())  // Updated to map events
                   )
                 }
                 headLabel={[
-                  { id: 'name', label: 'Name' },
-                  { id: 'address', label: 'Address' },  // Address column
-                  { id: 'description', label: 'Description' },  // Description column
-                  { id: 'isVerify', label: 'isVerify' },
+                  { id: 'eventName', label: 'Event Name' },
+                  { id: 'desciption', label: 'Description' }, 
+                  { id: 'placeName', label: 'Place Name' }, 
+                  { id: 'startDate - endDate', label: 'Start Date - End Date' }, 
                   { id: 'status', label: 'Status' },
                   { id: 'View details', label: 'View details' },
                   { id: '' },
@@ -127,17 +127,17 @@ export function PlaceView() {
                     table.page * table.rowsPerPage + table.rowsPerPage
                   )
                   .map((row) => (
-                    <PlaceTableRow
+                    <EventTableRow  // Updated to EventTableRow
                       key={row.id}
                       row={row}
-                      selected={table.selected.includes(row.id)}
-                      onSelectRow={() => table.onSelectRow(row.id)}
+                      selected={table.selected.includes(row.id.toString())}
+                      onSelectRow={() => table.onSelectRow(row.id.toString())}
                     />
                   ))}
 
                 <TableEmptyRows
                   height={68}
-                  emptyRows={emptyRows(table.page, table.rowsPerPage, places.length)}
+                  emptyRows={emptyRows(table.page, table.rowsPerPage, events.length)}  // Updated to events
                 />
 
                 {notFound && <TableNoData searchQuery={filterName} />}
@@ -149,7 +149,7 @@ export function PlaceView() {
         <TablePagination
           component="div"
           page={table.page}
-          count={places.length}
+          count={events.length}  // Updated to events
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
@@ -164,7 +164,7 @@ export function PlaceView() {
 
 export function useTable() {
   const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState('eventName');  // Updated to eventName
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selected, setSelected] = useState<string[]>([]);
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');

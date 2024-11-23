@@ -5,6 +5,7 @@ import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgr
 import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
+import { AuthProvider,useAuth} from 'src/layouts/components/account-popover';
 
 // ----------------------------------------------------------------------
 
@@ -15,6 +16,8 @@ export const PlacePage = lazy(() => import('src/pages/place'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
+export const PlaceViewPage = lazy(() => import('src/pages/place-detail'));
+export const EventPage = lazy(() => import('src/pages/event'));
 
 // ----------------------------------------------------------------------
 
@@ -31,39 +34,26 @@ const renderFallback = (
   </Box>
 );
 
-export function Router() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);  // Trạng thái đăng nhập
-  const token = localStorage.getItem('accessToken');  // Lấy token từ localStorage
-
-  useEffect(() => {
-    // Kiểm tra nếu có token trong localStorage
-    if (token) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-    }
-  }, [token]);
-
-  // Nếu chưa biết trạng thái đăng nhập, trả về loading state
-  if (isLoggedIn === null) {
-    return <Box>Loading...</Box>;
-  }
+function AppRoutes() {
+  const { token, role } = useAuth();
 
   return useRoutes([
     {
-      element: isLoggedIn ? (
+      element: token ? (
         <DashboardLayout>
           <Suspense fallback={renderFallback}>
             <Outlet />
           </Suspense>
         </DashboardLayout>
       ) : (
-        <Navigate to="/sign-in" replace />  // Nếu chưa đăng nhập, chuyển hướng tới trang đăng nhập
+        <Navigate to="/sign-in" replace />
       ),
       children: [
         { element: <HomePage />, index: true },
         { path: 'user', element: <UserPage /> },
-        { path: 'place', element: <PlacePage /> },
+        { path: 'place', element: role === 'Administrator' ? <PlacePage /> : <Navigate to="/404" replace /> },
+        { path: 'place/:id', element: <PlaceViewPage /> },
+        { path: 'event', element: <EventPage /> },
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
       ],
@@ -85,4 +75,12 @@ export function Router() {
       element: <Navigate to="/404" replace />,
     },
   ]);
+}
+
+export function Router() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
 }
