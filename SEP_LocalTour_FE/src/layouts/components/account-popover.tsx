@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-constructed-context-values */
 import type { IconButtonProps } from '@mui/material/IconButton';
 
 import { useState, useCallback, createContext, useEffect, useContext } from 'react';

@@ -37,6 +37,10 @@ const renderFallback = (
 function AppRoutes() {
   const { token, role } = useAuth();
 
+  // Parse the role string into an array of roles
+  const roles = role ? role.split(',').map(r => r.trim()) : [];
+  console.log('Parsed Roles:', roles);
+
   return useRoutes([
     {
       element: token ? (
@@ -50,9 +54,9 @@ function AppRoutes() {
       ),
       children: [
         { element: <HomePage />, index: true },
-        { path: 'user', element: <UserPage /> },
-        { path: 'place', element: role === 'Administrator' ? <PlacePage /> : <Navigate to="/404" replace /> },
-        { path: 'place/:id', element: <PlaceViewPage /> },
+        { path: 'user', element: roles.includes('Administrator') ? <UserPage /> : <Navigate to="/404" replace /> },
+        { path: 'place', element: (roles.includes('Moderator') || roles.includes('Service Owner')) ? <PlacePage /> : <Navigate to="/404" replace /> },
+        { path: 'place/:id', element: (roles.includes('Moderator') || roles.includes('Service Owner')) ? <PlaceViewPage /> : <Navigate to="/404" replace /> },
         { path: 'event', element: <EventPage /> },
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
@@ -76,6 +80,7 @@ function AppRoutes() {
     },
   ]);
 }
+
 
 export function Router() {
   return (

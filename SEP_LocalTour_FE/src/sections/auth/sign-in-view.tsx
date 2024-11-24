@@ -1,4 +1,7 @@
-import { useState, useCallback, useEffect  } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-shadow */
+/* eslint-disable object-shorthand */
+import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Divider from '@mui/material/Divider';
@@ -10,11 +13,11 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { jwtDecode } from 'jwt-decode';
-import { useAuth } from 'src/layouts/components/account-popover'
-import axios from "axios";
+import { useAuth } from 'src/layouts/components/account-popover';
+import axios from 'axios';
 
 interface JwtPayloadWithRole {
-  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': string;
 }
 export function SignInView() {
   const router = useRouter();
@@ -29,8 +32,7 @@ export function SignInView() {
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     const user = localStorage.getItem('user');
-    
-  
+
     if (token && user) {
       try {
         if (!isAuthenticated) {
@@ -38,7 +40,7 @@ export function SignInView() {
         }
         const decodedToken = jwtDecode<JwtPayloadWithRole & { exp: number }>(token);
         const currentTime = Math.floor(Date.now() / 1000);
-  
+
         // Kiểm tra token hết hạn
         if (decodedToken.exp && decodedToken.exp > currentTime) {
           const userData = JSON.parse(user);
@@ -57,16 +59,16 @@ export function SignInView() {
       }
     }
   }, [router]);
-  
+
   const handleSignIn = useCallback(async () => {
     setLoading(true);
     setError('');
-    
+
     try {
       const response = await fetch('https://api.localtour.space/api/Authen/login', {
         method: 'POST',
         headers: {
-          'Accept': '*/*',
+          Accept: '*/*',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -74,21 +76,41 @@ export function SignInView() {
           password: password,
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to sign in');
       }
-  
+
       const data = await response.json();
-      localStorage.setItem('accessToken', data.accessToken); 
+      localStorage.setItem('accessToken', data.accessToken);
       const decodedToken = jwtDecode<JwtPayloadWithRole>(data.accessToken);
 
       const userRole = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      console.log('User Role1111:', userRole);
 
-      if (userRole !== 'Administrator') {
-        throw new Error('You do not have permission to access this page');
+      const allowedRoles = ['Administrator', 'Moderator', 'Service Owner'];
+
+      if (Array.isArray(userRole)) {
+        // If userRole is an array, check if any role matches the allowed roles
+        const hasPermission = userRole.some((role) => allowedRoles.includes(role));
+        console.log('Has Permission (Array):', hasPermission);
+
+        if (!hasPermission) {
+          throw new Error('You do not have permission to access this page');
+        }
+      } else if (typeof userRole === 'string') {
+        // If userRole is a string, directly check if it matches an allowed role
+        const hasPermission = allowedRoles.includes(userRole);
+        console.log('Has Permission (String):', hasPermission);
+
+        if (!hasPermission) {
+          throw new Error('You do not have permission to access this page');
+        }
+      } else {
+        // Handle unexpected cases
+        throw new Error('Invalid role format');
       }
-  
+
       // Lưu thông tin người dùng và chuyển hướng
       localStorage.setItem('user', JSON.stringify(data));
       localStorage.setItem('role', userRole);
