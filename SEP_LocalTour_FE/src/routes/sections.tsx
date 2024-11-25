@@ -5,6 +5,8 @@ import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgr
 import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
+import AdminPage from 'src/pages/AdminPage';
+import UserUpdate from 'src/pages/UserUpdatePage';
 
 // ----------------------------------------------------------------------
 
@@ -15,6 +17,13 @@ export const PlacePage = lazy(() => import('src/pages/place'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
+export const UserRolePage = lazy(() => import('src/pages/UserRolePage'));
+export const UserBanPage = lazy(() => import('src/pages/UserBanPage'));
+export const ReportUserView = lazy(() => import('src/pages/user-report'))
+export const UserUpdatePage = lazy(() => import('src/pages/UserUpdatePage'));
+export const RegisterPage = lazy(() => import('src/pages/RegisterPage'));
+
+
 
 // ----------------------------------------------------------------------
 
@@ -58,14 +67,21 @@ export function Router() {
           </Suspense>
         </DashboardLayout>
       ) : (
-        <Navigate to="/sign-in" replace />  // Nếu chưa đăng nhập, chuyển hướng tới trang đăng nhập
+        <Navigate to="/sign-in" replace /> 
       ),
       children: [
         { element: <HomePage />, index: true },
-        { path: 'user', element: <UserPage /> },
+        { path: 'admin', element: <UserPage /> },
         { path: 'place', element: <PlacePage /> },
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
+        { path: 'role', element: <UserRolePage /> },
+        { path: 'admin', element: <AdminPage /> },
+        { path: 'register', element: <RegisterPage /> },
+        { path: 'ban', element: <UserBanPage /> },
+        { path: 'role', element: <UserRolePage /> },
+        { path: 'updateUser', element: <UserUpdatePage /> },
+        { path: 'reportUser', element: <ReportUserView /> }
       ],
     },
     {
@@ -77,6 +93,14 @@ export function Router() {
       ),
     },
     {
+      path: 'register',
+      element: <RegisterPage />,
+    },
+    {
+      path: 'admin',
+      element: <AdminPage />,
+    },
+    {
       path: '404',
       element: <Page404 />,
     },
@@ -86,3 +110,5 @@ export function Router() {
     },
   ]);
 }
+
+// export default useRoutes;

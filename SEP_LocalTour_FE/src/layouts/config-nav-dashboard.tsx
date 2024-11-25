@@ -15,7 +15,12 @@ export const navData = [
   },
   {
     title: 'User',
-    path: '/user',
+    path: '/admin',
+    icon: icon('ic-user'),
+  },
+  {
+    title: 'User Report',
+    path: '/reportUser',
     icon: icon('ic-user'),
   },
   {
@@ -43,6 +48,29 @@ export const navData = [
     path: '/sign-in',
     icon: icon('ic-lock'),
   },
+  {
+    title: 'Not found',
+    path: '/404',
+    icon: icon('ic-disabled'),
+  },
+];
+
+export const adminNavData = [
+  {
+    title: 'User',
+    path: '/admin',
+    icon: icon('ic-user'),
+  },
+  {
+    title: 'Blog',
+    path: '/blog',
+    icon: icon('ic-blog'),
+  },
+//   {
+//     title: 'Sign in',
+//     path: '/sign-in',
+//     icon: icon('ic-lock'),
+//   },
   {
     title: 'Not found',
     path: '/404',
