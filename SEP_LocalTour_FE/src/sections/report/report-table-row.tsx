@@ -43,7 +43,8 @@ export function ReportTableRow({ row, selected, onSelectRow }: ReportTableHeadPr
       };
 
       await axios.put(
-        `https://localhost:44388/api/UserReport/${id}`,
+        // https://api.localtour.space/api/UserReport
+        `https://api.localtour.space/api/UserReport/${id}`,
         updatedData, // Gửi tất cả dữ liệu nhưng thay đổi status
         { headers: { Authorization: `Bearer ${token}` } }
       );

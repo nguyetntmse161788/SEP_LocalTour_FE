@@ -70,7 +70,7 @@ export function ReportUserView() {
     try {
       // https://api.localtour.space/api/UserReport
       // https://localhost:44388/api/UserReport
-      const response = await axios.get('https://localhost:44388/api/UserReport', {
+      const response = await axios.get('https://api.localtour.space/api/UserReport', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUserReports(response.data);
