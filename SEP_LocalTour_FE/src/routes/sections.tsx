@@ -6,6 +6,8 @@ import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { CurrentPage } from 'src/layouts/components/currentpage';
+import AdminPage from 'src/pages/AdminPage';
+import UserUpdate from 'src/pages/UserUpdatePage';
 
 // ----------------------------------------------------------------------
 
@@ -25,6 +27,14 @@ export const ServiceOwnerEventPage = lazy(() => import('src/pages/owner/event'))
 export const ServiceOwnerEventViewPage = lazy(() => import('src/pages/owner/place-event-view'));
 export const ServiceOwnerActivityPage = lazy(() => import('src/pages/owner/activity'));
 export const ServiceOwnerActivityViewPage = lazy(() => import('src/pages/owner/place-activity-view'));
+export const UserRolePage = lazy(() => import('src/pages/UserRolePage'));
+export const UserBanPage = lazy(() => import('src/pages/UserBanPage'));
+export const ReportUserView = lazy(() => import('src/pages/user-report'))
+export const UserUpdatePage = lazy(() => import('src/pages/UserUpdatePage'));
+export const RegisterPage = lazy(() => import('src/pages/RegisterPage'));
+
+
+
 // ----------------------------------------------------------------------
 
 const renderFallback = (
@@ -61,7 +71,9 @@ function AppRoutes() {
           { path: 'place', element: <PlacePage /> },
           { path: 'event', element: <EventPage /> },
         ] : []),
-
+        { element: <HomePage />, index: true },
+        { path: 'admin', element: <UserPage /> },
+        { path: 'place', element: <PlacePage /> },
         // Các trang cho người dùng là Service Owner
         ...(userRole.includes('Service Owner') ? [
           { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
@@ -74,6 +86,13 @@ function AppRoutes() {
         ] : []),
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
+        { path: 'role', element: <UserRolePage /> },
+        { path: 'admin', element: <AdminPage /> },
+        { path: 'register', element: <RegisterPage /> },
+        { path: 'ban', element: <UserBanPage /> },
+        { path: 'role', element: <UserRolePage /> },
+        { path: 'updateUser', element: <UserUpdatePage /> },
+        { path: 'reportUser', element: <ReportUserView /> }
       ],
     },
     {
@@ -83,6 +102,14 @@ function AppRoutes() {
           <SignInPage />
         </AuthLayout>
       ),
+    },
+    {
+      path: 'register',
+      element: <RegisterPage />,
+    },
+    {
+      path: 'admin',
+      element: <AdminPage />,
     },
     {
       path: '404',

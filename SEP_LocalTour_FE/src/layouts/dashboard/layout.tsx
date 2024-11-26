@@ -13,7 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import { Main } from './main';
 import { layoutClasses } from '../classes';
 import { NavMobile, NavDesktop } from './nav';
-import { navData } from '../config-nav-dashboard';
+import { navData, adminNavData } from '../config-nav-dashboard';
 import { Searchbar } from '../components/searchbar';
 import { _workspaces } from '../config-nav-workspace';
 import { MenuButton } from '../components/menu-button';
@@ -31,9 +31,10 @@ export type DashboardLayoutProps = {
   header?: {
     sx?: SxProps<Theme>;
   };
+  userRole?: string; // Add a prop for the user role
 };
 
-export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) {
+export function DashboardLayout({ sx, children, header, userRole }: DashboardLayoutProps) {
   const theme = useTheme();
 
   const [navOpen, setNavOpen] = useState(false);
