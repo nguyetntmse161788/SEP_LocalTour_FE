@@ -1,6 +1,5 @@
 import { Label } from 'src/components/label'; 
 import { SvgColor } from 'src/components/svg-color'; 
-import { useAuth } from 'src/layouts/components/account-popover'; 
 
 // ----------------------------------------------------------------------
 
@@ -33,17 +32,27 @@ export const navData = (role: string | null): NavItem[] => {
     {
       title: 'Place',
       path: isAdmin ? '/place' : isModerator ? '/mod/place' : isServiceOwner ? '/owner/place' : '/404',
-      icon: icon('ic-place'),
+      icon: icon('ic-cart'),
     },
     isServiceOwner && {
       title: 'Place Created',
       path: '/owner/created',
-      icon: icon('ic-place'),
+      icon: icon('ic-cart'),
     },
     {
       title: 'Event',
-      path: '/event',
-      icon: icon('ic-event'),
+      path: isAdmin ? '/event' : isModerator ? '/mod/event' : isServiceOwner ? '/owner/event' : '/404',
+      icon: icon('ic-cart'),
+    },
+    {
+      title: 'Place Activity',
+      path: isAdmin ? '/activity' : isModerator ? '/mod/activity' : isServiceOwner ? '/owner/activity' : '/404',
+      icon: icon('ic-cart'),
+      info: (
+        <Label color="error" variant="inverted">
+          +3
+        </Label>
+      ),
     },
     {
       title: 'Product',
@@ -59,11 +68,6 @@ export const navData = (role: string | null): NavItem[] => {
       title: 'Blog',
       path: '/blog',
       icon: icon('ic-blog'),
-    },
-    {
-      title: 'Sign in',
-      path: '/sign-in',
-      icon: icon('ic-lock'),
     },
     {
       title: 'Not found',

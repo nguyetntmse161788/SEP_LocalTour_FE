@@ -10,12 +10,20 @@ import axios from 'axios';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
+import { NewEventForm } from '../view/new-event-form'; // Import NewEventForm
 
 export function PlaceDetailView() {
   const { id } = useParams(); // Lấy ID từ URL
   const [place, setPlace] = useState<any>(null); // Chứa dữ liệu place
+  const [placeEvents, setPlaceEvents] = useState<any[]>([]); // Chứa danh sách sự kiện của place
   const [loading, setLoading] = useState<boolean>(true); // Kiểm tra trạng thái loading
+  const [openNewEventForm, setOpenNewEventForm] = useState(false); // Mở form tạo sự kiện
   const navigate = useNavigate(); // Hook điều hướng
+
+  // Hàm xử lý sự kiện sau khi tạo thành công
+  const handleEventCreated = (newEvent: any) => {
+    setPlaceEvents((prevEvents) => [...prevEvents, newEvent]); // Thêm sự kiện mới vào danh sách
+  };
 
   // Fetch dữ liệu Place từ API
   useEffect(() => {
@@ -42,6 +50,33 @@ export function PlaceDetailView() {
 
     fetchPlaceDetail();
   }, [id]); // Khi ID thay đổi, sẽ gọi lại API
+
+  // Fetch dữ liệu Place Events từ API
+  useEffect(() => {
+    const fetchPlaceEvents = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error('No access token found');
+        return;
+      }
+
+      try {
+        const response = await axios.get(`https://api.localtour.space/api/Event/getall?placeid=${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log('Place events data:', response.data.items); 
+        setPlaceEvents(response.data.items); // Lưu dữ liệu sự kiện
+      } catch (error) {
+        console.error("Error fetching place events", error);
+      }
+    };
+
+    if (id) {
+      fetchPlaceEvents();
+    }
+  }, [id]); // Khi ID thay đổi, sẽ gọi lại API lấy sự kiện
 
   const handleChangeStatus = async (status: string) => {
     const token = localStorage.getItem('accessToken');
@@ -101,8 +136,8 @@ export function PlaceDetailView() {
         <Button
           variant="outlined"
           color="primary"
-          startIcon={<Iconify icon="eva:arrow-back-fill" />}  // Mũi tên quay lại
-          onClick={() => navigate('/owner/place')}  // Điều hướng về danh sách Places
+          startIcon={<Iconify icon="eva:arrow-back-fill" />}
+          onClick={() => navigate('/owner/event')}
         >
           Back to List
         </Button>
@@ -118,7 +153,6 @@ export function PlaceDetailView() {
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
-          {/* Card for Image */}
           <Card sx={{ p: 2, boxShadow: 3 }}>
             <Box mb={2} display="flex" justifyContent="center">
               <img 
@@ -131,7 +165,6 @@ export function PlaceDetailView() {
         </Grid>
 
         <Grid item xs={12} md={8}>
-          {/* Card for Place Information */}
           <Card sx={{ p: 3, boxShadow: 3 }}>
             <Typography variant="h5" mb={2}>{place.placeTranslations[0]?.name}</Typography>
             <Typography variant="body1" mb={2}>Address: {place.placeTranslations[0]?.address}</Typography>
@@ -154,11 +187,8 @@ export function PlaceDetailView() {
                 <Typography variant="h6">Status: {place.status === '1' ? 'Approved' : place.status === '2' ? 'Rejected' : 'Pending'}</Typography>
               </Grid>
             </Grid>
-
-            
           </Card>
 
-          {/* Additional Translations */}
           {place.placeTranslations.length > 1 && (
             <Card sx={{ mt: 3, p: 3, boxShadow: 3 }}>
               <Typography variant="h6" mb={2}>Other Translations:</Typography>
@@ -174,15 +204,21 @@ export function PlaceDetailView() {
           )}
         </Grid>
       </Grid>
-      {place.placeActivities?.length > 0 && (
-  <Box mt={4}>
-    {/* Tiêu đề Place Activity */}
-    <Typography variant="h5" mb={3}>
-      Place Activity
-    </Typography>
 
-    {/* Danh sách các Activity */}
-    <Grid container spacing={3}>
+      {placeEvents.length > 0 && (
+        <Box mt={4}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Typography variant="h5">Place Events</Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+              onClick={() => setOpenNewEventForm(true)}
+            >
+              Create Activity
+            </Button>
+          </Box>
+          <Grid container spacing={3}>
       {place.placeActivities.map((activity: any) => (
         <Grid item xs={12} sm={6} md={4} lg={3} key={activity.id}>
           {/* Card hiển thị thông tin Activity */}
@@ -274,11 +310,18 @@ export function PlaceDetailView() {
             </Box>
           </Card>
         </Grid>
-      ))}
-    </Grid>
-  </Box>
-)}
+            ))}
+          </Grid>
+        </Box>
+      )}
 
+      {/* Hiển thị form tạo sự kiện */}
+      <NewEventForm
+        open={openNewEventForm}
+        onClose={() => setOpenNewEventForm(false)}
+        onEventCreated={handleEventCreated}
+        placeId={id || ''} 
+      />
     </DashboardContent>
   );
 }

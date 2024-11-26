@@ -1,12 +1,12 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { Outlet, Navigate, useRoutes } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
-import { AuthProvider,useAuth} from 'src/layouts/components/account-popover';
-import { CurrentPage } from 'src/layouts/components/currentpage'; 
+import { CurrentPage } from 'src/layouts/components/currentpage';
+
 // ----------------------------------------------------------------------
 
 export const HomePage = lazy(() => import('src/pages/home'));
@@ -21,8 +21,10 @@ export const EventPage = lazy(() => import('src/pages/event'));
 export const ServiceOwnerPlacePage = lazy(() => import('src/pages/owner/place'));
 export const ServiceOwnerPlaceViewPage = lazy(() => import('src/pages/owner/place-detail'));
 export const ServiceOwnerPlaceCreatedPage = lazy(() => import('src/pages/owner/place-created'));
-
-
+export const ServiceOwnerEventPage = lazy(() => import('src/pages/owner/event'));
+export const ServiceOwnerEventViewPage = lazy(() => import('src/pages/owner/place-event-view'));
+export const ServiceOwnerActivityPage = lazy(() => import('src/pages/owner/activity'));
+export const ServiceOwnerActivityViewPage = lazy(() => import('src/pages/owner/place-activity-view'));
 // ----------------------------------------------------------------------
 
 const renderFallback = (
@@ -39,8 +41,8 @@ const renderFallback = (
 );
 
 function AppRoutes() {
-  const { token, role } = useAuth();
-
+  const token = localStorage.getItem('accessToken'); // Kiểm tra token từ localStorage
+  const userRole = JSON.parse(localStorage.getItem('role') || '[]');
   return useRoutes([
     {
       element: token ? (
@@ -55,17 +57,21 @@ function AppRoutes() {
       children: [
         { element: <HomePage />, index: true },
         { path: 'user', element: <UserPage /> },
+        ...(userRole.includes('Administrator') ? [
+          { path: 'place', element: <PlacePage /> },
+          { path: 'event', element: <EventPage /> },
+        ] : []),
 
-        // Phân quyền trang Place
-        {
-          path: 'place',
-          element: <PlacePage />,
-        },
-        { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
-        { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
-        { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
-        { path: 'place/:id', element: <PlaceViewPage /> },
-        { path: 'event', element: <EventPage /> },
+        // Các trang cho người dùng là Service Owner
+        ...(userRole.includes('Service Owner') ? [
+          { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
+          { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
+          { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
+          { path: 'owner/event', element: <ServiceOwnerEventPage /> },
+          { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
+          { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
+          { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
+        ] : []),
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
       ],
@@ -91,9 +97,9 @@ function AppRoutes() {
 
 export function Router() {
   return (
-    <AuthProvider>
-      <CurrentPage/>
+    <>
+      <CurrentPage />
       <AppRoutes />
-    </AuthProvider>
+    </>
   );
 }
