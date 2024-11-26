@@ -102,7 +102,7 @@ export function PlaceDetailView() {
           variant="outlined"
           color="primary"
           startIcon={<Iconify icon="eva:arrow-back-fill" />}  // Mũi tên quay lại
-          onClick={() => navigate('/place')}  // Điều hướng về danh sách Places
+          onClick={() => navigate('/owner/place')}  // Điều hướng về danh sách Places
         >
           Back to List
         </Button>
@@ -155,25 +155,7 @@ export function PlaceDetailView() {
               </Grid>
             </Grid>
 
-            {/* Show Approve/Reject buttons with disabled state */}
-            <Box mt={3} display="flex" gap={2}>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={() => handleChangeStatus('1')}  // Approve
-                disabled={place.status === '1'} // Disable nếu đã Approve
-              >
-                Approved
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={() => handleChangeStatus('2')}  // Reject
-                disabled={place.status === '2'} // Disable nếu đã Reject
-              >
-                Rejected
-              </Button>
-            </Box>
+            
           </Card>
 
           {/* Additional Translations */}

@@ -8,101 +8,76 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import axios from 'axios';
+import NewPlaceForm from '../view/new-place';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableNoData } from '../table-no-data';
-import { EventTableRow } from 'src/sections/event/event-table-row'; 
-import { EventTableHead } from 'src/sections/event/event-table-head';
+import { PlaceTableRow } from '../place-table-row';
+import { PlaceTableHead } from '../place-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
-import { EventTableToolbar } from 'src/sections/event/event-table-toolbar';
+import { PlaceTableToolbar } from '../place-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
-import type { EventProps } from 'src/sections/event/event-table-row';
+import type { UserProps } from '../place-table-row';
 
 // ----------------------------------------------------------------------
 
-// Hàm fetchEvents hỗ trợ phân trang
-const fetchEvents = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi') => {
+// Hàm fetchPlaces có sử dụng token từ localStorage
+const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi') => {
   const token = localStorage.getItem('accessToken');
   console.log('Access Token:', token);  // Kiểm tra token
   
   if (!token) {
     console.error('No access token found');
-    return { items: [], totalCount: 0 };  // Trả về dữ liệu rỗng nếu không có token
+    return { items: [], totalCount: 0 };  // Trả về totalCount là 0 nếu không có token
   }
 
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Event/getallevent`, {
+    const response = await axios.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}`, {
       headers: {
         Authorization: `Bearer ${token}`,
-      },
-      params: {
-        LanguageCode: languageCode,
-        Page: pageNumber,
-        Size: rowsPerPage
       }
     });
     console.log('API Response:', response.data);  // Kiểm tra dữ liệu trả về
     return {
-      items: response.data.items,  // Danh sách events
-      totalCount: response.data.totalCount,  // Tổng số bản ghi
+      items: response.data.items,  // Danh sách items
+      totalCount: response.data.totalCount,  // Tổng số items
     };
   } catch (error) {
-    console.error("Error fetching events", error);
-    return { items: [], totalCount: 0 };  // Trả về dữ liệu rỗng nếu có lỗi
+    console.error("Error fetching places", error);
+    return { items: [], totalCount: 0 };  // Trả về mảng rỗng và totalCount là 0 nếu có lỗi
   }
 };
-const updateEventStatus = async (placeId: number, eventId: number, status: string) => {
-  const token = localStorage.getItem('accessToken');
-  if (!token) {
-    console.error('No access token found');
-    return null;
-  }
 
-  try {
-    const response = await axios.put(
-      `https://api.localtour.space/api/Event/changeStatusEvent`,
-      null,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: { placeid: placeId, eventid: eventId, status },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error updating event status:', error);
-    return null;
-  }
-};
-export function EventView() {
-  const [events, setEvents] = useState<EventProps[]>([]);  // Danh sách sự kiện
-  const [totalCount, setTotalCount] = useState<number>(0);  // Tổng số lượng sự kiện
+export function PlaceCreatedView() {
+  const [places, setPlaces] = useState<UserProps[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);  // Lưu tổng số lượng bản ghi
   const [filterName, setFilterName] = useState('');
-  const [languageCode, setLanguageCode] = useState<string>('vi'); // Ngôn ngữ mặc định là Vietnamese
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);  // Trang hiện tại
-  const [rowsPerPage, setRowsPerPage] = useState(5);  // Số dòng mỗi trang
+  const [languageCode, setLanguageCode] = useState<string>('vi');
+  const [openNewPlaceForm, setOpenNewPlaceForm] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);  // Lưu trang hiện tại
+  const [rowsPerPage, setRowsPerPage] = useState(5);  // Sử dụng state để lưu rowsPerPage
 
-  // Lấy dữ liệu sự kiện khi component được render lần đầu
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount } = await fetchEvents(pageNumber, rowsPerPage, languageCode);  // Lấy dữ liệu sự kiện theo phân trang
-      setEvents(items);  // Cập nhật danh sách sự kiện
-      setTotalCount(totalCount);  // Cập nhật tổng số sự kiện
+      const { items, totalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
+      setPlaces(items);  // Cập nhật danh sách places
+      setTotalCount(totalCount);  // Cập nhật totalCount
     };
     fetchData();
-  }, [pageNumber, rowsPerPage, languageCode]);  // Chạy lại khi các giá trị này thay đổi
+  }, [pageNumber, rowsPerPage, languageCode]);  // Thêm rowsPerPage vào dependencies
 
+  const handlePlaceCreated = (newPlace: UserProps) => {
+    setPlaces((prevPlaces) => [...prevPlaces, newPlace]); // Thêm place mới vào đầu danh sách
+    setTotalCount((prevCount) => prevCount + 1); // Tăng tổng số lượng bản ghi
+  };
   const table = useTable();
 
-  const dataFiltered: EventProps[] = applyFilter({
-    inputData: events,
+  const dataFiltered: UserProps[] = applyFilter({
+    inputData: places,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
-    filterStatus,
   });
 
   const notFound = !dataFiltered.length && !!filterName;
@@ -111,81 +86,71 @@ export function EventView() {
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Events
+          Places
         </Typography>
         <Button
           variant="contained"
           color="inherit"
           startIcon={<Iconify icon="mingcute:add-line" />}
+          onClick={() => setOpenNewPlaceForm(true)} // Hiển thị form khi nhấn
         >
-          New event
+          New place
         </Button>
       </Box>
 
       <Card>
-        <EventTableToolbar
+        <PlaceTableToolbar
           numSelected={table.selected.length}
           filterName={filterName}
           onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
             setFilterName(event.target.value);
             table.onResetPage();
           }}
-          onFilterStatus={(status: string | null) => setFilterStatus(status)} 
         />
 
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>
-              <EventTableHead
+              <PlaceTableHead
                 order={table.order}
                 orderBy={table.orderBy}
-                rowCount={events.length}
+                rowCount={places.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}
-                onSelectAllRows={(checked: boolean) =>
+                onSelectAllRows={(checked) =>
                   table.onSelectAllRows(
                     checked,
-                    events.map((event) => event.id.toString())
+                    places.map((place) => place.id)
                   )
                 }
                 headLabel={[
-                  { id: 'eventName', label: 'Event Name' },
+                  { id: 'name', label: 'Name' },
+                  { id: 'address', label: 'Address' },
                   { id: 'description', label: 'Description' },
-                  { id: 'placeName', label: 'Place Name' },
-                  { id: 'startDate - endDate', label: 'Start Date - End Date' },
+                  { id: 'isVerify', label: 'isVerify' },
                   { id: 'status', label: 'Status' },
-                  { id: 'actions', label: 'Actions' },
+                  { id: 'View details', label: 'View details' },
                   { id: '' },
                 ]}
               />
-               <TableBody>
+              <TableBody>
                 {dataFiltered
                   .slice(
-                    table.page * table.rowsPerPage,
-                    table.page * table.rowsPerPage + table.rowsPerPage
+                    table.page * rowsPerPage,
+                    table.page * rowsPerPage + rowsPerPage
                   )
                   .map((row) => (
-                    <EventTableRow  // Updated to EventTableRow
-                    key={row.id}
-                    row={row}
-                    selected={table.selected.includes(row.id.toString())}
-                    onSelectRow={() => table.onSelectRow(row.id.toString())}
-                    onUpdateStatus={async (status) => {
-                      const result = await updateEventStatus(row.placeId, row.id, status);
-                      if (result) {
-                        setEvents((prevEvents) =>
-                          prevEvents.map((event) =>
-                            event.id === row.id ? { ...event, eventStatus: status } : event
-                          )
-                        );
-                      }
-                    }}
-                  />
+                    <PlaceTableRow
+                      key={row.id}
+                      row={row}
+                      selected={table.selected.includes(row.id)}
+                      onSelectRow={() => table.onSelectRow(row.id)}
+                    />
                   ))}
 
                 <TableEmptyRows
                   height={68}
-                  emptyRows={emptyRows(table.page, table.rowsPerPage, events.length)}  // Updated to events
+                  emptyRows={emptyRows(table.page, table.rowsPerPage, places.length)}
                 />
 
                 {notFound && <TableNoData searchQuery={filterName} />}
@@ -196,17 +161,22 @@ export function EventView() {
 
         <TablePagination
           component="div"
-          page={pageNumber - 1}  // Chỉnh lại pageNumber để bắt đầu từ 0
-          count={totalCount}  // Sử dụng totalCount thay vì events.length
-          rowsPerPage={rowsPerPage}
-          onPageChange={(event, newPage) => setPageNumber(newPage + 1)}  // Chỉnh lại pageNumber để bắt đầu từ 1
+          page={pageNumber - 1}  // Chỉnh lại để bắt đầu từ trang 0
+          count={totalCount}  // Dùng totalCount thay vì places.length
+          rowsPerPage={rowsPerPage}  // Cập nhật rowsPerPage
+          onPageChange={(event, newPage) => setPageNumber(newPage + 1)}  // Sử dụng pageNumber + 1
           rowsPerPageOptions={[5, 10, 25]}
           onRowsPerPageChange={(event) => {
-            setRowsPerPage(parseInt(event.target.value, 10));  // Cập nhật số dòng mỗi trang
-            setPageNumber(1);  // Reset trang về 1 khi thay đổi số dòng
+            setRowsPerPage(parseInt(event.target.value, 10));  // Cập nhật rowsPerPage
+            setPageNumber(1);  // Reset trang về 1 khi thay đổi số dòng trên mỗi trang
           }}
         />
       </Card>
+      <NewPlaceForm
+        open={openNewPlaceForm}
+        onClose={() => setOpenNewPlaceForm(false)}
+        onPlaceCreated={handlePlaceCreated} // Đóng form
+      />
     </DashboardContent>
   );
 }
@@ -215,7 +185,7 @@ export function EventView() {
 
 export function useTable() {
   const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('eventName');
+  const [orderBy, setOrderBy] = useState('name');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selected, setSelected] = useState<string[]>([]);
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');

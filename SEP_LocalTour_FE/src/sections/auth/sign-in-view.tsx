@@ -24,39 +24,31 @@ export function SignInView() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     const user = localStorage.getItem('user');
-    
+    const currentPath = localStorage.getItem('currentPath') || '/';
   
     if (token && user) {
       try {
-        if (!isAuthenticated) {
-          router.push('/sign-in'); // Điều hướng về trang đăng nhập nếu không có token
-        }
         const decodedToken = jwtDecode<JwtPayloadWithRole & { exp: number }>(token);
         const currentTime = Math.floor(Date.now() / 1000);
   
-        // Kiểm tra token hết hạn
         if (decodedToken.exp && decodedToken.exp > currentTime) {
-          const userData = JSON.parse(user);
-          console.log('User:', userData); // Hoặc setUser(userData) nếu dùng state quản lý user
-          router.push('/'); // Tự động chuyển hướng về trang chủ nếu hợp lệ
+          router.replace(currentPath); // Redirect to home if token is valid
         } else {
-          localStorage.removeItem('accessToken'); // Xóa token hết hạn
-          localStorage.removeItem('user');
-          localStorage.removeItem('role');
+          localStorage.clear(); // Clear localStorage if token is expired
+          router.push('/sign-in');
         }
       } catch (error) {
         console.error('Invalid token:', error);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-        localStorage.removeItem('role');
+        localStorage.clear(); // Clear localStorage if token is invalid
+        router.push('/sign-in');
       }
     }
   }, [router]);
+  
   
   const handleSignIn = useCallback(async () => {
     setLoading(true);
@@ -83,15 +75,21 @@ export function SignInView() {
       localStorage.setItem('accessToken', data.accessToken); 
       const decodedToken = jwtDecode<JwtPayloadWithRole>(data.accessToken);
 
-      const userRole = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      const userRoles = Array.isArray(decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'])
+  ? decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+  : [decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']];
+  const validRoles = ['Administrator', 'Moderator', 'Service Owner'];
 
-      if (userRole !== 'Administrator') {
-        throw new Error('You do not have permission to access this page');
-      }
+  const validUserRoles = userRoles.filter(role => validRoles.includes(role));
+
+  // If no valid roles, show error
+  if (validUserRoles.length === 0) {
+    throw new Error('You do not have permission to access this page');
+  }
   
       // Lưu thông tin người dùng và chuyển hướng
       localStorage.setItem('user', JSON.stringify(data));
-      localStorage.setItem('role', userRole);
+      localStorage.setItem('role', JSON.stringify(validUserRoles));
       router.push('/'); // Redirect to home page after successful login
     } catch (err) {
       setError(err.message || 'Invalid phone number or password');

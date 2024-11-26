@@ -1,4 +1,4 @@
-import type { EventProps } from './event-table-row';
+import type { UserProps } from './place-table-row';
 
 // ----------------------------------------------------------------------
 
@@ -52,30 +52,28 @@ export function getComparator<Key extends keyof any>(
 
 // ----------------------------------------------------------------------
 
-export function applyFilter({
-  inputData,
-  comparator,
-  filterName,
-  filterStatus,
-}: {
-  inputData: EventProps[];
-  comparator: (a: EventProps, b: EventProps) => number;
+type ApplyFilterProps = {
+  inputData: UserProps[];
   filterName: string;
-  filterStatus: string | null;
-}) {
-  let filteredData = [...inputData];
+  comparator: (a: any, b: any) => number;
+};
+
+export function applyFilter({ inputData, comparator, filterName }: ApplyFilterProps) {
+  const stabilizedThis = inputData.map((el, index) => [el, index] as const);
+
+  stabilizedThis.sort((a, b) => {
+    const order = comparator(a[0], b[0]);
+    if (order !== 0) return order;
+    return a[1] - b[1];
+  });
+
+  inputData = stabilizedThis.map((el) => el[0]);
 
   if (filterName) {
-    filteredData = filteredData.filter((event) =>
-      event.eventName.toLowerCase().includes(filterName.toLowerCase())
+    inputData = inputData.filter(
+      (user) => user.name.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
     );
   }
 
-  if (filterStatus) {
-    filteredData = filteredData.filter((event) => event.eventStatus === filterStatus);
-  }
-
-  filteredData.sort(comparator);
-
-  return filteredData;
+  return inputData;
 }

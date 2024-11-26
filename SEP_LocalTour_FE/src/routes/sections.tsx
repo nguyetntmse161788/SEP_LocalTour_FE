@@ -6,7 +6,7 @@ import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { AuthProvider,useAuth} from 'src/layouts/components/account-popover';
-
+import { CurrentPage } from 'src/layouts/components/currentpage'; 
 // ----------------------------------------------------------------------
 
 export const HomePage = lazy(() => import('src/pages/home'));
@@ -18,6 +18,10 @@ export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 export const PlaceViewPage = lazy(() => import('src/pages/place-detail'));
 export const EventPage = lazy(() => import('src/pages/event'));
+export const ServiceOwnerPlacePage = lazy(() => import('src/pages/owner/place'));
+export const ServiceOwnerPlaceViewPage = lazy(() => import('src/pages/owner/place-detail'));
+export const ServiceOwnerPlaceCreatedPage = lazy(() => import('src/pages/owner/place-created'));
+
 
 // ----------------------------------------------------------------------
 
@@ -51,7 +55,15 @@ function AppRoutes() {
       children: [
         { element: <HomePage />, index: true },
         { path: 'user', element: <UserPage /> },
-        { path: 'place', element: role === 'Administrator' ? <PlacePage /> : <Navigate to="/404" replace /> },
+
+        // Phân quyền trang Place
+        {
+          path: 'place',
+          element: <PlacePage />,
+        },
+        { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
+        { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
+        { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
         { path: 'place/:id', element: <PlaceViewPage /> },
         { path: 'event', element: <EventPage /> },
         { path: 'products', element: <ProductsPage /> },
@@ -80,6 +92,7 @@ function AppRoutes() {
 export function Router() {
   return (
     <AuthProvider>
+      <CurrentPage/>
       <AppRoutes />
     </AuthProvider>
   );

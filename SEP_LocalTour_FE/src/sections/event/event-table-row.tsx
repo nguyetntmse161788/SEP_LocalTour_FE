@@ -18,6 +18,7 @@ import { Iconify } from 'src/components/iconify';
 
 export type EventProps = {
   id: number;
+  placeId: number;
   placeName: string;
   eventName: string;
   description: string;
@@ -32,9 +33,10 @@ type EventTableRowProps = {
   row: EventProps;
   selected: boolean;
   onSelectRow: () => void;
+  onUpdateStatus: (status: string) => void;
 };
 
-export function EventTableRow({ row, selected, onSelectRow }: EventTableRowProps) {
+export function EventTableRow({ row, selected, onSelectRow,onUpdateStatus }: EventTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const navigate = useNavigate(); // Hook điều hướng
 
@@ -112,17 +114,29 @@ export function EventTableRow({ row, selected, onSelectRow }: EventTableRowProps
       </TableCell>
 
 
-        {/* Nút View Details */}
-        <TableCell align="right">
-          <Button
-            variant="outlined"
-            size="small"
-            color="primary"
-            onClick={handleNavigateToDetail}
-          >
-            View Details
-          </Button>
-        </TableCell>
+      <TableCell align="center">
+        {/* Nút Approve */}
+        <Button
+          variant="contained"
+          color="success"
+          size="small"
+          disabled={row.eventStatus === 'Approved'} // Disable nếu trạng thái là Approved
+          onClick={() => onUpdateStatus('Approved')}
+        >
+          Approve
+        </Button>
+        {/* Nút Reject */}
+        <Button
+          variant="contained"
+          color="error"
+          size="small"
+          sx={{ ml: 1 }}
+          disabled={row.eventStatus === 'Rejected'} // Disable nếu trạng thái là Rejected
+          onClick={() => onUpdateStatus('Rejected')}
+        >
+          Reject
+        </Button>
+      </TableCell>
 
         {/* Menu Dấu 3 chấm */}
         <TableCell align="right">

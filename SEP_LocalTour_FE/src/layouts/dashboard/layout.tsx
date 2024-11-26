@@ -39,7 +39,9 @@ export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) 
   const [navOpen, setNavOpen] = useState(false);
 
   const layoutQuery: Breakpoint = 'lg';
-
+  const role = JSON.parse(localStorage.getItem('role') || '[]');
+  const navItems = navData(role);
+  console.log('Role::::', role);
   return (
     <LayoutSection
       /** **************************************
@@ -71,7 +73,7 @@ export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) 
                   }}
                 />
                 <NavMobile
-                  data={navData}
+                  data={navItems}
                   open={navOpen}
                   onClose={() => setNavOpen(false)}
                   workspaces={_workspaces}
@@ -111,7 +113,7 @@ export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) 
        * Sidebar
        *************************************** */
       sidebarSection={
-        <NavDesktop data={navData} layoutQuery={layoutQuery} workspaces={_workspaces} />
+        <NavDesktop data={navItems} layoutQuery={layoutQuery} workspaces={_workspaces} />
       }
       /** **************************************
        * Footer

@@ -34,21 +34,20 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
 
 // ----------------------------------------------------------------------
 
-export function getComparator<Key extends keyof any>(
-  order: 'asc' | 'desc',
-  orderBy: Key
-): (
-  a: {
-    [key in Key]: number | string;
-  },
-  b: {
-    [key in Key]: number | string;
-  }
-) => number {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
+export const getComparator = (order: 'asc' | 'desc', orderBy: string) => {
+  return (a: UserProps, b: UserProps) => {
+    if (orderBy === 'status') {
+      const statusA = Number(a.status); // Ép kiểu về number
+      const statusB = Number(b.status); // Ép kiểu về number
+      return order === 'asc' ? statusA - statusB : statusB - statusA;
+    }
+    
+    // Các điều kiện so sánh khác nếu cần thiết
+    return 0;
+  };
+};
+
+
 
 // ----------------------------------------------------------------------
 
@@ -58,22 +57,35 @@ type ApplyFilterProps = {
   comparator: (a: any, b: any) => number;
 };
 
-export function applyFilter({ inputData, comparator, filterName }: ApplyFilterProps) {
-  const stabilizedThis = inputData.map((el, index) => [el, index] as const);
-
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
-  });
-
-  inputData = stabilizedThis.map((el) => el[0]);
-
-  if (filterName) {
-    inputData = inputData.filter(
-      (user) => user.name.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
-    );
+export const applyFilter = ({
+  inputData,
+  comparator,
+  filterName,
+  filterStatus,
+}: {
+  inputData: UserProps[];
+  comparator: (a: UserProps, b: UserProps) => number;
+  filterName: string;
+  filterStatus: string | null; // Trạng thái có thể là 'Pending', 'Approved', 'Rejected' hoặc null
+}) => {
+  // Chuyển đổi filterStatus từ chuỗi thành số
+  let statusFilterValue: number | null = null;
+  if (filterStatus === 'Pending') {
+    statusFilterValue = 0;
+  } else if (filterStatus === 'Approved') {
+    statusFilterValue = 1;
+  } else if (filterStatus === 'Rejected') {
+    statusFilterValue = 2;
   }
 
-  return inputData;
-}
+  // Lọc dữ liệu theo tên và status
+  const filteredData = inputData.filter((place) => {
+    const status = Number(place.status); // Ép kiểu về number
+    const matchesStatus = statusFilterValue !== null ? status === statusFilterValue : true;
+
+    return matchesStatus;
+  });
+
+  // Sắp xếp dữ liệu theo comparator
+  return filteredData.sort(comparator);
+};

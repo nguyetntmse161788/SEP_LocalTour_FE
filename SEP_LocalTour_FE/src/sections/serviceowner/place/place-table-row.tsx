@@ -51,7 +51,7 @@ export function PlaceTableRow({ row, selected, onSelectRow }: UserTableRowProps)
  // Hàm điều hướng khi bấm vào mũi tên ngang (IconButton)
  const handleNavigateToDetail = (event: React.MouseEvent<HTMLButtonElement>) => {
   event.stopPropagation(); // Ngăn không cho sự kiện điều hướng khi nhấn mũi tên
-  navigate(`/place/${row.id}`);  // Điều hướng tới trang chi tiết của Place
+  navigate(`/owner/place/${row.id}`);  // Điều hướng tới trang chi tiết của Place
 };
 
 // Hàm xử lý sự kiện khi bấm vào dòng bảng
@@ -60,7 +60,7 @@ const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
     // Nếu click vào checkbox hoặc button thì không điều hướng
     return;
   }
-  navigate(`/place/${row.id}`);  // Điều hướng tới trang chi tiết của Place
+  navigate(`/owner/place/${row.id}`);  // Điều hướng tới trang chi tiết của Place
 };
 
 return (

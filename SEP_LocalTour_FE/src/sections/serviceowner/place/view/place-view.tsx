@@ -22,14 +22,14 @@ import type { UserProps } from '../place-table-row';
 
 // ----------------------------------------------------------------------
 
-// Hàm fetchPlaces không cần truyền filterStatus vào API
+// Hàm fetchPlaces có sử dụng token từ localStorage
 const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi') => {
   const token = localStorage.getItem('accessToken');
   console.log('Access Token:', token);  // Kiểm tra token
   
   if (!token) {
     console.error('No access token found');
-    return { items: [], totalCount: 0 };  // Trả về dữ liệu rỗng nếu không có token
+    return { items: [], totalCount: 0 };  // Trả về totalCount là 0 nếu không có token
   }
 
   try {
@@ -40,12 +40,12 @@ const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi')
     });
     console.log('API Response:', response.data);  // Kiểm tra dữ liệu trả về
     return {
-      items: response.data.items,  // Danh sách places
-      totalCount: response.data.totalCount,  // Tổng số bản ghi
+      items: response.data.items,  // Danh sách items
+      totalCount: response.data.totalCount,  // Tổng số items
     };
   } catch (error) {
     console.error("Error fetching places", error);
-    return { items: [], totalCount: 0 };  // Trả về dữ liệu rỗng nếu có lỗi
+    return { items: [], totalCount: 0 };  // Trả về mảng rỗng và totalCount là 0 nếu có lỗi
   }
 };
 
@@ -56,25 +56,22 @@ export function PlaceView() {
   const [languageCode, setLanguageCode] = useState<string>('vi'); // Ngôn ngữ mặc định là Vietnamese
   const [pageNumber, setPageNumber] = useState(1);  // Lưu trang hiện tại
   const [rowsPerPage, setRowsPerPage] = useState(5);  // Sử dụng state để lưu rowsPerPage
-  const [filterStatus, setFilterStatus] = useState<string | null>('All');  // Trạng thái mặc định là "All"
 
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy dữ liệu theo trang, số dòng và ngôn ngữ
+      const { items, totalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
       setPlaces(items);  // Cập nhật danh sách places
       setTotalCount(totalCount);  // Cập nhật totalCount
     };
     fetchData();
-  }, [pageNumber, rowsPerPage, languageCode]);  // Chạy lại khi các giá trị này thay đổi
+  }, [pageNumber, rowsPerPage, languageCode]);  // Thêm rowsPerPage vào dependencies
 
   const table = useTable();
 
-  // Áp dụng bộ lọc sau khi cập nhật dữ liệu
   const dataFiltered: UserProps[] = applyFilter({
     inputData: places,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
-    filterStatus,  // Lọc trên client
   });
 
   const notFound = !dataFiltered.length && !!filterName;
@@ -95,7 +92,6 @@ export function PlaceView() {
             setFilterName(event.target.value);
             table.onResetPage();
           }}
-          onFilterStatus={setFilterStatus}  // Cập nhật trạng thái khi người dùng chọn lọc
         />
 
         <Scrollbar>
@@ -151,14 +147,14 @@ export function PlaceView() {
 
         <TablePagination
           component="div"
-          page={pageNumber - 1}  // Sử dụng pageNumber - 1 vì TablePagination bắt đầu từ 0
+          page={pageNumber - 1}  // Chỉnh lại để bắt đầu từ trang 0
           count={totalCount}  // Dùng totalCount thay vì places.length
-          rowsPerPage={rowsPerPage}  // Sử dụng rowsPerPage
-          onPageChange={(event, newPage) => setPageNumber(newPage + 1)}  // Chỉnh lại pageNumber để bắt đầu từ 1
+          rowsPerPage={rowsPerPage}  // Cập nhật rowsPerPage
+          onPageChange={(event, newPage) => setPageNumber(newPage + 1)}  // Sử dụng pageNumber + 1
           rowsPerPageOptions={[5, 10, 25]}
           onRowsPerPageChange={(event) => {
-            setRowsPerPage(parseInt(event.target.value, 10));  // Cập nhật số dòng mỗi trang
-            setPageNumber(1);  // Reset trang về 1 khi thay đổi số dòng
+            setRowsPerPage(parseInt(event.target.value, 10));  // Cập nhật rowsPerPage
+            setPageNumber(1);  // Reset trang về 1 khi thay đổi số dòng trên mỗi trang
           }}
         />
       </Card>
@@ -197,20 +193,39 @@ export function useTable() {
       const newSelected = selected.includes(inputValue)
         ? selected.filter((value) => value !== inputValue)
         : [...selected, inputValue];
+
       setSelected(newSelected);
     },
     [selected]
   );
 
+  const onResetPage = useCallback(() => {
+    setPage(0);
+  }, []);
+
+  const onChangePage = useCallback((event: unknown, newPage: number) => {
+    setPage(newPage);
+  }, []);
+
+  const onChangeRowsPerPage = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setRowsPerPage(parseInt(event.target.value, 10));
+      onResetPage();
+    },
+    [onResetPage]
+  );
+
   return {
-    order,
-    orderBy,
-    rowsPerPage,
-    selected,
     page,
+    order,
     onSort,
-    onSelectAllRows,
+    orderBy,
+    selected,
+    rowsPerPage,
     onSelectRow,
-    onResetPage: () => setPage(0),
+    onResetPage,
+    onChangePage,
+    onSelectAllRows,
+    onChangeRowsPerPage,
   };
 }
