@@ -216,7 +216,7 @@ export function NewActivityForm({ open, onClose, onActivityCreated, placeId }: N
         </div>
 
         <div>
-          <label>Photo Display: </label>
+          Photo Display:
           <input
             type="file"
             accept="image/*"

@@ -13,12 +13,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableNoData } from '../table-no-data';
-import { EventTableRow } from 'src/sections/event/event-table-row'; 
-import { EventTableHead } from 'src/sections/event/event-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
-import { EventTableToolbar } from 'src/sections/event/event-table-toolbar';
 import { emptyRows, applyFilter, getComparator, applyFilterPlace } from '../utils';
-import type { EventProps } from 'src/sections/event/event-table-row';
 import { PlaceTableRow, UserProps } from '../place-table-row';
 import { PlaceTableHead } from '../place-table-head';
 import { PlaceTableToolbar } from '../place-table-toolbar';
@@ -61,9 +57,9 @@ export function PlaceView() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
+      const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
       setPlaces(items);  // Cập nhật danh sách places
-      setTotalCount(totalCount);  // Cập nhật totalCount
+      setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
     };
     fetchData();
   }, [pageNumber, rowsPerPage, languageCode]);  // Thêm rowsPerPage vào dependencies

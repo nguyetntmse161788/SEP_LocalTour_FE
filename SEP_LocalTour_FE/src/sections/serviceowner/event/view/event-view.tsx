@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react'; 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
@@ -10,15 +10,10 @@ import TablePagination from '@mui/material/TablePagination';
 import axios from 'axios';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableNoData } from '../table-no-data';
-import { EventTableRow } from 'src/sections/event/event-table-row'; 
-import { EventTableHead } from 'src/sections/event/event-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
-import { EventTableToolbar } from 'src/sections/event/event-table-toolbar';
 import { emptyRows, applyFilter, getComparator, applyFilterPlace } from '../utils';
-import type { EventProps } from 'src/sections/event/event-table-row';
 import { PlaceTableRow, UserProps } from '../place-table-row';
 import { PlaceTableHead } from '../place-table-head';
 import { PlaceTableToolbar } from '../place-table-toolbar';
@@ -53,7 +48,7 @@ const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi')
 
 export function PlaceView() {
   const [places, setPlaces] = useState<UserProps[]>([]);
-  const [totalCount, setTotalCount] = useState<number>(0);  // Lưu tổng số lượng bản ghi
+  const [totalCountState, setTotalCount] = useState<number>(0);  // Đổi tên state thành totalCountState để tránh xung đột
   const [filterName, setFilterName] = useState('');
   const [languageCode, setLanguageCode] = useState<string>('vi'); // Ngôn ngữ mặc định là Vietnamese
   const [pageNumber, setPageNumber] = useState(1);  // Lưu trang hiện tại
@@ -63,7 +58,7 @@ export function PlaceView() {
     const fetchData = async () => {
       const { items, totalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
       setPlaces(items);  // Cập nhật danh sách places
-      setTotalCount(totalCount);  // Cập nhật totalCount
+      setTotalCount(totalCount);  // Cập nhật totalCountState
     };
     fetchData();
   }, [pageNumber, rowsPerPage, languageCode]);  // Thêm rowsPerPage vào dependencies
@@ -150,7 +145,7 @@ export function PlaceView() {
         <TablePagination
           component="div"
           page={pageNumber - 1}  // Chỉnh lại để bắt đầu từ trang 0
-          count={totalCount}  // Dùng totalCount thay vì places.length
+          count={totalCountState}  // Dùng totalCountState thay vì totalCount
           rowsPerPage={rowsPerPage}  // Cập nhật rowsPerPage
           onPageChange={(event, newPage) => setPageNumber(newPage + 1)}  // Sử dụng pageNumber + 1
           rowsPerPageOptions={[5, 10, 25]}
@@ -231,4 +226,3 @@ export function useTable() {
     onChangeRowsPerPage,
   };
 }
-

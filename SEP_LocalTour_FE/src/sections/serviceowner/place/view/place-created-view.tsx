@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import axios from 'axios';
-import NewPlaceForm from '../view/new-place';
+
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
@@ -20,6 +20,7 @@ import { TableEmptyRows } from '../table-empty-rows';
 import { PlaceTableToolbar } from '../place-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
 import type { UserProps } from '../place-table-row';
+import NewPlaceForm from './new-place';
 
 // ----------------------------------------------------------------------
 
@@ -61,15 +62,20 @@ export function PlaceCreatedView() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
+      const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
       setPlaces(items);  // Cập nhật danh sách places
-      setTotalCount(totalCount);  // Cập nhật totalCount
+      setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
     };
     fetchData();
   }, [pageNumber, rowsPerPage, languageCode]);  // Thêm rowsPerPage vào dependencies
 
   const handlePlaceCreated = (newPlace: UserProps) => {
-    setPlaces((prevPlaces) => [...prevPlaces, newPlace]); // Thêm place mới vào đầu danh sách
+    const placeWithImageAndStatus = {
+      ...newPlace,
+      status: newPlace.status ?? '0',  // Default to '0' if status is null/undefined
+      isVerified: newPlace.isVerified ?? false
+    };
+    setPlaces((prevPlaces) => [...prevPlaces, placeWithImageAndStatus ]); // Thêm place mới vào đầu danh sách
     setTotalCount((prevCount) => prevCount + 1); // Tăng tổng số lượng bản ghi
   };
   const table = useTable();

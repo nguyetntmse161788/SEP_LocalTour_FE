@@ -59,6 +59,7 @@ function AppRoutes() {
         { path: 'user', element: <UserPage /> },
         ...(userRole.includes('Administrator') ? [
           { path: 'place', element: <PlacePage /> },
+          { path: 'place/:id', element: <PlaceViewPage /> },
           { path: 'event', element: <EventPage /> },
         ] : []),
 

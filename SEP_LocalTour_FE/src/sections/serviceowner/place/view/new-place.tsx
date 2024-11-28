@@ -30,6 +30,8 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     placeTranslations: [] as PlaceTranslation[], // Mảng chứa nhiều PlaceTranslation
     photoDisplay: null as File | null, // Lưu file hình ảnh cho PhotoDisplay
     placeMedia: [] as (File | null)[], // Mảng chứa nhiều file hình ảnh cho PlaceMedia (cho phép null)
+    isVerified: false,
+    status: '0',
   });
 
   const [tags, setTags] = useState<{ id: string; tagName: string; tagPhotoUrl: string }[]>([]);
@@ -302,7 +304,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
 
         {/* Photo Display */}
         <div style={{ marginTop: '20px' }}>
-          <label htmlFor="photoDisplay" style={{ fontWeight: 'bold' }}>Photo Display</label>
+          <div style={{ fontWeight: 'bold' }}>Photo Display</div>
           <input
             type="file"
             accept="image/*"

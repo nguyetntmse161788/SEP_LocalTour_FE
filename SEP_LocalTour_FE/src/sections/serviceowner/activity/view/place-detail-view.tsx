@@ -137,10 +137,7 @@ export function PlaceDetailView() {
           </Card>
         </Grid>
       </Grid>
-
-      {place.placeActivities?.length > 0 && (
-  <Box mt={4}>
-    <Typography variant="h5" mb={3} display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="h5" mb={3} display="flex" justifyContent="space-between" alignItems="center">
       <span>Place Activity</span>
       <Button
         variant="contained"
@@ -151,6 +148,19 @@ export function PlaceDetailView() {
         Create Activity
       </Button>
     </Typography>
+      {place.placeActivities?.length > 0 && (
+  <Box mt={4}>
+    {/* <Typography variant="h5" mb={3} display="flex" justifyContent="space-between" alignItems="center">
+      <span>Place Activity</span>
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<Iconify icon="mingcute:add-line" />}
+        onClick={() => setOpenNewActivityForm(true)}
+      >
+        Create Activity
+      </Button>
+    </Typography> */}
 
     <Grid container spacing={3}>
       {place.placeActivities.map((activity: any) => (

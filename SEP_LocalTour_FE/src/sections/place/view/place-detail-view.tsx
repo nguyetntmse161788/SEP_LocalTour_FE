@@ -157,23 +157,24 @@ export function PlaceDetailView() {
 
             {/* Show Approve/Reject buttons with disabled state */}
             <Box mt={3} display="flex" gap={2}>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={() => handleChangeStatus('1')}  // Approve
-                disabled={place.status === '1'} // Disable nếu đã Approve
-              >
-                Approved
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={() => handleChangeStatus('2')}  // Reject
-                disabled={place.status === '2'} // Disable nếu đã Reject
-              >
-                Rejected
-              </Button>
-            </Box>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => handleChangeStatus('1')}  // Approve
+              disabled={place.status === '1'} // Disable if already Approved
+            >
+              Approved
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => handleChangeStatus('2')}  // Reject
+              disabled={place.status === '2'} // Disable if already Rejected
+            >
+              Rejected
+            </Button>
+          </Box>
+
           </Card>
 
           {/* Additional Translations */}

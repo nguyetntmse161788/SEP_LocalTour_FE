@@ -183,14 +183,14 @@ export function PlaceDetailView() {
                 <Button
                   variant="contained"
                   color="success"
-                  disabled={true}  // Disable when Approved or Rejected
+                  disabled  // Disable when Approved or Rejected
                 >
                   Approve
                 </Button>
                 <Button
                   variant="contained"
                   color="error"
-                  disabled={true}  // Disable when Approved or Rejected
+                  disabled  // Disable when Approved or Rejected
                 >
                   Reject
                 </Button>

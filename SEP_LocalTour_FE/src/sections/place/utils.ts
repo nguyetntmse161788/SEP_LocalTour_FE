@@ -34,18 +34,17 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
 
 // ----------------------------------------------------------------------
 
-export const getComparator = (order: 'asc' | 'desc', orderBy: string) => {
-  return (a: UserProps, b: UserProps) => {
-    if (orderBy === 'status') {
-      const statusA = Number(a.status); // Ép kiểu về number
-      const statusB = Number(b.status); // Ép kiểu về number
-      return order === 'asc' ? statusA - statusB : statusB - statusA;
-    }
-    
-    // Các điều kiện so sánh khác nếu cần thiết
-    return 0;
-  };
+export const getComparator = (order: 'asc' | 'desc', orderBy: string) => (a: UserProps, b: UserProps) => {
+  if (orderBy === 'status') {
+    const statusA = Number(a.status); // Ép kiểu về number
+    const statusB = Number(b.status); // Ép kiểu về number
+    return order === 'asc' ? statusA - statusB : statusB - statusA;
+  }
+
+  // Các điều kiện so sánh khác nếu cần thiết
+  return 0;
 };
+
 
 
 

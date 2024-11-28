@@ -10,7 +10,7 @@ import axios from 'axios';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
-import { NewEventForm } from '../view/new-event-form'; // Import NewEventForm
+import { NewEventForm } from './new-event-form'; // Import NewEventForm
 
 export function PlaceDetailView() {
   const { id } = useParams(); // Lấy ID từ URL
@@ -78,33 +78,7 @@ export function PlaceDetailView() {
     }
   }, [id]); // Khi ID thay đổi, sẽ gọi lại API lấy sự kiện
 
-  const handleChangeStatus = async (status: string) => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      console.error('No access token found');
-      return;
-    }
 
-    try {
-      console.log(`Changing status to: ${status}`); // Log trạng thái để kiểm tra
-      const response = await axios.put(
-        `https://api.localtour.space/api/Place/changeStatusPlace?placeid=${id}&status=${status}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        console.log(`Status updated to: ${status}`); // Log khi thành công
-        setPlace((prevPlace: any) => ({ ...prevPlace, status }));
-      }
-    } catch (error) {
-      console.error("Error changing status", error);
-    }
-  };
 
   if (loading) {
     return (
@@ -204,10 +178,7 @@ export function PlaceDetailView() {
           )}
         </Grid>
       </Grid>
-
-      {placeEvents.length > 0 && (
-        <Box mt={4}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Typography variant="h5">Place Events</Typography>
             <Button
               variant="contained"
@@ -215,9 +186,12 @@ export function PlaceDetailView() {
               startIcon={<Iconify icon="mingcute:add-line" />}
               onClick={() => setOpenNewEventForm(true)}
             >
-              Create Activity
+              Create Event
             </Button>
           </Box>
+      {placeEvents.length > 0 && (
+        <Box mt={4}>
+
           <Grid container spacing={3}>
       {place.placeActivities.map((activity: any) => (
         <Grid item xs={12} sm={6} md={4} lg={3} key={activity.id}>

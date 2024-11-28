@@ -42,8 +42,8 @@ export function SignInView() {
           localStorage.clear(); // Xóa localStorage nếu token hết hạn
           router.push('/sign-in');
         }
-      } catch (error) {
-        console.error('Invalid token:', error);
+      } catch (e) {
+        console.error('Invalid token:', e);
         localStorage.clear(); // Xóa localStorage nếu token không hợp lệ
         router.push('/sign-in');
       }
@@ -63,9 +63,9 @@ export function SignInView() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phoneNumber: phoneNumber,
-          password: password,
-        }),
+          phoneNumber,
+          password,
+        }),        
       });
 
       if (!response.ok) {

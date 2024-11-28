@@ -59,9 +59,9 @@ export function PlaceView() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
+      const { items, totalCount : fetchedTotalCount} = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
       setPlaces(items);  // Cập nhật danh sách places
-      setTotalCount(totalCount);  // Cập nhật totalCount
+      setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
     };
     fetchData();
   }, [pageNumber, rowsPerPage, languageCode]);  // Thêm rowsPerPage vào dependencies
