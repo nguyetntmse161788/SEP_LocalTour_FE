@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { TextField, Autocomplete, Button, Dialog, DialogTitle, DialogContent, DialogActions, Grid } from '@mui/material';
 import { Console } from 'console';
+import MapComponent from 'src/components/map/map-component';
 import { UserProps } from '../place-table-row';
 
 interface NewPlaceFormProps {
@@ -35,7 +36,22 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   });
 
   const [tags, setTags] = useState<{ id: string; tagName: string; tagPhotoUrl: string }[]>([]);
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [longitude, setLongitude] = useState<string>('');
+  const [latitude, setLatitude] = useState<string>('');
 
+  const handleLocationSelect = (longitude: string, latitude: string) => {
+    // Cập nhật longitude và latitude vào các ô input
+    setLongitude(longitude);
+    setLatitude(latitude);
+  };
+  const handleOpenMap = () => {
+    setMapDialogOpen(true); // Mở bản đồ khi nhấn chọn địa chỉ
+  };
+
+  const handleCloseMap = () => {
+    setMapDialogOpen(false); // Đóng bản đồ khi chọn vị trí
+  };
   // Lấy danh sách tags từ API khi component được render
   useEffect(() => {
     const fetchTags = async () => {
@@ -262,25 +278,45 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
           }}
         />
 
-        {/* Longitude */}
-        <TextField
+<TextField
           fullWidth
           label="Longitude"
           name="longitude"
-          value={formData.longitude}
-          onChange={handleInputChange}
+          value={longitude}
+          onChange={(e) => setLongitude(e.target.value)}
           margin="normal"
         />
-
-        {/* Latitude */}
         <TextField
           fullWidth
           label="Latitude"
           name="latitude"
-          value={formData.latitude}
-          onChange={handleInputChange}
+          value={latitude}
+          onChange={(e) => setLatitude(e.target.value)}
           margin="normal"
         />
+        <Button onClick={handleOpenMap} variant="outlined">
+          Choose on Map
+        </Button>
+
+        <Dialog open={mapDialogOpen} onClose={() => setMapDialogOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>Select Location on Map</DialogTitle>
+          <DialogContent>
+            <MapComponent
+              latitude={parseFloat(latitude) || 10.762622}
+              longitude={parseFloat(longitude) || 106.827153}
+              onLocationSelect={handleLocationSelect}
+              onCloseMap={handleCloseMap}
+            />
+          </DialogContent>
+          {/* <DialogActions>
+            <Button onClick={() => setMapDialogOpen(false)} color="secondary">
+              Close
+            </Button>
+            <Button onClick={() => setMapDialogOpen(false)} color="primary">
+              Select Location
+            </Button>
+          </DialogActions> */}
+        </Dialog>
 
         {/* Contact Link */}
         <TextField
