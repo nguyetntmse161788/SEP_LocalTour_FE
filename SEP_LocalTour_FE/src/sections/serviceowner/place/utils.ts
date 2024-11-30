@@ -34,21 +34,19 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
 
 // ----------------------------------------------------------------------
 
-export function getComparator<Key extends keyof any>(
-  order: 'asc' | 'desc',
-  orderBy: Key
-): (
-  a: {
-    [key in Key]: number | string;
-  },
-  b: {
-    [key in Key]: number | string;
+export const getComparator = (order: 'asc' | 'desc', orderBy: string) => (a: UserProps, b: UserProps) => {
+  if (orderBy === 'status') {
+    const statusA = Number(a.status); // Ép kiểu về number
+    const statusB = Number(b.status); // Ép kiểu về number
+    return order === 'asc' ? statusA - statusB : statusB - statusA;
   }
-) => number {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
+
+  // Các điều kiện so sánh khác nếu cần thiết
+  return 0;
+};
+
+
+
 
 // ----------------------------------------------------------------------
 
@@ -58,22 +56,30 @@ type ApplyFilterProps = {
   comparator: (a: any, b: any) => number;
 };
 
-export function applyFilter({ inputData, comparator, filterName }: ApplyFilterProps) {
-  const stabilizedThis = inputData.map((el, index) => [el, index] as const);
+export const applyFilter = ({
+  inputData,
+  comparator,
+  filterName,
+  filterStatus,
+}: {
+  inputData: UserProps[];
+  comparator: (a: UserProps, b: UserProps) => number;
+  filterName: string;
+  filterStatus: string | null; // Trạng thái có thể là 'Pending', 'Approved', 'Rejected' hoặc null
+}) => {
+  const filteredData = [...inputData];
 
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
-  });
+  // if (filterName) {
+  //   filteredData = filteredData.filter((event) =>
+  //     event.name.toLowerCase().includes(filterName.toLowerCase())
+  //   );
+  // }
 
-  inputData = stabilizedThis.map((el) => el[0]);
+  // if (filterStatus) {
+  //   filteredData = filteredData.filter((event) => event.status === filterStatus);
+  // }
 
-  if (filterName) {
-    inputData = inputData.filter(
-      (user) => user.name.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
-    );
-  }
+  filteredData.sort(comparator);
 
-  return inputData;
-}
+  return filteredData;
+};

@@ -18,6 +18,14 @@ interface PlaceTranslation {
   address: string;
   contact: string;
 }
+interface Location {
+  id: string;
+  name: string;
+}
+interface Ward {
+  id: string;
+  wardName: string;
+}
 
 function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   const [formData, setFormData] = useState({
@@ -40,10 +48,22 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   const [longitude, setLongitude] = useState<string>('');
   const [latitude, setLatitude] = useState<string>('');
 
-  const handleLocationSelect = (longitude: string, latitude: string) => {
+  const [provinces, setProvinces] = useState<Location[]>([]);
+  const [districts, setDistricts] = useState<Location[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+
+
+  const handleLocationSelect = (longitudes : string , latitudes : string) => {
     // Cập nhật longitude và latitude vào các ô input
-    setLongitude(longitude);
-    setLatitude(latitude);
+    setLongitude(parseFloat(longitudes).toFixed(6));  // Giữ tối đa 6 chữ số thập phân
+    setLatitude(parseFloat(latitudes).toFixed(6)); 
+    setFormData((prevData) => ({
+      ...prevData,
+      longitude: parseFloat(longitudes).toFixed(6),
+      latitude: parseFloat(latitudes).toFixed(6),
+    }));
   };
   const handleOpenMap = () => {
     setMapDialogOpen(true); // Mở bản đồ khi nhấn chọn địa chỉ
@@ -179,13 +199,16 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     try {
       const token = localStorage.getItem('accessToken');
       const formDataToSend = new FormData();
-  
+      if (!formData.wardId) {
+        alert('Please select a ward.');
+        return;
+      }
       // Thêm các tham số vào formData
       formDataToSend.append('WardId', formData.wardId);
       formDataToSend.append('TimeOpen', formData.timeOpen);
       formDataToSend.append('TimeClose', formData.timeClose);
-      formDataToSend.append('Longitude', formData.longitude);
-      formDataToSend.append('Latitude', formData.latitude);
+      formDataToSend.append('Longitude', parseFloat(formData.longitude).toFixed(6));
+      formDataToSend.append('Latitude', parseFloat(formData.latitude).toFixed(6));
       formDataToSend.append('ContactLink', formData.contactLink);
   
       // Thêm Tags
@@ -236,6 +259,38 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     }
   };
   
+  useEffect(() => {
+  const fetchProvinces = async () => {
+    try {
+      const response = await axios.get('https://api.localtour.space/api/Address/Province');
+      setProvinces(response.data);
+    } catch (error) {
+      console.error('Error fetching provinces:', error);
+    }
+  };
+
+  fetchProvinces();
+}, []);
+
+const fetchDistricts = async (provinceId: any) => {
+  try {
+    const response = await axios.get(`https://api.localtour.space/api/Address/District?provinceI=${provinceId}`);
+    setDistricts(response.data);
+  } catch (error) {
+    console.error('Error fetching districts:', error);
+  }
+};
+
+const fetchWards = async (districtId: any) => {
+  try {
+    const response = await axios.get(`https://api.localtour.space/api/Address/Ward?cityId=${districtId}`);
+    console.log('Wards Response:', response.data);
+    setWards(response.data);
+  } catch (error) {
+    console.error('Error fetching wards:', error);
+  }
+};
+
   
 
   return (
@@ -243,14 +298,45 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
       <DialogTitle>New Place</DialogTitle>
       <DialogContent>
         {/* WardId */}
-        <TextField
-          fullWidth
-          label="Ward ID"
-          name="wardId"
-          value={formData.wardId}
-          onChange={handleInputChange}
-          margin="normal"
-        />
+        <Autocomplete
+  fullWidth
+  options={provinces}
+  getOptionLabel={(option) => option.name}
+  onChange={(event, value) => {
+    setSelectedProvince(value?.id || '');
+    setSelectedDistrict('');
+    setWards([]);
+    fetchDistricts(value?.id);
+  }}
+  renderInput={(params) => <TextField {...params} label="Province" />}
+/>
+
+<Autocomplete
+  fullWidth
+  options={districts}
+  getOptionLabel={(option) => option.name}
+  onChange={(event, value) => {
+    setSelectedDistrict(value?.id || '');
+    fetchWards(value?.id);
+  }}
+  renderInput={(params) => <TextField {...params} label="District" />}
+/>
+
+<Autocomplete
+  fullWidth
+  options={wards}
+  getOptionLabel={(option) => option.wardName || ''}
+  value={wards.find((ward) => ward.id === formData.wardId) || null} // Xác định ward được chọn từ formData
+  onChange={(event, value) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      wardId: value?.id || '', // Gán wardId hoặc để trống nếu không có giá trị
+    }));
+  }}
+  renderInput={(params) => <TextField {...params} label="Ward" />}
+  isOptionEqualToValue={(option, value) => option.id === value?.id} // So sánh chính xác giữa option và value
+/>
+
 
         {/* TimeOpen */}
         <TextField
@@ -282,7 +368,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
           fullWidth
           label="Longitude"
           name="longitude"
-          value={longitude}
+          value={formData.longitude}
           onChange={(e) => setLongitude(e.target.value)}
           margin="normal"
         />
@@ -290,7 +376,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
           fullWidth
           label="Latitude"
           name="latitude"
-          value={latitude}
+          value={formData.latitude}
           onChange={(e) => setLatitude(e.target.value)}
           margin="normal"
         />

@@ -151,7 +151,7 @@ export function PlaceDetailView() {
                 <Typography variant="h6">Latitude: {place.latitude}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="h6">Status: {place.status === '1' ? 'Approved' : place.status === '2' ? 'Rejected' : 'Pending'}</Typography>
+                <Typography variant="h6">Status: {place.status === 'Approved' ? 'Approved' : place.status === 'Rejected' ? 'Rejected' : 'Pending'}</Typography>
               </Grid>
             </Grid>
 

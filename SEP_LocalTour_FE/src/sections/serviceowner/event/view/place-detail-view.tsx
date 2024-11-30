@@ -61,7 +61,7 @@ export function PlaceDetailView() {
       }
 
       try {
-        const response = await axios.get(`https://api.localtour.space/api/Event/getall?placeid=${id}`, {
+        const response = await axios.get(`https://api.localtour.space/api/Event/getall?placeid=${id}&languageCode=vi`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -158,7 +158,7 @@ export function PlaceDetailView() {
                 <Typography variant="h6">Latitude: {place.latitude}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="h6">Status: {place.status === '1' ? 'Approved' : place.status === '2' ? 'Rejected' : 'Pending'}</Typography>
+                <Typography variant="h6">Status: {place.status === 'Approved' ? 'Approved' : place.status === 'Rejected' ? 'Rejected' : 'Pending'}</Typography>
               </Grid>
             </Grid>
           </Card>
@@ -189,20 +189,17 @@ export function PlaceDetailView() {
               Create Event
             </Button>
           </Box>
-      {placeEvents.length > 0 && (
-        <Box mt={4}>
-
-          <Grid container spacing={3}>
-      {place.placeActivities.map((activity: any) => (
-        <Grid item xs={12} sm={6} md={4} lg={3} key={activity.id}>
-          {/* Card hiển thị thông tin Activity */}
+          {placeEvents.length > 0 ? (
+  <Box mt={4}>
+    <Grid container spacing={3}>
+      {placeEvents.map((event: any) => (
+        <Grid item xs={12} sm={6} md={4} lg={3} key={event.id}>
           <Card sx={{ p: 2, boxShadow: 2, borderRadius: 2 }}>
             <Box position="relative" mb={2}>
-              {/* Hình ảnh Activity */}
-              {activity.photoDisplay ? (
+              {event.eventPhotoDisplay ? (
                 <img
-                  src={activity.photoDisplay}
-                  alt={activity.placeActivityTranslations[0]?.activityName || "Activity"}
+                  src={event.eventPhotoDisplay}
+                  alt={event.eventName || "Event"}
                   style={{
                     width: "100%",
                     height: "auto",
@@ -211,7 +208,6 @@ export function PlaceDetailView() {
                   }}
                 />
               ) : (
-                // Nếu không có ảnh, hiển thị chữ cái đầu của Name
                 <Box
                   display="flex"
                   justifyContent="center"
@@ -226,68 +222,44 @@ export function PlaceDetailView() {
                     color: "#888",
                   }}
                 >
-                  {activity.placeActivityTranslations[0]?.activityName?.charAt(0)}
-                </Box>
-              )}
-
-              {/* Badge SALE */}
-              {activity.placeActivityTranslations[0]?.discount > 0 && (
-                <Box
-                  position="absolute"
-                  top={8}
-                  right={8}
-                  bgcolor="error.main"
-                  color="white"
-                  px={1}
-                  py={0.5}
-                  borderRadius={1}
-                  fontSize="12px"
-                  fontWeight="bold"
-                >
-                  SALE
+                  {event.eventName?.charAt(0)}
                 </Box>
               )}
             </Box>
 
-            {/* Tên Activity */}
             <Typography
               variant="h6"
               fontWeight="bold"
               textAlign="center"
               mb={1}
             >
-              {activity.placeActivityTranslations[0]?.activityName}
+              {event.eventName}
             </Typography>
 
-            {/* Giá và thông tin bổ sung */}
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Box>
-                {/* Giá Activity */}
-                <Typography variant="subtitle1" color="text.secondary">
-                  {new Intl.NumberFormat('vi-VN', {
-                    style: 'currency',
-                    currency: activity.placeActivityTranslations[0]?.priceType && /^[A-Z]{3}$/.test(activity.placeActivityTranslations[0]?.priceType)
-                      ? activity.placeActivityTranslations[0]?.priceType 
-                      : 'VND', // Default to 'VND' if invalid
-                  }).format(activity.placeActivityTranslations[0]?.price)}
-                </Typography>
-              </Box>
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              Start Date: {event.startDate}
+            </Typography>
 
-              {/* Trạng thái hoặc nút thêm */}
-              <Button
-                variant="outlined"
-                size="small"
-                color="primary"
-              >
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              End Date: {event.endDate}
+            </Typography>
+
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Button variant="outlined" size="small" color="primary">
                 View
               </Button>
             </Box>
           </Card>
         </Grid>
-            ))}
-          </Grid>
-        </Box>
-      )}
+      ))}
+    </Grid>
+  </Box>
+) : (
+  <Typography variant="body1" color="text.secondary" mt={3}>
+    No events found for this place.
+  </Typography>
+)}
+
 
       {/* Hiển thị form tạo sự kiện */}
       <NewEventForm

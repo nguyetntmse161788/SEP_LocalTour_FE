@@ -31,7 +31,7 @@ export const navData = (role: string | null): NavItem[] => {
     },
     {
       title: 'Place',
-      path: isAdmin ? '/place' : isModerator ? '/mod/place' : isServiceOwner ? '/owner/place' : '/404',
+      path: isModerator ? '/place' : isAdmin ? '/admin/place' : isServiceOwner ? '/owner/place' : '/404',
       icon: icon('ic-cart'),
     },
     isServiceOwner && {
@@ -41,12 +41,12 @@ export const navData = (role: string | null): NavItem[] => {
     },
     {
       title: 'Event',
-      path: isAdmin ? '/event' : isModerator ? '/mod/event' : isServiceOwner ? '/owner/event' : '/404',
+      path: isModerator ? '/event' : isAdmin ? '/admin/event' : isServiceOwner ? '/owner/event' : '/404',
       icon: icon('ic-cart'),
     },
-    {
+    isServiceOwner && {
       title: 'Place Activity',
-      path: isAdmin ? '/activity' : isModerator ? '/mod/activity' : isServiceOwner ? '/owner/activity' : '/404',
+      path: '/owner/activity',
       icon: icon('ic-cart'),
       info: (
         <Label color="error" variant="inverted">

@@ -151,7 +151,7 @@ export function PlaceDetailView() {
                 <Typography variant="h6">Latitude: {place.latitude}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="h6">Status: {place.status === '1' ? 'Approved' : place.status === '2' ? 'Rejected' : 'Pending'}</Typography>
+                <Typography variant="h6">Status: {place.status === 'Approved' ? 'Approved' : place.status === 'Rejected' ? 'Rejected' : 'Pending'}</Typography>
               </Grid>
             </Grid>
 
@@ -160,16 +160,16 @@ export function PlaceDetailView() {
             <Button
               variant="contained"
               color="success"
-              onClick={() => handleChangeStatus('1')}  // Approve
-              disabled={place.status === '1'} // Disable if already Approved
+              onClick={() => handleChangeStatus('Approved')}  // Approve
+              disabled={place.status === 'Approved'} // Disable if already Approved
             >
               Approved
             </Button>
             <Button
               variant="contained"
               color="error"
-              onClick={() => handleChangeStatus('2')}  // Reject
-              disabled={place.status === '2'} // Disable if already Rejected
+              onClick={() => handleChangeStatus('Rejected')}  // Reject
+              disabled={place.status === 'Rejected'} // Disable if already Rejected
             >
               Rejected
             </Button>

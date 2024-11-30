@@ -14,7 +14,13 @@ export function NewEventForm({ open, onClose, onEventCreated, placeId }: NewEven
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [eventPhoto, setPhoto] = useState<File | null>(null); // Thêm state cho ảnh
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setPhoto(e.target.files[0]);
+    }
+  };
   const handleCreateEvent = async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -33,6 +39,9 @@ export function NewEventForm({ open, onClose, onEventCreated, placeId }: NewEven
     formData.append('description', description);
     formData.append('startDate', formattedStartDate);
     formData.append('endDate', formattedEndDate);
+    if (eventPhoto) {
+      formData.append('eventPhoto', eventPhoto); // Thêm ảnh vào FormData
+    }
   
     console.log("Data being sent to API:", formData);  // Kiểm tra dữ liệu
   
@@ -60,6 +69,7 @@ export function NewEventForm({ open, onClose, onEventCreated, placeId }: NewEven
     setDescription('');
     setStartDate('');
     setEndDate('');
+    setPhoto(null); 
   };
   
   
@@ -97,6 +107,13 @@ export function NewEventForm({ open, onClose, onEventCreated, placeId }: NewEven
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
           margin="normal"
+        />
+        <input
+          id="event-photo"
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoChange}
+          style={{ marginTop: '1rem' }}
         />
       </DialogContent>
       <DialogActions>

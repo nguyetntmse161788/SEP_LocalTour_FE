@@ -6,6 +6,7 @@ import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { CurrentPage } from 'src/layouts/components/currentpage';
+import { PrivateRoute } from 'src/sections/auth/privateroute';
 
 // ----------------------------------------------------------------------
 
@@ -41,38 +42,43 @@ const renderFallback = (
 );
 
 function AppRoutes() {
-  const token = localStorage.getItem('accessToken'); // Kiểm tra token từ localStorage
   const userRole = JSON.parse(localStorage.getItem('role') || '[]');
+
   return useRoutes([
     {
-      element: token ? (
-        <DashboardLayout>
-          <Suspense fallback={renderFallback}>
-            <Outlet />
-          </Suspense>
-        </DashboardLayout>
-      ) : (
-        <Navigate to="/sign-in" replace />
+      element: (
+        <PrivateRoute>
+          <DashboardLayout>
+            <Suspense fallback={renderFallback}>
+              <Outlet />
+            </Suspense>
+          </DashboardLayout>
+        </PrivateRoute>
       ),
       children: [
         { element: <HomePage />, index: true },
         { path: 'user', element: <UserPage /> },
-        ...(userRole.includes('Administrator') ? [
-          { path: 'place', element: <PlacePage /> },
-          { path: 'place/:id', element: <PlaceViewPage /> },
-          { path: 'event', element: <EventPage /> },
-        ] : []),
 
-        // Các trang cho người dùng là Service Owner
-        ...(userRole.includes('Service Owner') ? [
-          { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
-          { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
-          { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
-          { path: 'owner/event', element: <ServiceOwnerEventPage /> },
-          { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
-          { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
-          { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
-        ] : []),
+        ...(userRole.includes('Moderator')
+          ? [
+              { path: 'place', element: <PlacePage /> },
+              { path: 'place/:id', element: <PlaceViewPage /> },
+              { path: 'event', element: <EventPage /> },
+            ]
+          : []),
+
+        ...(userRole.includes('Service Owner')
+          ? [
+              { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
+              { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
+              { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
+              { path: 'owner/event', element: <ServiceOwnerEventPage /> },
+              { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
+              { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
+              { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
+            ]
+          : []),
+
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
       ],
@@ -95,6 +101,7 @@ function AppRoutes() {
     },
   ]);
 }
+
 
 export function Router() {
   return (

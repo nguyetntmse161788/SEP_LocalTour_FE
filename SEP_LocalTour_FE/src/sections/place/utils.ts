@@ -67,24 +67,19 @@ export const applyFilter = ({
   filterName: string;
   filterStatus: string | null; // Trạng thái có thể là 'Pending', 'Approved', 'Rejected' hoặc null
 }) => {
-  // Chuyển đổi filterStatus từ chuỗi thành số
-  let statusFilterValue: number | null = null;
-  if (filterStatus === 'Pending') {
-    statusFilterValue = 0;
-  } else if (filterStatus === 'Approved') {
-    statusFilterValue = 1;
-  } else if (filterStatus === 'Rejected') {
-    statusFilterValue = 2;
-  }
+  const filteredData = [...inputData];
 
-  // Lọc dữ liệu theo tên và status
-  const filteredData = inputData.filter((place) => {
-    const status = Number(place.status); // Ép kiểu về number
-    const matchesStatus = statusFilterValue !== null ? status === statusFilterValue : true;
+  // if (filterName) {
+  //   filteredData = filteredData.filter((event) =>
+  //     event.name.toLowerCase().includes(filterName.toLowerCase())
+  //   );
+  // }
 
-    return matchesStatus;
-  });
+  // if (filterStatus) {
+  //   filteredData = filteredData.filter((event) => event.status === filterStatus);
+  // }
 
-  // Sắp xếp dữ liệu theo comparator
-  return filteredData.sort(comparator);
+  filteredData.sort(comparator);
+
+  return filteredData;
 };

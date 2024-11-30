@@ -23,7 +23,7 @@ import type { UserProps } from '../place-table-row';
 // ----------------------------------------------------------------------
 
 // Hàm fetchPlaces không cần truyền filterStatus vào API
-const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi') => {
+const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi',searchTerm = '',Status:  string | null = '') => {
   const token = localStorage.getItem('accessToken');
   console.log('Access Token:', token);  // Kiểm tra token
   
@@ -33,7 +33,7 @@ const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi')
   }
 
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Place/getAll?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}`, {
+    const response = await axios.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }
@@ -56,16 +56,16 @@ export function PlaceView() {
   const [languageCode, setLanguageCode] = useState<string>('vi'); // Ngôn ngữ mặc định là Vietnamese
   const [pageNumber, setPageNumber] = useState(1);  // Lưu trang hiện tại
   const [rowsPerPage, setRowsPerPage] = useState(5);  // Sử dụng state để lưu rowsPerPage
-  const [filterStatus, setFilterStatus] = useState<string | null>('All');  // Trạng thái mặc định là "All"
+  const [filterStatus, setFilterStatus] = useState<string | null>('');
 
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy dữ liệu theo trang, số dòng và ngôn ngữ
+      const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode,filterName,filterStatus);  // Lấy dữ liệu theo trang, số dòng và ngôn ngữ
       setPlaces(items);  // Cập nhật danh sách places
       setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
     };
     fetchData();
-  }, [pageNumber, rowsPerPage, languageCode]);  // Chạy lại khi các giá trị này thay đổi
+  }, [pageNumber, rowsPerPage, languageCode, filterName,filterStatus]);  // Chạy lại khi các giá trị này thay đổi
 
   const table = useTable();
 
@@ -89,13 +89,16 @@ export function PlaceView() {
 
       <Card>
         <PlaceTableToolbar
-          numSelected={table.selected.length}
-          filterName={filterName}
-          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setFilterName(event.target.value);
-            table.onResetPage();
-          }}
-          onFilterStatus={setFilterStatus}  // Cập nhật trạng thái khi người dùng chọn lọc
+            numSelected={table.selected.length}
+            filterName={filterName}
+            onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setFilterName(event.target.value); // Cập nhật giá trị tìm kiếm
+              setPageNumber(1); // Reset về trang đầu tiên
+            }}
+            onFilterStatus={(status) => {
+              setFilterStatus(status || ''); 
+              setPageNumber(1);
+            }}
         />
 
         <Scrollbar>

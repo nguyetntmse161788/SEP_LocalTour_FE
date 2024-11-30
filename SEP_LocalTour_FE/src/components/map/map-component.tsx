@@ -93,7 +93,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ latitude, longitude, onLoca
   
         // Cập nhật tọa độ lên parent component
         onLocationSelect(lng.toString(), lat.toString());
-  
+        setSearchResults([]);
+        setSearchQuery(address);
         // Hiển thị địa chỉ đầy đủ nếu có
         const fullAddress = address || `${data.result.district}, ${data.result.city}`;
         console.log('Địa chỉ đầy đủ:', fullAddress);
@@ -126,24 +127,33 @@ const MapComponent: React.FC<MapComponentProps> = ({ latitude, longitude, onLoca
 
       {/* Hiển thị danh sách các kết quả tìm kiếm */}
       {searchResults.length > 0 && (
-        <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #ccc' }}>
-          {searchResults.map((result) => (
-            <div
-              key={result.ref_id}
-              style={{ padding: '8px', cursor: 'pointer' }}
-              onClick={() => handleLocationSelect(result.address, result.ref_id)}
-            >
-              {result.display}
-            </div>
-          ))}
-        </div>
-      )}
+  <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #ccc' }}>
+    {searchResults.map((result) => (
+      <div
+        key={result.ref_id}
+        style={{ padding: '8px', cursor: 'pointer' }}
+        role="button" // Accessibility: this element behaves like a button
+        tabIndex={0} // Make it focusable for keyboard navigation
+        onClick={() => handleLocationSelect(result.address, result.ref_id)} // Handle click
+        onKeyDown={(e) => {
+          // Allow keyboard interaction with Enter or Space keys
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleLocationSelect(result.address, result.ref_id);
+          }
+        }}
+      >
+        {result.display}
+      </div>
+    ))}
+  </div>
+)}
+
 
       {/* Bản đồ */}
       <div ref={mapRef} style={{ width: '100%', height: '300px' }} />
       <div className="map-actions">
-        <button onClick={handleSelectLocation} className="btn-select">Select Location</button>
-        <button onClick={onCloseMap} className="btn-close">Close</button>
+        <button onClick={handleSelectLocation} className="btn-select" type="button">Select Location</button>
+        <button onClick={onCloseMap} className="btn-close" type="button">Close</button>
       </div>
     </div>
   );

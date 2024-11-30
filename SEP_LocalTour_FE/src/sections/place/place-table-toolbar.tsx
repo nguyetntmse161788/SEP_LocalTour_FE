@@ -23,8 +23,9 @@ export function PlaceTableToolbar({ numSelected, filterName, onFilterName, onFil
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const handleFilterClick = (status: string | null) => {
-    setActiveFilter(status);
-    onFilterStatus(status);
+    const statusValue = status === 'All' ? '' : status; // 'All' sẽ thành chuỗi rỗng
+    setActiveFilter(statusValue);
+    onFilterStatus(statusValue);
     setAnchorEl(null); // Đóng popover sau khi chọn filter
   };
 
@@ -59,7 +60,7 @@ export function PlaceTableToolbar({ numSelected, filterName, onFilterName, onFil
           fullWidth
           value={filterName}
           onChange={onFilterName}
-          placeholder="Search event..."
+          placeholder="Search place..."
           startAdornment={
             <InputAdornment position="start">
               <Iconify width={20} icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
