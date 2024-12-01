@@ -217,12 +217,10 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
       });
   
       // Thêm PlaceTranslations
-      formData.placeTranslations.forEach((translation) => {
-        formDataToSend.append(
-          'PlaceTranslation',
-          JSON.stringify(translation) // Đảm bảo PlaceTranslation được gửi dưới dạng JSON string
-        );
-      });
+      formDataToSend.append(
+        'PlaceTranslation', // Tên key API yêu cầu
+        JSON.stringify(formData.placeTranslations) // Chuyển mảng thành JSON
+      );
   
       // Thêm file PhotoDisplay nếu có
       if (formData.photoDisplay) {

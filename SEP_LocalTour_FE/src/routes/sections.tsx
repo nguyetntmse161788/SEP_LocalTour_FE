@@ -12,7 +12,7 @@ import { PrivateRoute } from 'src/sections/auth/privateroute';
 
 export const HomePage = lazy(() => import('src/pages/home'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
-export const UserPage = lazy(() => import('src/pages/user'));
+export const UserPage = lazy(() => import('src/pages/admin/user'));
 export const PlacePage = lazy(() => import('src/pages/place'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
@@ -26,6 +26,12 @@ export const ServiceOwnerEventPage = lazy(() => import('src/pages/owner/event'))
 export const ServiceOwnerEventViewPage = lazy(() => import('src/pages/owner/place-event-view'));
 export const ServiceOwnerActivityPage = lazy(() => import('src/pages/owner/activity'));
 export const ServiceOwnerActivityViewPage = lazy(() => import('src/pages/owner/place-activity-view'));
+
+export const UserRolePage = lazy(() => import('src/pages/admin/user-role'));
+export const UserBanPage = lazy(() => import('src/pages/admin/user-ban'));
+export const ReportUserView = lazy(() => import('src/pages/admin/user-report'))
+export const UserUpdatePage = lazy(() => import('src/pages/admin/user-update'));
+export const RegisterPage = lazy(() => import('src/pages/admin/register-user'));
 // ----------------------------------------------------------------------
 
 const renderFallback = (
@@ -57,7 +63,6 @@ function AppRoutes() {
       ),
       children: [
         { element: <HomePage />, index: true },
-        { path: 'user', element: <UserPage /> },
 
         ...(userRole.includes('Moderator')
           ? [
@@ -76,6 +81,18 @@ function AppRoutes() {
               { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
               { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
               { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
+            ]
+          : []),
+          ...(userRole.includes('Administrator')
+          ? [
+            { path: 'admin/user', element: <UserPage /> },
+            { path: 'admin/role', element: <UserRolePage /> },
+            // { path: 'admin', element: <AdminPage /> },
+            { path: 'admin/register', element: <RegisterPage /> },
+            { path: 'admin/ban', element: <UserBanPage /> },
+            { path: 'admin/role', element: <UserRolePage /> },
+            { path: 'admin/updateUser', element: <UserUpdatePage /> },
+            { path: 'admin/reportUser', element: <ReportUserView /> }
             ]
           : []),
 

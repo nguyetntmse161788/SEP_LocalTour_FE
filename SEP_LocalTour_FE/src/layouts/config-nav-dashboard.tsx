@@ -24,14 +24,24 @@ export const navData = (role: string | null): NavItem[] => {
       path: '/',
       icon: icon('ic-analytics'),
     },
-    {
+    isAdmin && {
       title: 'User',
-      path: '/user',
+      path: '/admin/user',
       icon: icon('ic-user'),
     },
-    {
+    isAdmin && {
+      title: 'User Report',
+      path: '/admin/reportUser',
+      icon: icon('ic-user'),
+    },
+    isServiceOwner&& {
       title: 'Place',
-      path: isModerator ? '/place' : isAdmin ? '/admin/place' : isServiceOwner ? '/owner/place' : '/404',
+      path: '/owner/place',
+      icon: icon('ic-cart'),
+    },
+    isModerator && {
+      title: 'Place',
+      path:'/place',
       icon: icon('ic-cart'),
     },
     isServiceOwner && {
@@ -39,9 +49,14 @@ export const navData = (role: string | null): NavItem[] => {
       path: '/owner/created',
       icon: icon('ic-cart'),
     },
-    {
+    isServiceOwner && {
       title: 'Event',
-      path: isModerator ? '/event' : isAdmin ? '/admin/event' : isServiceOwner ? '/owner/event' : '/404',
+      path:'/owner/event',
+      icon: icon('ic-cart'),
+    },
+    isModerator && {
+      title: 'Event',
+      path: '/event',
       icon: icon('ic-cart'),
     },
     isServiceOwner && {
