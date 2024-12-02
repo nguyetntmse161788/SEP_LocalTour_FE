@@ -1,17 +1,18 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Box, Card, CardContent, Typography, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import axios from 'axios'; 
+import axios from 'axios';
 
 export function UserRolePage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, userId, userName, role } = location.state || {}; // Get user, userId, and role from state
-  const [selectedRole, setSelectedRole] = useState(role || ''); // Initialize with current role
+  const { user, userId, username, roles } = location.state || {}; // Get user, userId, and role from state
+  const [selectedRole, setSelectedRole] = useState(roles || ''); // Initialize with current role
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [userRoles, setUserRoles] = useState(roles || []);
 
-  const token = localStorage.getItem('accessToken');  
+  const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
     if (!user) {
@@ -23,6 +24,53 @@ export function UserRolePage() {
     setSelectedRole(event.target.value);
   };
 
+  const handleRemoveRole = async (roleToRemove: any) => {
+    if (!token) {
+      setError('Authentication required. Please log in again.');
+      return;
+    }
+
+    try {
+      // Construct the API URL for removing the role
+      const url = `https://api.localtour.space/api/User/removeRole?userId=${userId}&role=${roleToRemove}`;
+
+      // Make the API call to remove the role
+      const response = await axios.post(url, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status === 200) {
+        // Role removed successfully, now fetch the updated roles
+        await fetchUserRoles(); // Fetch updated roles
+        setSuccess(`Role "${roleToRemove}" removed successfully.`);
+        setTimeout(() => {
+          navigate('/admin/user'); // Redirect to /admin/user page
+        }, 500); // Optionally delay the redirect to show the success message
+      } else {
+        setError('Failed to remove role. Please try again.');
+      }
+    } catch (err) {
+      setError('Failed to remove role. Please try again.');
+    }
+  };
+
+  const fetchUserRoles = async () => {
+    try {
+      const url = `https://api.localtour.space/api/User/getRoles?userId=${userId}`;
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status === 200) {
+        setUserRoles(response.data.roles); // Update state with the new roles
+      } else {
+        setError('Failed to fetch updated roles. Please try again.');
+      }
+    } catch (err) {
+      setError('Failed to fetch updated roles. Please try again.');
+    }
+  };
+
   const handleSaveRole = async () => {
     if (!token) {
       setError('Authentication required. Please log in again.');
@@ -30,13 +78,13 @@ export function UserRolePage() {
     }
 
     try {
-      // Construct the API URL
+      // Construct the API URL for adding the role
       const url = `https://api.localtour.space/api/User/addRole?userId=${userId}&role=${selectedRole}`;
-      
+
       // Send the data as a POST request with the required parameters and authorization header
       const response = await axios.post(url, {
         userId,
-        userName,
+        username,
         role: selectedRole,
       }, {
         headers: { Authorization: `Bearer ${token}` },
@@ -44,6 +92,9 @@ export function UserRolePage() {
 
       if (response.status === 200) {
         setSuccess('Role updated successfully!');
+        setTimeout(() => {
+          navigate('/admin/user'); // Redirect to /admin/user page after success
+        }, 500); // Optionally delay the redirect to show the success message
       }
     } catch (err) {
       setError('Failed to update role. Please try again.');
@@ -86,11 +137,41 @@ export function UserRolePage() {
                 <strong>ID:</strong> {userId}
               </Typography>
               <Typography variant="body1" marginBottom={1}>
-                <strong>User Name:</strong> {userName}
+                <strong>User Name:</strong> {username}
               </Typography>
               <Typography variant="body1" marginBottom={1}>
-                <strong>Current Role:</strong> {role}
+                <strong>Current Role:</strong>
               </Typography>
+
+              {userRoles && Array.isArray(userRoles) && userRoles.length > 0 ? (
+                <ul>
+                  {userRoles.map((roleItem, index) => (
+                    <li
+                      key={index}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '10px',
+                      }}
+                    >
+                      {roleItem}
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={() => handleRemoveRole(roleItem)}
+                      >
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <Typography variant="body2" color="textSecondary">
+                  No roles found.
+                </Typography>
+              )}
 
               <FormControl fullWidth margin="normal">
                 <InputLabel>New Role</InputLabel>
@@ -115,7 +196,7 @@ export function UserRolePage() {
           )}
 
           <Box textAlign="center" marginTop={2}>
-            <Button variant="text" onClick={() => navigate('/admin/user ')} sx={{ width: '100%' }}>
+            <Button variant="text" onClick={() => navigate('/admin/user')} sx={{ width: '100%' }}>
               Go to Profile
             </Button>
           </Box>

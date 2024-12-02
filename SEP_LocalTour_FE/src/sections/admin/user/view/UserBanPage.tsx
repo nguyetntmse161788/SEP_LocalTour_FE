@@ -5,7 +5,7 @@ import axios from 'axios';
 
 export function UserBanPage() {
   const { state } = useLocation();
-  const { userId, userName, endDate } = state || {};
+  const { userId, username, endDate } = state || {};
   const [banEndDate, setBanEndDate] = useState(endDate || '');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -90,13 +90,13 @@ export function UserBanPage() {
             </Typography>
           )}
 
-          {userId && userName && (
+          {userId && username && (
             <>
               <Typography variant="body1" marginBottom={1}>
                 <strong>ID:</strong> {userId}
               </Typography>
               <Typography variant="body1" marginBottom={1}>
-                <strong>User Name:</strong> {userName}
+                <strong>User Name:</strong> {username}
               </Typography>
               <TextField
                 label="Ban End Date"

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios'; // Import axios
-
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -34,7 +33,7 @@ export function UserView() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [filterName, setFilterName] = useState('');
-  const table = useTable(); // Hook quản lý bảng
+  const table = useTable(); // Hook to manage table state
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -44,35 +43,35 @@ export function UserView() {
       navigate('/login');
       return;
     }
-  
+
     const decodedToken = JSON.parse(atob(token.split('.')[1]));
     const currentTime = Math.floor(Date.now() / 1000);
-  
+
     if (decodedToken.exp < currentTime) {
       setError('Token has expired. Please log in again.');
       setLoading(false);
       navigate('/sign-in');
       return;
     }
-  
+
     fetchUsers(token);
   }, [navigate]);
-  
+
   const fetchUsers = async (token: string) => {
     try {
-      const response = await axios.get('https://api.localtour.space/api/User', {
+      const response = await axios.get('https://api.localtour.space/api/User/getlist', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(response.data);
+      console.log('Fetched Users:', response.data);
+      setUsers([...response.data]);
     } catch (err) {
       setError('Failed to fetch users');
     } finally {
       setLoading(false);
     }
   };
-  
 
-  // Dữ liệu đã lọc theo tìm kiếm
+  // Filtered data based on search input
   const dataFiltered = applyFilter({
     inputData: users,
     comparator: getComparator(table.order, table.orderBy),
@@ -85,17 +84,6 @@ export function UserView() {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* <Box display="flex" alignItems="center" mb={5}>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={() => navigate('/admin/register')}
-        >
-          New user
-        </Button>
-      </Box> */}
-
       <Card>
         <UserTableToolbar
           filterName={filterName}
@@ -115,26 +103,21 @@ export function UserView() {
                 rowCount={users.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}
-                // onSelectAllRows={(checked) =>
-                //   table.onSelectAllRows(checked, users.map((user) => user.id))
-                // }
                 headLabel={[
                   { id: 'avatar', label: 'Avatar' },
-                  // { id: 'id', label: 'Id' },
-                  { id: 'username', label: 'Username' },
+                  { id: 'username', label: 'User name' },
                   { id: 'email', label: 'Email' },
                   { id: 'fullname', label: 'Full Name' },
                   { id: 'phone', label: 'Phone' },
-                  { id: 'DoB', label: 'Date of Birth' },
-                  { id: 'address', label: 'Address' },
-                  { id: 'button', label: 'Action' },  // Changed to more appropriate label
+                  { id: 'role', label: 'Role' },
+                  { id: 'button', label: 'Action' },
                 ]}
               />
 
               <TableBody>
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">Loading...</TableCell>  {/* Adjusted to cover all columns */}
+                    <TableCell colSpan={8} align="center">Loading...</TableCell>
                   </TableRow>
                 )}
 
@@ -198,14 +181,6 @@ export function useTable() {
     setOrderBy(id);
   }, [order, orderBy]);
 
-  const onSelectAllRows = useCallback((checked: boolean, newSelecteds: string[]) => {
-    if (checked) {
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  }, []);
-
   const onSelectRow = useCallback(
     (inputValue: string) => {
       setSelected((prev) =>
@@ -238,7 +213,6 @@ export function useTable() {
     selected,
     onSort,
     onSelectRow,
-    onSelectAllRows,
     onResetPage,
     onChangePage,
     onChangeRowsPerPage,
