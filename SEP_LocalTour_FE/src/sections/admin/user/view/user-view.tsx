@@ -85,7 +85,7 @@ export function UserView() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box display="flex" alignItems="center" mb={5}>
+      {/* <Box display="flex" alignItems="center" mb={5}>
         <Button
           variant="contained"
           color="inherit"
@@ -94,7 +94,7 @@ export function UserView() {
         >
           New user
         </Button>
-      </Box>
+      </Box> */}
 
       <Card>
         <UserTableToolbar

@@ -19,7 +19,7 @@ export type UserProps = {
   address: string;
   gender: 'Male' | 'Female' | 'Other';
   profilePictureUrl: string;
-  role: string; // Thêm role vào đối tượng UserProps
+  role: string;
   endDate: Date;
 };
 
@@ -145,14 +145,15 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         {/* <IconButton>
           <Iconify icon="eva:more-vertical-fill" />
         </IconButton> */}
-        <Button
+        
+        {/* <Button
           variant="outlined"
           color="primary"
           sx={{ margin: '0 5px' }}
           onClick={() => navigate('/admin/updateUser', { state: { user: row } })}
         >
           Update Profile
-        </Button>
+        </Button> */}
 
         <Button variant="outlined" color="primary" sx={{ margin: '0 5px' }} onClick={() => handleSetRole(row.id, row.userName, row.role)}>
           Set Role

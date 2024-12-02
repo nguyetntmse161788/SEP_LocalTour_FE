@@ -69,26 +69,26 @@ export const navData = (role: string | null): NavItem[] => {
         </Label>
       ),
     },
-    {
-      title: 'Product',
-      path: '/products',
-      icon: icon('ic-cart'),
-      info: (
-        <Label color="error" variant="inverted">
-          +3
-        </Label>
-      ),
-    },
-    {
-      title: 'Blog',
-      path: '/blog',
-      icon: icon('ic-blog'),
-    },
-    {
-      title: 'Not found',
-      path: '/404',
-      icon: icon('ic-disabled'),
-    },
+    // {
+    //   title: 'Product',
+    //   path: '/products',
+    //   icon: icon('ic-cart'),
+    //   info: (
+    //     <Label color="error" variant="inverted">
+    //       +3
+    //     </Label>
+    //   ),
+    // },
+    // {
+    //   title: 'Blog',
+    //   path: '/blog',
+    //   icon: icon('ic-blog'),
+    // },
+    // {
+    //   title: 'Not found',
+    //   path: '/404',
+    //   icon: icon('ic-disabled'),
+    // },
   ];
 
   return navItems.filter((item): item is NavItem => Boolean(item));

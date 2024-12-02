@@ -125,7 +125,7 @@ export function UserBanPage() {
           )}
 
           <Box textAlign="center" marginTop={2}>
-            <Button variant="text" onClick={() => navigate('/admin')} sx={{ width: '100%' }}>
+            <Button variant="text" onClick={() => navigate('/admin/user ')} sx={{ width: '100%' }}>
               Go to Profile
             </Button>
           </Box>

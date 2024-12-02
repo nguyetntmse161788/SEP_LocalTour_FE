@@ -48,7 +48,14 @@ const renderFallback = (
 );
 
 function AppRoutes() {
-  const userRole = JSON.parse(localStorage.getItem('role') || '[]');
+  const userRole = (() => {
+    try {
+      const data = JSON.parse(localStorage.getItem('role') || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  })();
 
   return useRoutes([
     {
