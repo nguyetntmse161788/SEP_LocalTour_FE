@@ -1,30 +1,37 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { Outlet, Navigate, useRoutes } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
-import AdminPage from 'src/pages/AdminPage';
-import UserUpdate from 'src/pages/UserUpdatePage';
+import { CurrentPage } from 'src/layouts/components/currentpage';
+import { PrivateRoute } from 'src/sections/auth/privateroute';
 
 // ----------------------------------------------------------------------
 
 export const HomePage = lazy(() => import('src/pages/home'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
-export const UserPage = lazy(() => import('src/pages/user'));
+export const UserPage = lazy(() => import('src/pages/admin/user'));
 export const PlacePage = lazy(() => import('src/pages/place'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
-export const UserRolePage = lazy(() => import('src/pages/UserRolePage'));
-export const UserBanPage = lazy(() => import('src/pages/UserBanPage'));
-export const ReportUserView = lazy(() => import('src/pages/user-report'))
-export const UserUpdatePage = lazy(() => import('src/pages/UserUpdatePage'));
-export const RegisterPage = lazy(() => import('src/pages/RegisterPage'));
+export const PlaceViewPage = lazy(() => import('src/pages/place-detail'));
+export const EventPage = lazy(() => import('src/pages/event'));
+export const ServiceOwnerPlacePage = lazy(() => import('src/pages/owner/place'));
+export const ServiceOwnerPlaceViewPage = lazy(() => import('src/pages/owner/place-detail'));
+export const ServiceOwnerPlaceCreatedPage = lazy(() => import('src/pages/owner/place-created'));
+export const ServiceOwnerEventPage = lazy(() => import('src/pages/owner/event'));
+export const ServiceOwnerEventViewPage = lazy(() => import('src/pages/owner/place-event-view'));
+export const ServiceOwnerActivityPage = lazy(() => import('src/pages/owner/activity'));
+export const ServiceOwnerActivityViewPage = lazy(() => import('src/pages/owner/place-activity-view'));
 
-
-
+export const UserRolePage = lazy(() => import('src/pages/admin/user-role'));
+export const UserBanPage = lazy(() => import('src/pages/admin/user-ban'));
+export const ReportUserView = lazy(() => import('src/pages/admin/user-report'))
+export const UserUpdatePage = lazy(() => import('src/pages/admin/user-update'));
+export const RegisterPage = lazy(() => import('src/pages/admin/register-user'));
 // ----------------------------------------------------------------------
 
 const renderFallback = (
@@ -40,48 +47,64 @@ const renderFallback = (
   </Box>
 );
 
-export function Router() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);  // Trạng thái đăng nhập
-  const token = localStorage.getItem('accessToken');  // Lấy token từ localStorage
-
-  useEffect(() => {
-    // Kiểm tra nếu có token trong localStorage
-    if (token) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
+function AppRoutes() {
+  const userRole = (() => {
+    try {
+      const data = JSON.parse(localStorage.getItem('role') || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
     }
-  }, [token]);
-
-  // Nếu chưa biết trạng thái đăng nhập, trả về loading state
-  if (isLoggedIn === null) {
-    return <Box>Loading...</Box>;
-  }
+  })();
 
   return useRoutes([
     {
-      element: isLoggedIn ? (
-        <DashboardLayout>
-          <Suspense fallback={renderFallback}>
-            <Outlet />
-          </Suspense>
-        </DashboardLayout>
-      ) : (
-        <Navigate to="/sign-in" replace /> 
+      element: (
+        <PrivateRoute>
+          <DashboardLayout>
+            <Suspense fallback={renderFallback}>
+              <Outlet />
+            </Suspense>
+          </DashboardLayout>
+        </PrivateRoute>
       ),
       children: [
         { element: <HomePage />, index: true },
-        { path: 'admin', element: <UserPage /> },
-        { path: 'place', element: <PlacePage /> },
+
+        ...(userRole.includes('Moderator')
+          ? [
+              { path: 'place', element: <PlacePage /> },
+              { path: 'place/:id', element: <PlaceViewPage /> },
+              { path: 'event', element: <EventPage /> },
+            ]
+          : []),
+
+        ...(userRole.includes('Service Owner')
+          ? [
+              { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
+              { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
+              { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
+              { path: 'owner/event', element: <ServiceOwnerEventPage /> },
+              { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
+              { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
+              { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
+            ]
+          : []),
+          ...(userRole.includes('Administrator')
+          ? [
+            { path: 'admin/user', element: <UserPage /> },
+            { path: 'admin/role', element: <UserRolePage /> },
+            // { path: 'admin', element: <AdminPage /> },
+            { path: 'admin/register', element: <RegisterPage /> },
+            { path: 'admin/ban', element: <UserBanPage /> },
+            { path: 'admin/role', element: <UserRolePage /> },
+            { path: 'admin/updateUser', element: <UserUpdatePage /> },
+            { path: 'admin/reportUser', element: <ReportUserView /> }
+            ]
+          : []),
+
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
-        { path: 'role', element: <UserRolePage /> },
-        { path: 'admin', element: <AdminPage /> },
-        { path: 'register', element: <RegisterPage /> },
-        { path: 'ban', element: <UserBanPage /> },
-        { path: 'role', element: <UserRolePage /> },
-        { path: 'updateUser', element: <UserUpdatePage /> },
-        { path: 'reportUser', element: <ReportUserView /> }
       ],
     },
     {
@@ -91,14 +114,6 @@ export function Router() {
           <SignInPage />
         </AuthLayout>
       ),
-    },
-    {
-      path: 'register',
-      element: <RegisterPage />,
-    },
-    {
-      path: 'admin',
-      element: <AdminPage />,
     },
     {
       path: '404',
@@ -111,4 +126,12 @@ export function Router() {
   ]);
 }
 
-// export default useRoutes;
+
+export function Router() {
+  return (
+    <>
+      <CurrentPage />
+      <AppRoutes />
+    </>
+  );
+}

@@ -1,7 +1,5 @@
 import type { IconButtonProps } from '@mui/material/IconButton';
-
 import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
@@ -11,13 +9,9 @@ import MenuList from '@mui/material/MenuList';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
-
 import { useRouter, usePathname } from 'src/routes/hooks';
-
 import { _myAccount } from 'src/_mock';
-
 // ----------------------------------------------------------------------
-
 export type AccountPopoverProps = IconButtonProps & {
   data?: {
     label: string;
@@ -26,22 +20,17 @@ export type AccountPopoverProps = IconButtonProps & {
     info?: React.ReactNode;
   }[];
 };
-
 export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps) {
   const router = useRouter();
   const pathname = usePathname();
-
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
-
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
   }, []);
-
   const handleClosePopover = useCallback(() => {
     setOpenPopover(null);
   }, []);
-
   const handleClickItem = useCallback(
     (path: string) => {
       handleClosePopover();
@@ -49,14 +38,14 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     },
     [handleClosePopover, router]
   );
-
   // Hàm xử lý đăng xuất
   const handleLogout = () => {
-    localStorage.removeItem('user'); // Xóa thông tin người dùng
-    localStorage.removeItem('accessToken'); // Xóa token đăng nhập (nếu có)
-    router.push('/sign-in'); // Chuyển hướng tới trang đăng nhập
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('role');
+    localStorage.removeItem('currentPath');
+    window.location.href = '/sign-in';  // Chuyển hướng tới trang đăng nhập
   };
-
   return (
     <>
       <IconButton
@@ -75,7 +64,6 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
           {userData?.fullName?.charAt(0).toUpperCase()}
         </Avatar>
       </IconButton>
-
       <Popover
         open={!!openPopover}
         anchorEl={openPopover}
@@ -92,14 +80,11 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
           <Typography variant="subtitle2" noWrap>
             {userData?.fullName}
           </Typography>
-
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
             {userData?.phoneNumber}
           </Typography>
         </Box>
-
         <Divider sx={{ borderStyle: 'dashed' }} />
-
         <MenuList
           disablePadding
           sx={{
@@ -132,9 +117,7 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
             </MenuItem>
           ))}
         </MenuList>
-
         <Divider sx={{ borderStyle: 'dashed' }} />
-
         <Box sx={{ p: 1 }}>
           {/* Nút Logout */}
           <Button fullWidth color="error" size="medium" variant="text" onClick={handleLogout}>

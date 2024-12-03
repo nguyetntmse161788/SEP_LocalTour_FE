@@ -105,7 +105,7 @@ export const _langs = [
     icon: '/assets/icons/flags/ic-flag-en.svg',
   },
   {
-    value: 'vn',
+    value: 'vi',
     label: 'VietNam',
     icon: '/assets/icons/flags/ic-flag-de.svg',
   },

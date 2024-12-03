@@ -13,7 +13,7 @@ import { Iconify } from 'src/components/iconify';
 import { Main } from './main';
 import { layoutClasses } from '../classes';
 import { NavMobile, NavDesktop } from './nav';
-import { navData, adminNavData } from '../config-nav-dashboard';
+import { navData } from '../config-nav-dashboard';
 import { Searchbar } from '../components/searchbar';
 import { _workspaces } from '../config-nav-workspace';
 import { MenuButton } from '../components/menu-button';
@@ -31,19 +31,17 @@ export type DashboardLayoutProps = {
   header?: {
     sx?: SxProps<Theme>;
   };
-  userRole?: string; // Add a prop for the user role
 };
 
-export function DashboardLayout({ sx, children, header, userRole }: DashboardLayoutProps) {
+export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) {
   const theme = useTheme();
 
   const [navOpen, setNavOpen] = useState(false);
 
   const layoutQuery: Breakpoint = 'lg';
-
-  // Determine the navigation data based on the user's role
-  const navigationData = userRole === 'Administrator' ? adminNavData : navData;
-
+  const role = JSON.parse(localStorage.getItem('role') || '[]');
+  const navItems = navData(role);
+  console.log('Role::::', role);
   return (
     <LayoutSection
       /** **************************************
@@ -75,7 +73,7 @@ export function DashboardLayout({ sx, children, header, userRole }: DashboardLay
                   }}
                 />
                 <NavMobile
-                  data={navigationData}
+                  data={navItems}
                   open={navOpen}
                   onClose={() => setNavOpen(false)}
                   workspaces={_workspaces}
@@ -115,7 +113,7 @@ export function DashboardLayout({ sx, children, header, userRole }: DashboardLay
        * Sidebar
        *************************************** */
       sidebarSection={
-        <NavDesktop data={navigationData} layoutQuery={layoutQuery} workspaces={_workspaces} />
+        <NavDesktop data={navItems} layoutQuery={layoutQuery} workspaces={_workspaces} />
       }
       /** **************************************
        * Footer
