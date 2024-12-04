@@ -1,5 +1,6 @@
 import type { UserProps } from './user-table-row';
 import { ReportProps } from '../report/report-table-row';
+
 // ----------------------------------------------------------------------
 
 export const visuallyHidden = {
@@ -38,12 +39,8 @@ export function getComparator<Key extends keyof any>(
   order: 'asc' | 'desc',
   orderBy: Key
 ): (
-  a: {
-    [key in Key]: number | string;
-  },
-  b: {
-    [key in Key]: number | string;
-  }
+  a: { [key in Key]: number | string },
+  b: { [key in Key]: number | string }
 ) => number {
   return order === 'desc'
     ? (a, b) => descendingComparator(a, b, orderBy)
@@ -57,6 +54,7 @@ type ApplyFilterProps = {
   filterName: string;
   comparator: (a: any, b: any) => number;
 };
+
 type ApplyFilterProps2 = {
   reportData: ReportProps[];
   filterName: string;
@@ -72,16 +70,32 @@ export function applyFilter({ inputData, comparator, filterName }: ApplyFilterPr
     return a[1] - b[1];
   });
 
-  inputData = stabilizedThis.map((el) => el[0]);
+  let filteredData = stabilizedThis.map((el) => el[0]);
 
   if (filterName) {
-    inputData = inputData.filter(
-      (user) => user.fullName.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
+    const lowerCaseFilter = filterName.toLowerCase();
+    filteredData = filteredData.filter(
+      (user) =>
+        (user.username && user.username.toLowerCase().includes(lowerCaseFilter)) ||
+        (user.email && user.email.toLowerCase().includes(lowerCaseFilter)) ||
+        (user.fullName && user.fullName.toLowerCase().includes(lowerCaseFilter)) ||
+        (user.phoneNumber && user.phoneNumber.toLowerCase().includes(lowerCaseFilter)) ||
+        (user.address && user.address.toLowerCase().includes(lowerCaseFilter)) ||
+        (user.gender && user.gender.toLowerCase().includes(lowerCaseFilter)) ||
+        (user.role && user.role.toLowerCase().includes(lowerCaseFilter)) ||
+        (user.roles && user.roles.some((role) => role.toLowerCase().includes(lowerCaseFilter))) ||
+        (user.dateOfBirth && user.dateOfBirth.toLowerCase().includes(lowerCaseFilter)) ||
+        (user.profilePictureUrl &&
+          user.profilePictureUrl.toLowerCase().includes(lowerCaseFilter)) ||
+        (user.endDate &&
+          user.endDate.toISOString().toLowerCase().includes(lowerCaseFilter)) // Format date for comparison
     );
   }
 
-  return inputData;
+  return filteredData;
 }
+
+
 export function applyFilter2({ reportData, comparator, filterName }: ApplyFilterProps2) {
   const stabilizedThis = reportData.map((el, index) => [el, index] as const);
 
@@ -91,13 +105,21 @@ export function applyFilter2({ reportData, comparator, filterName }: ApplyFilter
     return a[1] - b[1];
   });
 
-  reportData = stabilizedThis.map((el) => el[0]);
+  let filteredData = stabilizedThis.map((el) => el[0]);
 
-  // if (filterName) {
-  //   reportData = reportData.filter(
-  //     (user) => user.fullName.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
-  //   );
-  // }
+  if (filterName) {
+    const lowerCaseFilter = filterName.toLowerCase();
 
-  return reportData;
+    // Search through multiple fields in the ReportProps
+    filteredData = filteredData.filter(
+      (report) =>
+        (report.content && report.content.toLowerCase().includes(lowerCaseFilter)) || // Search content
+        (report.userReportId && report.userReportId.toLowerCase().includes(lowerCaseFilter)) || // Search userReportId
+        (report.userId && report.userId.toLowerCase().includes(lowerCaseFilter)) || // Search userId
+        (report.status && report.status.toLowerCase().includes(lowerCaseFilter)) || // Search status
+        (report.reportDate && report.reportDate.toLowerCase().includes(lowerCaseFilter)) // Search reportDate
+    );
+  }
+
+  return filteredData;
 }
