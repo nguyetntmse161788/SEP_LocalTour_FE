@@ -91,6 +91,9 @@ export function PlaceCreatedView() {
     filterName,
     filterStatus,
   });
+  const handleDeletePlace = (placeId: string) => {
+    setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== placeId));
+  };
 
   const notFound = !dataFiltered.length && !!filterName;
 
@@ -161,6 +164,7 @@ export function PlaceCreatedView() {
                       row={row}
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
+                      onDeletePlace={handleDeletePlace}
                     />
                   ))}
 

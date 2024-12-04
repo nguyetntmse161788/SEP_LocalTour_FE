@@ -44,7 +44,7 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     localStorage.removeItem('user');
     localStorage.removeItem('role');
     localStorage.removeItem('currentPath');
-    window.location.href = '/sign-in';  // Chuyển hướng tới trang đăng nhập
+    router.push('/sign-in');  // Chuyển hướng tới trang đăng nhập
   };
   return (
     <>

@@ -76,7 +76,9 @@ export function PlaceView() {
     filterName,
     filterStatus,  // Lọc trên client
   });
-
+  const handleDeletePlace = (placeId: string) => {
+    setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== placeId));
+  };
   const notFound = !dataFiltered.length && !!filterName;
 
   return (
@@ -138,6 +140,7 @@ export function PlaceView() {
                       row={row}
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
+                      onDeletePlace={handleDeletePlace}
                     />
                   ))}
 

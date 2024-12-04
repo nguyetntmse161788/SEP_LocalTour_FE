@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { TextField, Autocomplete, Button, Dialog, DialogTitle, DialogContent, DialogActions, Grid } from '@mui/material';
-import { Console } from 'console';
 import MapComponent from 'src/components/map/map-component';
-import { UserProps } from '../place-table-row';
+// import { UserProps } from '../place-table-row';
 
-interface NewPlaceFormProps {
+
+export type UserProps = {
+    id: string;
+    name: string;
+    address: string;
+    description: string;
+    status: string;
+    photoDisplay: string;
+    
+    placeTranslation: [
+      { name: string, address: string, description: string },
+    ],
+    isVerified: boolean;
+  };
+interface UpdatePlaceFormProps {
   open: boolean;
   onClose: () => void;
-  onPlaceCreated: (newPlace: UserProps) => void;
+  placeId: string; // ID của địa điểm cần update
+  onPlaceUpdated: (updatedPlace: UserProps) => void;
 }
 
 interface PlaceTranslation {
@@ -18,16 +32,18 @@ interface PlaceTranslation {
   address: string;
   contact: string;
 }
+
 interface Location {
   id: string;
   name: string;
 }
+
 interface Ward {
   id: string;
   wardName: string;
 }
 
-function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
+function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlaceFormProps) {
   const [formData, setFormData] = useState({
     wardId: '',
     timeOpen: '',
@@ -35,10 +51,10 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     longitude: '',
     latitude: '',
     contactLink: '',
-    tags: [] as string[], // Lưu ID của các tags
-    placeTranslations: [] as PlaceTranslation[], // Mảng chứa nhiều PlaceTranslation
-    photoDisplay: null as File | null, // Lưu file hình ảnh cho PhotoDisplay
-    placeMedia: [] as (File | null)[], // Mảng chứa nhiều file hình ảnh cho PlaceMedia (cho phép null)
+    tags: [] as string[],
+    placeTranslations: [] as PlaceTranslation[],
+    photoDisplay: null as File | null,
+    placeMedia: [] as (File | null)[],
     isVerified: false,
     status: '0',
   });
@@ -54,7 +70,64 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   const [selectedProvince, setSelectedProvince] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
 
+  // Lấy dữ liệu hiện tại của địa điểm từ API
+  useEffect(() => {
+    const fetchPlaceData = async () => {
+      try {
+        const response = await axios.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${placeId}`);
+        const placeData = response.data;
 
+        setFormData({
+          wardId: placeData.wardId || '',
+          timeOpen: placeData.timeOpen || '',
+          timeClose: placeData.timeClose || '',
+          longitude: placeData.longitude?.toString() || '',
+          latitude: placeData.latitude?.toString() || '',
+          contactLink: placeData.contactLink || '',
+          tags: placeData.tags || [],
+          placeTranslations: placeData.placeTranslations || [],
+          photoDisplay: placeData.photoDisplay,
+          placeMedia: [],
+          isVerified: placeData.isVerified || false,
+          status: placeData.status || '0',
+        });
+        setSelectedProvince(placeData.provinceId);
+        setSelectedDistrict(placeData.districtId);
+        fetchDistricts(placeData.provinceId); // Fetch districts for selected province
+        fetchWards(placeData.districtId);
+        fetchTagsForPlace(placeId);
+      } catch (error) {
+        console.error('Error fetching place data:', error);
+      }
+    };
+
+    fetchPlaceData();
+  }, [placeId]);
+  const fetchTagsForPlace = async (placeid: string) => {
+    try {
+      const response = await axios.get(`https://api.localtour.space/api/Place/getTagsInPlace?placeId=${placeid}`);
+      const tagsForPlace = response.data; // Assuming response.data.items is the list of tags
+      setTags(tagsForPlace); // Store the tags in the `tags` state
+      setFormData((prevData) => ({
+        ...prevData,
+        tags: tagsForPlace.map((tag: { id: string }) => tag.id), // Store the tag IDs
+      }));
+    } catch (error) {
+      console.error('Error fetching tags for place:', error);
+    }
+  };
+  const handleProvinceChange = (event: any, value: Location | null) => {
+    setSelectedProvince(value?.id || '');
+    setSelectedDistrict(''); // Reset district when province changes
+    setWards([]); // Reset wards when province changes
+    fetchDistricts(value?.id);
+  };
+  
+  // When District is selected, fetch wards
+  const handleDistrictChange = (event: any, value: Location | null) => {
+    setSelectedDistrict(value?.id || '');
+    fetchWards(value?.id);
+  };
   const handleLocationSelect = (longitudes : string , latitudes : string) => {
     // Cập nhật longitude và latitude vào các ô input
     setLongitude(longitudes);
@@ -72,11 +145,12 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   const handleCloseMap = () => {
     setMapDialogOpen(false); // Đóng bản đồ khi chọn vị trí
   };
-  // Lấy danh sách tags từ API khi component được render
+
+  // Lấy danh sách tags từ API
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const response = await axios.get('https://api.localtour.space/api/Tag/getAll?Size=1000');
+        const response = await axios.get('https://api.localtour.space/api/Tag/getAll');
         setTags(response.data.items);
       } catch (error) {
         console.error('Error fetching tags:', error);
@@ -85,67 +159,37 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
 
     fetchTags();
   }, []);
-
-  // Hàm xử lý thay đổi input trong form
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index?: number) => {
-    const { name, value } = event.target;
-
-    // Nếu có index (đang sửa một PlaceTranslation cụ thể)
-    if (index !== undefined) {
-      setFormData((prevData) => {
-        const updatedTranslations = [...prevData.placeTranslations];
-        updatedTranslations[index] = {
-          ...updatedTranslations[index],
-          [name]: value,
-        };
-        return { ...prevData, placeTranslations: updatedTranslations };
-      });
-    } else {
-      // Cập nhật các field khác ngoài PlaceTranslation
-      setFormData((prevData) => ({
-        ...prevData,
-        [name]: value,
-      }));
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const response = await axios.get('https://api.localtour.space/api/Address/Province');
+        setProvinces(response.data);
+      } catch (error) {
+        console.error('Error fetching provinces:', error);
+      }
+    };
+  
+    fetchProvinces();
+  }, []);
+  
+  const fetchDistricts = async (provinceId: any) => {
+    try {
+      const response = await axios.get(`https://api.localtour.space/api/Address/District?provinceI=${provinceId}`);
+      setDistricts(response.data);
+    } catch (error) {
+      console.error('Error fetching districts:', error);
     }
   };
-
-  // Hàm xử lý thay đổi file cho PhotoDisplay
-  const handlePhotoDisplayChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files as FileList | null;
-    
-    if (files && files[0]) {
-      setFormData((prevData) => ({
-        ...prevData,
-        photoDisplay: files[0], // Lưu lại file đầu tiên
-      }));
+  
+  const fetchWards = async (districtId: any) => {
+    try {
+      const response = await axios.get(`https://api.localtour.space/api/Address/Ward?cityId=${districtId}`);
+      console.log('Wards Response:', response.data);
+      setWards(response.data);
+    } catch (error) {
+      console.error('Error fetching wards:', error);
     }
   };
-
-  const handlePlaceMediaChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const files = event.target.files;
-  
-    if (files && files.length > 0) {
-      // Lưu file vào đúng vị trí trong mảng
-      setFormData((prevData) => {
-        const updatedPlaceMedia = [...prevData.placeMedia];
-        updatedPlaceMedia[index] = files[0]; // Cập nhật file
-        return { ...prevData, placeMedia: updatedPlaceMedia };
-      });
-    } else {
-      // Nếu không có file, gán null cho vị trí đó (nếu bạn muốn xóa file)
-      setFormData((prevData) => {
-        const updatedPlaceMedia = [...prevData.placeMedia];
-        updatedPlaceMedia[index] = null; // Xóa file
-        return { ...prevData, placeMedia: updatedPlaceMedia };
-      });
-    }
-  };
-
-  
-  
-  
-
-  // Hàm xử lý thêm một PlaceTranslation mới
   const addPlaceTranslation = () => {
     setFormData((prevData) => ({
       ...prevData,
@@ -185,60 +229,95 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
       return { ...prevData, placeMedia: updatedPlaceMedia };
     });
   };
-
-  // Hàm xử lý tags (khi người dùng chọn tag)
-  const handleTagsChange = (event: React.ChangeEvent<{}>, newValue: { id: string; tagName: string }[]) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      tags: newValue.map((tag) => tag.id),
-    }));
+  const handlePhotoDisplayChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files as FileList | null;
+    
+    if (files && files[0]) {
+      setFormData((prevData) => ({
+        ...prevData,
+        photoDisplay: files[0], // Lưu lại file đầu tiên
+      }));
+    }
   };
 
-  // Hàm xử lý submit form
+  const handlePlaceMediaChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const files = event.target.files;
+  
+    if (files && files.length > 0) {
+      // Lưu file vào đúng vị trí trong mảng
+      setFormData((prevData) => {
+        const updatedPlaceMedia = [...prevData.placeMedia];
+        updatedPlaceMedia[index] = files[0]; // Cập nhật file
+        return { ...prevData, placeMedia: updatedPlaceMedia };
+      });
+    } else {
+      // Nếu không có file, gán null cho vị trí đó (nếu bạn muốn xóa file)
+      setFormData((prevData) => {
+        const updatedPlaceMedia = [...prevData.placeMedia];
+        updatedPlaceMedia[index] = null; // Xóa file
+        return { ...prevData, placeMedia: updatedPlaceMedia };
+      });
+    }
+  };
+
+
+  // Cập nhật dữ liệu form
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+    const { name, value } = event.target;
+    const updatedTranslations = [...formData.placeTranslations];
+    updatedTranslations[index] = {
+      ...updatedTranslations[index],
+      [name]: value,
+    };
+    setFormData({
+      ...formData,
+      placeTranslations: updatedTranslations,
+    });
+  };
+  const handleInputChanges = (event: { target: { name: any; value: any; }; }) => {
+    const { name, value } = event.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value, // Cập nhật trường tương ứng trong formData
+    }));
+  };
+  
+
+  const handleTagsChange = (event: React.ChangeEvent<{}>, newValue: { id: string; tagName: string }[]) => {
+    // Map through the new selected tags and update the form data
+    setFormData((prevData) => ({
+      ...prevData,
+      tags: newValue.map((tag) => tag.id),  // Save only the tag IDs
+    }));
+  };
+  
+
   const handleSubmit = async () => {
     try {
       const token = localStorage.getItem('accessToken');
       const formDataToSend = new FormData();
-      if (!formData.wardId) {
-        alert('Please select a ward.');
-        return;
-      }
-      // Thêm các tham số vào formData
+
       formDataToSend.append('WardId', formData.wardId);
       formDataToSend.append('TimeOpen', formData.timeOpen);
       formDataToSend.append('TimeClose', formData.timeClose);
-      formDataToSend.append('Longitude', parseFloat(formData.longitude).toFixed(6));
-      formDataToSend.append('Latitude', parseFloat(formData.latitude).toFixed(6));
+      formDataToSend.append('Longitude', formData.longitude);
+      formDataToSend.append('Latitude', formData.latitude);
       formDataToSend.append('ContactLink', formData.contactLink);
-      console.log('longitude', formData.longitude);
-      console.log('latitude', formData.latitude);
-  
-      // Thêm Tags
-      formData.tags.forEach((tagId) => {
-        formDataToSend.append('Tags', tagId);
-      });
-  
-      // Thêm PlaceTranslations
-      formDataToSend.append(
-        'PlaceTranslation', // Tên key API yêu cầu
-        JSON.stringify(formData.placeTranslations) // Chuyển mảng thành JSON
-      );
-  
-      // Thêm file PhotoDisplay nếu có
+      formData.tags.forEach((tagId) => formDataToSend.append('Tags', tagId));
+      formDataToSend.append('PlaceTranslation', JSON.stringify(formData.placeTranslations));
+
       if (formData.photoDisplay) {
         formDataToSend.append('PhotoDisplay', formData.photoDisplay);
       }
-  
-      // Thêm các file PlaceMedia
-      formData.placeMedia.forEach((media, index) => {
+
+      formData.placeMedia.forEach((media) => {
         if (media) {
-          formDataToSend.append('PlaceMedia', media);  // Không cần thêm chỉ mục, vì API có thể nhận được mảng các file
+          formDataToSend.append('PlaceMedia', media);
         }
       });
-  
-      // Gửi yêu cầu POST với formData
-      const response = await axios.post(
-        'https://api.localtour.space/api/Place/create',
+
+      const response = await axios.put(
+        `https://api.localtour.space/api/Place/update?placeid=${placeId}`,
         formDataToSend,
         {
           headers: {
@@ -247,51 +326,16 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
           },
         }
       );
-  
-      const newPlace = response.data; // Dữ liệu place mới từ API
-    console.log('newPlace', newPlace);
-      alert('Place created successfully!');
-      onPlaceCreated(newPlace); // Gọi callback với dữ liệu place mới
+
+      const updatedPlace = response.data;
+      alert('Place updated successfully!');
+      onPlaceUpdated(updatedPlace);
       onClose();
     } catch (error) {
-      console.error('Error creating place:', error);
-      alert('Failed to create place.');
+      console.error('Error updating place:', error);
+      alert('Failed to update place.');
     }
   };
-  
-  useEffect(() => {
-  const fetchProvinces = async () => {
-    try {
-      const response = await axios.get('https://api.localtour.space/api/Address/Province');
-      setProvinces(response.data);
-    } catch (error) {
-      console.error('Error fetching provinces:', error);
-    }
-  };
-
-  fetchProvinces();
-}, []);
-
-const fetchDistricts = async (provinceId: any) => {
-  try {
-    const response = await axios.get(`https://api.localtour.space/api/Address/District?provinceI=${provinceId}`);
-    setDistricts(response.data);
-  } catch (error) {
-    console.error('Error fetching districts:', error);
-  }
-};
-
-const fetchWards = async (districtId: any) => {
-  try {
-    const response = await axios.get(`https://api.localtour.space/api/Address/Ward?cityId=${districtId}`);
-    console.log('Wards Response:', response.data);
-    setWards(response.data);
-  } catch (error) {
-    console.error('Error fetching wards:', error);
-  }
-};
-
-  
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -308,6 +352,7 @@ const fetchWards = async (districtId: any) => {
     setWards([]);
     fetchDistricts(value?.id);
   }}
+  value={provinces.find((province) => province.id === selectedProvince) || null}
   renderInput={(params) => <TextField {...params} label="Province" />}
 />
 
@@ -319,6 +364,7 @@ const fetchWards = async (districtId: any) => {
     setSelectedDistrict(value?.id || '');
     fetchWards(value?.id);
   }}
+  value={districts.find((district) => district.id === selectedDistrict) || null}
   renderInput={(params) => <TextField {...params} label="District" />}
 />
 
@@ -326,16 +372,17 @@ const fetchWards = async (districtId: any) => {
   fullWidth
   options={wards}
   getOptionLabel={(option) => option.wardName || ''}
-  value={wards.find((ward) => ward.id === formData.wardId) || null} // Xác định ward được chọn từ formData
+  value={wards.find((ward) => ward.id === formData.wardId) || null}
   onChange={(event, value) => {
     setFormData((prevData) => ({
       ...prevData,
-      wardId: value?.id || '', // Gán wardId hoặc để trống nếu không có giá trị
+      wardId: value?.id || '',
     }));
   }}
   renderInput={(params) => <TextField {...params} label="Ward" />}
-  isOptionEqualToValue={(option, value) => option.id === value?.id} // So sánh chính xác giữa option và value
 />
+
+
 
 
         {/* TimeOpen */}
@@ -345,7 +392,7 @@ const fetchWards = async (districtId: any) => {
           name="timeOpen"
           type="time"
           value={formData.timeOpen}
-          onChange={handleInputChange}
+          onChange={handleInputChanges}
           margin="normal"
           inputProps={{
             step: 300, // 5 minutes
@@ -357,7 +404,7 @@ const fetchWards = async (districtId: any) => {
           name="timeClose"
           type="time"
           value={formData.timeClose}
-          onChange={handleInputChange}
+          onChange={handleInputChanges}
           margin="normal"
           inputProps={{
             step: 300, // 5 minutes
@@ -410,30 +457,77 @@ const fetchWards = async (districtId: any) => {
           label="Contact Link"
           name="contactLink"
           value={formData.contactLink}
-          onChange={handleInputChange}
+          onChange={handleInputChanges}
           margin="normal"
         />
 
         {/* Tags - Autocomplete */}
         <Autocomplete
-          multiple
-          id="tags"
-          options={tags}
-          getOptionLabel={(option) => option.tagName}
-          onChange={handleTagsChange}
-          renderInput={(params) => <TextField {...params} label="Tags" />}
-        />
+  multiple
+  id="tags"
+  options={tags}
+  getOptionLabel={(option) => option.tagName}
+  onChange={handleTagsChange}
+  value={tags.filter((tag) => formData.tags.includes(tag.id))} 
+  renderInput={(params) => <TextField {...params} label="Tags" />}
+  disableCloseOnSelect
+/>
+
 
         {/* Photo Display */}
         <div style={{ marginTop: '20px' }}>
-          <div style={{ fontWeight: 'bold' }}>Photo Display</div>
-          <input
-            type="file"
-            accept="image/*"
-            id="photoDisplay"
-            onChange={handlePhotoDisplayChange}
-          />
-        </div>
+  <div style={{ fontWeight: 'bold' }}>Photo Display</div>
+  
+  {/* Kiểm tra nếu photoDisplay là URL */}
+  {formData.photoDisplay && typeof formData.photoDisplay === 'string' ? (
+    // Nếu là URL, hiển thị ảnh
+    <div style={{ position: 'relative', width: '100%', maxWidth: '200px', marginBottom: '10px' }}>
+      <img 
+        src={formData.photoDisplay} 
+        alt="Display of the place"
+        style={{
+          width: '100%',
+          height: 'auto',
+          maxHeight: '200px',
+          objectFit: 'cover',
+          borderRadius: '10px',  // Tạo bo góc cho ảnh
+        }} 
+      />
+      
+      {/* Dấu "X" trên góc phải của ảnh */}
+      <Button
+        variant="contained"
+        color="error"
+        onClick={() => setFormData({ ...formData, photoDisplay: null })}
+        style={{
+          position: 'absolute',
+          top: '5px',
+          right: '5px',
+          padding: '5px',
+          minWidth: 'unset',
+          borderRadius: '50%',
+          fontSize: '16px',  // Kích thước chữ của dấu X
+          backgroundColor: 'rgba(255, 0, 0, 0.7)', // Màu nền đỏ trong suốt
+          color: '#fff', // Màu chữ trắng
+          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',  // Thêm bóng cho nút
+        }}
+      >
+        X
+      </Button>
+    </div>
+  ) : (
+    // Nếu không phải URL (null hoặc file), hiển thị input để chọn ảnh
+    <input
+      type="file"
+      accept="image/*"
+      id="photoDisplay"
+      onChange={handlePhotoDisplayChange}
+    />
+  )}
+</div>
+
+
+
 
         {/* Place Media */}
         <div style={{ marginTop: '20px' }}>
@@ -535,4 +629,4 @@ const fetchWards = async (districtId: any) => {
   );
 }
 
-export default NewPlaceForm;
+export default UpdatePlaceForm;
