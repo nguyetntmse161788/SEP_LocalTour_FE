@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["@types/estree"],
     "baseUrl": ".",
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { TextField, Autocomplete, Button, Dialog, DialogTitle, DialogContent, DialogActions, Grid } from '@mui/material';
-import { Console } from 'console';
+
+import { useState, useEffect } from 'react';
 import MapComponent from 'src/components/map/map-component';
 import { UserProps } from '../place-table-row';
 
