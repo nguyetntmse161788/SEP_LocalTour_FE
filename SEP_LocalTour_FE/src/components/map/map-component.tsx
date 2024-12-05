@@ -59,7 +59,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ latitude, longitude, onLoca
 
     if (query.length > 2) {
       try {
-        const response = await fetch(`https://maps.vietmap.vn/api/search/v3?apikey=9e37b843f972388f80a9e51612cad4c1bc3877c71c107e46&text=${query}`);
+        const response = await fetch(`https://maps.vietmap.vn/api/autocomplete/v3?apikey=9e37b843f972388f80a9e51612cad4c1bc3877c71c107e46&text=${query}`);
         const data = await response.json();
         setSearchResults(data || []); // Cập nhật kết quả tìm kiếm
       } catch (error) {

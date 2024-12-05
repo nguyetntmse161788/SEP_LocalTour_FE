@@ -22,7 +22,7 @@ export type UserProps = {
   description: string;
   status: string;
   photoDisplay: string;
-  
+  wardName: string;
   placeTranslation: [
     { name: string, address: string, description: string },
   ],
@@ -86,6 +86,7 @@ return (
       <TableCell>{row.placeTranslation[0]?.address || 'N/A'}</TableCell>
 
       <TableCell>{row.placeTranslation[0]?.description || 'N/A'}</TableCell>
+      <TableCell>{row.wardName || 'N/A'}</TableCell>
 
       <TableCell align="center">
         {row.status === 'Pending' ? (

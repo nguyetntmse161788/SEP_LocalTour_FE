@@ -74,7 +74,7 @@ export function SignInView() {
 
       const data = await response.json();
       localStorage.setItem('accessToken', data.accessToken);  // Lưu token vào localStorage
-
+      localStorage.setItem('userId', data.userId);
       const decodedToken = jwtDecode<JwtPayloadWithRole>(data.accessToken);
       const userRoles = Array.isArray(decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'])
         ? decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']

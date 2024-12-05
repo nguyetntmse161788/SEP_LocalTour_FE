@@ -23,31 +23,50 @@ import type { UserProps } from '../place-table-row';
 // ----------------------------------------------------------------------
 
 // Hàm fetchPlaces không cần truyền filterStatus vào API
-const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi',searchTerm = '',Status:  string | null = '') => {
+const fetchPlaces = async (
+  pageNumber = 1,
+  rowsPerPage = 5,
+  languageCode = 'vi',
+  searchTerm = '',
+  Status: string | null = '',
+  districtIds: number[] = []  // Add districtIds parameter
+) => {
   const token = localStorage.getItem('accessToken');
   console.log('Access Token:', token);  // Kiểm tra token
   
   if (!token) {
     console.error('No access token found');
-    return { items: [], totalCount: 0 };  // Trả về dữ liệu rỗng nếu không có token
+    return { items: [], totalCount: 0 };  // Return empty data if no token
   }
 
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`, {
+    // Start building the URL
+    let url = `https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`;
+    
+    // If districtIds is not empty, append the DistrictNCityIds query parameter
+    if (districtIds.length > 0) {
+      url += `&DistrictNCityIds=${districtIds.join('&DistrictNCityIds=')}`;
+    }
+
+    // Make the GET request
+    const response = await axios.get(url, {
       headers: {
-        Authorization: `Bearer ${token}`,
-      }
+        Authorization: `Bearer ${token}`,  // Include token for authentication
+      },
     });
-    console.log('API Response:', response.data);  // Kiểm tra dữ liệu trả về
+
+    console.log('API Response:', response.data);  // Log the response data
+
     return {
-      items: response.data.items,  // Danh sách places
-      totalCount: response.data.totalCount,  // Tổng số bản ghi
+      items: response.data.items,  // List of places
+      totalCount: response.data.totalCount,  // Total count of records
     };
   } catch (error) {
     console.error("Error fetching places", error);
-    return { items: [], totalCount: 0 };  // Trả về dữ liệu rỗng nếu có lỗi
+    return { items: [], totalCount: 0 };  // Return empty data if there's an error
   }
 };
+
 
 export function PlaceView() {
   const [places, setPlaces] = useState<UserProps[]>([]);
@@ -57,15 +76,17 @@ export function PlaceView() {
   const [pageNumber, setPageNumber] = useState(1);  // Lưu trang hiện tại
   const [rowsPerPage, setRowsPerPage] = useState(5);  // Sử dụng state để lưu rowsPerPage
   const [filterStatus, setFilterStatus] = useState<string | null>('');
+  const [selectedDistricts, setSelectedDistricts] = useState<number[]>([]);  // State to store selected district IDs
 
+  const userId = localStorage.getItem('userId');
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode,filterName,filterStatus);  // Lấy dữ liệu theo trang, số dòng và ngôn ngữ
+      const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode,filterName,filterStatus,selectedDistricts);  // Lấy dữ liệu theo trang, số dòng và ngôn ngữ
       setPlaces(items);  // Cập nhật danh sách places
       setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
     };
     fetchData();
-  }, [pageNumber, rowsPerPage, languageCode, filterName,filterStatus]);  // Chạy lại khi các giá trị này thay đổi
+  }, [pageNumber, rowsPerPage, languageCode, filterName,filterStatus,selectedDistricts]);  // Chạy lại khi các giá trị này thay đổi
 
   const table = useTable();
 
@@ -76,7 +97,6 @@ export function PlaceView() {
     filterName,
     filterStatus,  // Lọc trên client
   });
-
   const notFound = !dataFiltered.length && !!filterName;
 
   return (
@@ -99,6 +119,9 @@ export function PlaceView() {
               setFilterStatus(status || ''); 
               setPageNumber(1);
             }}
+            userId={userId || ''}
+            onDistrictSelect={setSelectedDistricts}
+            
         />
 
         <Scrollbar>
@@ -120,6 +143,7 @@ export function PlaceView() {
                   { id: 'name', label: 'Name' },
                   { id: 'address', label: 'Address' },
                   { id: 'description', label: 'Description' },
+                  { id: 'wardName', label: 'WardName' },
                   { id: 'isVerify', label: 'isVerify' },
                   { id: 'status', label: 'Status' },
                   { id: 'View details', label: 'View details' },
