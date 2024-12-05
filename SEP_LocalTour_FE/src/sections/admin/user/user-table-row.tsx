@@ -11,15 +11,16 @@ import { TableCell } from '@mui/material';
 
 export type UserProps = {
   id: string;
+  username: string;
   email: string;
   fullName: string;
   phoneNumber: string;
-  userName: string;
   dateOfBirth: string;
   address: string;
   gender: 'Male' | 'Female' | 'Other';
   profilePictureUrl: string;
-  role: string; // Thêm role vào đối tượng UserProps
+  role: string;
+  roles: string[]; // Thêm role vào đối tượng UserProps
   endDate: Date;
 };
 
@@ -30,9 +31,11 @@ type UserTableRowProps = {
 };
 
 export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+  
   const navigate = useNavigate();
 
-  const handleSetRole = async (userId: string, userName: string, role: string) => {
+  const handleSetRole = async (userId: string, username: string, roles: string[]) => {
+    console.log(row);
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -64,17 +67,65 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
         state: {
           user: userProfile,
           userId,
-          userName,
-          role,
+          username,
+          roles,
+          // role,
         },
       });
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
       alert('Error fetching user profile. Please try again.');
     }
+    console.log('Updated Roles:', roles);
+    console.log("Roles from localStorage:", roles);
+
   };
 
-  const handleBanUser = async (userId: string, userName: string, endDate: Date) => {
+  const handleUnbanUser = async (userId: string) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        alert('No token found. Please log in.');
+        navigate('/sign-in');
+        return;
+      }
+  
+      const decodedToken = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+  
+      if (decodedToken.exp < currentTime) {
+        alert('Token has expired. Please log in again.');
+        localStorage.removeItem('accessToken');
+        navigate('/login');
+        return;
+      }
+  
+      // Construct the unban URL dynamically using the userId
+      const url = `https://api.localtour.space/api/User/UnBan/${userId}`;
+  
+      // Log to verify the URL and token
+      console.log('Unban URL:', url);
+  
+      // Send the unban request
+      const response = await axios.post(url, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.status === 200) {
+        alert('User has been unbanned successfully.');
+        window.location.reload();
+      } else {
+        alert('Failed to unban user. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error unbanning user:', error);
+      alert('Error unbanning user. Please try again.');
+    }
+  };
+  
+  const handleBanUser = async (userId: string, username: string, endDate: Date) => {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -109,7 +160,7 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
           state: {
             user: userProfile,
             userId,
-            userName,
+            username,
             endDate,
           },
         });
@@ -122,47 +173,52 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
     }
   };
 
-
   return (
     <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
       {/* <TableCell padding="checkbox">
         <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
       </TableCell> */}
-
       <TableCell>
         <Avatar alt={row.fullName} src={row.profilePictureUrl} />
       </TableCell>
-
       {/* <TableCell>{row.id}</TableCell> */}
-      <TableCell>{row.userName}</TableCell>
+      <TableCell>{row.username}</TableCell>
       <TableCell>{row.email}</TableCell>
       <TableCell>{row.fullName}</TableCell>
       <TableCell>{row.phoneNumber}</TableCell>
-      <TableCell>{row.dateOfBirth}</TableCell>
-      <TableCell>{row.address}</TableCell>
-
+      {/* <TableCell>{row.dateOfBirth}</TableCell>
+      <TableCell>{row.address}</TableCell> */}
+      <TableCell>{row.roles.join(', ')}</TableCell>
       <TableCell>
         {/* <IconButton>
           <Iconify icon="eva:more-vertical-fill" />
         </IconButton> */}
-        <Button
+        {/* <Button
           variant="outlined"
           color="primary"
           sx={{ margin: '0 5px' }}
           onClick={() => navigate('/admin/updateUser', { state: { user: row } })}
         >
           Update Profile
-        </Button>
+        </Button> */}
 
-        <Button variant="outlined" color="primary" sx={{ margin: '0 5px' }} onClick={() => handleSetRole(row.id, row.userName, row.role)}>
+        <Button variant="outlined" color="primary" sx={{ margin: '0 5px' }} onClick={() => handleSetRole(row.id, row.username, row.roles)}>
           Set Role
         </Button>
         <Button
-          variant="outlined" color="error" sx={{ margin: '0 5px' }} onClick={() => handleBanUser(row.id, row.userName, row.endDate)}
+          variant="outlined" color="error" sx={{ margin: '0 5px' }} onClick={() => handleBanUser(row.id, row.username, row.endDate)}
         >
           Ban
         </Button>
 
+        <Button
+          variant="outlined"
+          color="success"
+          sx={{ margin: '0 5px' }}
+          onClick={() => handleUnbanUser(row.id)} // Trigger unban on click
+        >
+          Unban
+        </Button>
       </TableCell>
     </TableRow>
   );
