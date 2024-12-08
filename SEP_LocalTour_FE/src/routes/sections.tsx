@@ -7,10 +7,10 @@ import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { CurrentPage } from 'src/layouts/components/currentpage';
 import { PrivateRoute } from 'src/sections/auth/privateroute';
-
 // ----------------------------------------------------------------------
 
 export const HomePage = lazy(() => import('src/pages/home'));
+export const UserProfile = lazy(() => import('src/components/user/user-profile'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/admin/user'));
 export const PlacePage = lazy(() => import('src/pages/place'));
@@ -56,7 +56,7 @@ function AppRoutes() {
       return [];
     }
   })();
-  
+
   return useRoutes([
     {
       element: (
@@ -73,24 +73,28 @@ function AppRoutes() {
 
         ...(userRole.includes('Moderator')
           ? [
-              { path: 'place', element: <PlacePage /> },
-              { path: 'place/:id', element: <PlaceViewPage /> },
-              { path: 'event', element: <EventPage /> },
-            ]
+            { path: 'place', element: <PlacePage /> },
+            { path: 'place/:id', element: <PlaceViewPage /> },
+            { path: 'event', element: <EventPage /> },
+            { path: 'profile', element: <UserProfile /> }
+
+          ]
           : []),
 
         ...(userRole.includes('Service Owner')
           ? [
-              { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
-              { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
-              { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
-              { path: 'owner/event', element: <ServiceOwnerEventPage /> },
-              { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
-              { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
-              { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
-            ]
+            { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
+            { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
+            { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
+            { path: 'owner/event', element: <ServiceOwnerEventPage /> },
+            { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
+            { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
+            { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
+            { path: 'profile', element: <UserProfile /> }
+
+          ]
           : []),
-          ...(userRole.includes('Administrator')
+        ...(userRole.includes('Administrator')
           ? [
             { path: 'admin/user', element: <UserPage /> },
             { path: 'admin/role', element: <UserRolePage /> },
@@ -99,8 +103,10 @@ function AppRoutes() {
             { path: 'admin/ban', element: <UserBanPage /> },
             { path: 'admin/role', element: <UserRolePage /> },
             { path: 'admin/updateUser', element: <UserUpdatePage /> },
-            { path: 'admin/reportUser', element: <ReportUserView /> }
-            ]
+            { path: 'admin/reportUser', element: <ReportUserView /> },
+            { path: 'profile', element: <UserProfile /> }
+
+          ]
           : []),
 
         { path: 'products', element: <ProductsPage /> },
