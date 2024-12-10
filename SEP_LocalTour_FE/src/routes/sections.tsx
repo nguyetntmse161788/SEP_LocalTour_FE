@@ -7,11 +7,14 @@ import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { CurrentPage } from 'src/layouts/components/currentpage';
 import { PrivateRoute } from 'src/sections/auth/privateroute';
+import { BannerView } from 'src/sections/admin/banner/view/banner-view';
+import { BannerDetailPage } from 'src/sections/admin/banner/view/banner-view-detail';
 import { refreshAccessToken } from 'src/utils/auth';
 
 // ----------------------------------------------------------------------
 
 export const HomePage = lazy(() => import('src/pages/home'));
+export const UserProfile = lazy(() => import('src/components/user/user-profile'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/admin/user'));
 export const PlacePage = lazy(() => import('src/pages/place'));
@@ -75,10 +78,12 @@ function AppRoutes() {
 
         ...(userRole.includes('Moderator')
           ? [
-              { path: 'place', element: <PlacePage /> },
-              { path: 'place/:id', element: <PlaceViewPage /> },
-              { path: 'event', element: <EventPage /> },
-            ]
+            { path: 'place', element: <PlacePage /> },
+            { path: 'place/:id', element: <PlaceViewPage /> },
+            { path: 'event', element: <EventPage /> },
+            { path: 'profile', element: <UserProfile /> }
+
+          ]
           : []),
 
         ...(userRole.includes('Service Owner')
@@ -94,7 +99,7 @@ function AppRoutes() {
               { path: 'owner/usertranfer', element: <UserTranferPage /> },
             ]
           : []),
-          ...(userRole.includes('Administrator')
+        ...(userRole.includes('Administrator')
           ? [
             { path: 'admin/user', element: <UserPage /> },
             { path: 'admin/role', element: <UserRolePage /> },
@@ -103,8 +108,12 @@ function AppRoutes() {
             { path: 'admin/ban', element: <UserBanPage /> },
             { path: 'admin/role', element: <UserRolePage /> },
             { path: 'admin/updateUser', element: <UserUpdatePage /> },
-            { path: 'admin/reportUser', element: <ReportUserView /> }
-            ]
+            { path: 'admin/reportUser', element: <ReportUserView /> },
+            { path: 'admin/bannerUser', element: <BannerView /> },
+            { path: 'admin/bannerUser/:id', element: <BannerDetailPage /> },
+            { path: 'profile', element: <UserProfile /> }
+
+          ]
           : []),
 
         { path: 'products', element: <ProductsPage /> },

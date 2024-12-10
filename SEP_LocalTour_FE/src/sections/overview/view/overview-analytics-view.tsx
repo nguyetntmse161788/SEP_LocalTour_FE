@@ -1,6 +1,6 @@
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
-
+import { useState, useEffect } from 'react';
 import { _tasks, _posts, _timeline } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -16,7 +16,65 @@ import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 
 // ----------------------------------------------------------------------
 
+interface MonthlyData {
+  monthName: string;
+  registrationCount: number;
+}
+
 export function OverviewAnalyticsView() {
+  const [userRegistrations, setUserRegistrations] = useState<{
+    total: number;
+    monthlyData: MonthlyData[];
+  }>({
+    total: 0,
+    monthlyData: [],
+  });
+
+  useEffect(() => {
+    
+    const fetchUserRegistrations = async () => {
+      try {
+        const response = await fetch('https://api.localtour.space/api/Statistic/GetUserRegistrationByMonthAsync?year=2024');
+        const data = await response.json();
+
+        if (data) {
+          // Map the monthly data and convert month number to month name
+          const monthlyData: MonthlyData[] = Object.entries(data).map(([month, count]) => ({
+            monthName: new Date(0, parseInt(month, 10) - 1).toLocaleString('default', { month: 'long' }),
+            registrationCount: Number(count),
+          }));
+
+          // Calculate the total number of registrations for the year
+          const totalRegistrations = monthlyData.reduce(
+            (total, monthData) => total + monthData.registrationCount,
+            0
+          );
+
+          // Update the state with the monthly data and total count
+          setUserRegistrations({
+            total: totalRegistrations,
+            monthlyData,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user registration data:', error);
+      }
+    };
+
+    fetchUserRegistrations();
+  }, []); // Fetch data on component mount
+
+  const { total, monthlyData } = userRegistrations;
+  const categories = monthlyData.map((item) => item.monthName);
+  const series = monthlyData.map((item) => item.registrationCount);
+
+  // Convert percent to number
+  const percent = ((total - 0 / 1) * 100).toFixed(2); // This is a string, so parse it as a float
+  const percentAsNumber = parseFloat(percent);
+
+  const chartCategories = userRegistrations.monthlyData.map((data: any) => data.monthName);
+  const chartSeriesData = userRegistrations.monthlyData.map((data: any) => data.registrationCount);
+
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
@@ -24,12 +82,27 @@ export function OverviewAnalyticsView() {
       </Typography>
 
       <Grid container spacing={3}>
+        {/* User Registration Widget */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Weekly sales"
+            title="User Register By This Year"
+            percent={percentAsNumber}
+            total={total}
+            color="secondary"
+            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
+            chart={{
+              categories,
+              series,
+            }}
+          />
+        </Grid>
+
+        <Grid xs={12} sm={6} md={3}>
+          <AnalyticsWidgetSummary
+            title="People completing the trip"
             percent={2.6}
             total={714000}
-            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-bag.svg" />}
+            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [22, 8, 35, 50, 82, 84, 77, 12],
@@ -37,27 +110,14 @@ export function OverviewAnalyticsView() {
           />
         </Grid>
 
-        <Grid xs={12} sm={6} md={3}>
-          <AnalyticsWidgetSummary
-            title="New users"
-            percent={-0.1}
-            total={1352831}
-            color="secondary"
-            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [56, 47, 40, 62, 73, 30, 23, 54],
-            }}
-          />
-        </Grid>
-
+        {/* Purchase Orders Widget */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
             title="Purchase orders"
             percent={2.8}
             total={1723315}
             color="warning"
-            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-buy.svg" />}
+            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [40, 70, 50, 28, 70, 75, 7, 64],
@@ -65,13 +125,14 @@ export function OverviewAnalyticsView() {
           />
         </Grid>
 
+        {/* Messages Widget */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
             title="Messages"
             percent={3.6}
             total={234}
             color="error"
-            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-message.svg" />}
+            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [56, 30, 23, 54, 47, 40, 62, 73],
@@ -79,85 +140,22 @@ export function OverviewAnalyticsView() {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
-          <AnalyticsCurrentVisits
-            title="Current visits"
-            chart={{
-              series: [
-                { label: 'America', value: 3500 },
-                { label: 'Asia', value: 2500 },
-                { label: 'Europe', value: 1500 },
-                { label: 'Africa', value: 500 },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid xs={12} md={6} lg={8}>
-          <AnalyticsWebsiteVisits
-            title="Website visits"
-            subheader="(+43%) than last year"
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-              series: [
-                { name: 'Team A', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
-                { name: 'Team B', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid xs={12} md={6} lg={8}>
-          <AnalyticsConversionRates
-            title="Conversion rates"
-            subheader="(+43%) than last year"
-            chart={{
-              categories: ['Italy', 'Japan', 'China', 'Canada', 'France'],
-              series: [
-                { name: '2022', data: [44, 55, 41, 64, 22] },
-                { name: '2023', data: [53, 32, 33, 52, 13] },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid xs={12} md={6} lg={4}>
-          <AnalyticsCurrentSubject
-            title="Current subject"
-            chart={{
-              categories: ['English', 'History', 'Physics', 'Geography', 'Chinese', 'Math'],
-              series: [
-                { name: 'Series 1', data: [80, 50, 30, 40, 100, 20] },
-                { name: 'Series 2', data: [20, 30, 40, 80, 20, 80] },
-                { name: 'Series 3', data: [44, 76, 78, 13, 43, 10] },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid xs={12} md={6} lg={8}>
-          <AnalyticsNews title="News" list={_posts.slice(0, 5)} />
-        </Grid>
-
-        <Grid xs={12} md={6} lg={4}>
-          <AnalyticsOrderTimeline title="Order timeline" list={_timeline} />
-        </Grid>
-
-        <Grid xs={12} md={6} lg={4}>
-          <AnalyticsTrafficBySite
-            title="Traffic by site"
-            list={[
-              { value: 'facebook', label: 'Facebook', total: 323234 },
-              { value: 'google', label: 'Google', total: 341212 },
-              { value: 'linkedin', label: 'Linkedin', total: 411213 },
-              { value: 'twitter', label: 'Twitter', total: 443232 },
-            ]}
-          />
-        </Grid>
-
-        <Grid xs={12} md={6} lg={8}>
-          <AnalyticsTasks title="Tasks" list={_tasks} />
-        </Grid>
+        {/* Website Visits Widget */}
+      <Grid xs={12} md={6} lg={8}>
+        <AnalyticsWebsiteVisits
+          title="Statistics of registrants during the year"
+          subheader="(+%) than last year"
+          chart={{
+            categories: chartCategories,
+            series: [
+              {
+                name: 'Registrations',
+                data: chartSeriesData,
+              },
+            ],
+          }}
+        />
+      </Grid>
       </Grid>
     </DashboardContent>
   );

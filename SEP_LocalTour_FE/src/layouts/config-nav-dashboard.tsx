@@ -34,6 +34,11 @@ export const navData = (role: string | null): NavItem[] => {
       path: '/admin/reportUser',
       icon: icon('ic-user'),
     },
+    isAdmin && {
+      title: 'Banner Report',
+      path: '/admin/bannerUser',
+      icon: icon('ic-user'),
+    },
     isServiceOwner&& {
       title: 'Place',
       path: '/owner/place',
