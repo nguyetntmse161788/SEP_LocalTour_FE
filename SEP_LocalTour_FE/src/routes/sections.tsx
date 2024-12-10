@@ -164,7 +164,7 @@ function getDefaultRouteByRole(userRole: string[]): string {
     return '/place'; // Trang chính cho Moderator
   } else if (userRole.includes('Service Owner')) {
     return '/owner/place'; // Trang chính cho Service Owner
-  }
+  }else
   return '/sign-in'; // Mặc định, chuyển hướng về trang đăng nhập nếu không có vai trò
 }
 
