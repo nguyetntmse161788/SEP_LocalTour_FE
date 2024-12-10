@@ -10,6 +10,7 @@ import axios from 'axios';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
+import axiosInstance from 'src/utils/axiosInstance';
 
 export function PlaceDetailView() {
   const { id } = useParams(); // Lấy ID từ URL
@@ -27,7 +28,7 @@ export function PlaceDetailView() {
       }
 
       try {
-        const response = await axios.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
+        const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -52,7 +53,7 @@ export function PlaceDetailView() {
 
     try {
       console.log(`Changing status to: ${status}`); // Log trạng thái để kiểm tra
-      const response = await axios.put(
+      const response = await axiosInstance.put(
         `https://api.localtour.space/api/Place/changeStatusPlace?placeid=${id}&status=${status}`,
         {},
         {

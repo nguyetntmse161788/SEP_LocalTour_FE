@@ -11,6 +11,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 import { useRouter, usePathname } from 'src/routes/hooks';
 import { _myAccount } from 'src/_mock';
+import Cookies from 'js-cookie';
 // ----------------------------------------------------------------------
 export type AccountPopoverProps = IconButtonProps & {
   data?: {
@@ -44,6 +45,7 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     localStorage.removeItem('user');
     localStorage.removeItem('role');
     localStorage.removeItem('currentPath');
+    Cookies.remove('refreshToken');
     router.push('/sign-in');  // Chuyển hướng tới trang đăng nhập
   };
   return (

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Outlet, Navigate, useRoutes } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
@@ -9,6 +9,8 @@ import { CurrentPage } from 'src/layouts/components/currentpage';
 import { PrivateRoute } from 'src/sections/auth/privateroute';
 import { BannerView } from 'src/sections/admin/banner/view/banner-view';
 import { BannerDetailPage } from 'src/sections/admin/banner/view/banner-view-detail';
+import { refreshAccessToken } from 'src/utils/auth';
+
 // ----------------------------------------------------------------------
 
 export const HomePage = lazy(() => import('src/pages/home'));
@@ -28,6 +30,8 @@ export const ServiceOwnerEventPage = lazy(() => import('src/pages/owner/event'))
 export const ServiceOwnerEventViewPage = lazy(() => import('src/pages/owner/place-event-view'));
 export const ServiceOwnerActivityPage = lazy(() => import('src/pages/owner/activity'));
 export const ServiceOwnerActivityViewPage = lazy(() => import('src/pages/owner/place-activity-view'));
+export const BannerListPage = lazy(() => import('src/pages/owner/banner-list'));
+export const UserTranferPage = lazy(() => import('src/pages/owner/usertranfer'));
 
 export const UserRolePage = lazy(() => import('src/pages/admin/user-role'));
 export const UserBanPage = lazy(() => import('src/pages/admin/user-ban'));
@@ -58,7 +62,6 @@ function AppRoutes() {
       return [];
     }
   })();
-
   return useRoutes([
     {
       element: (
@@ -85,16 +88,16 @@ function AppRoutes() {
 
         ...(userRole.includes('Service Owner')
           ? [
-            { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
-            { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
-            { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
-            { path: 'owner/event', element: <ServiceOwnerEventPage /> },
-            { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
-            { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
-            { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
-            { path: 'profile', element: <UserProfile /> }
-
-          ]
+              { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
+              { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
+              { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
+              { path: 'owner/event', element: <ServiceOwnerEventPage /> },
+              { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
+              { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
+              { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
+              { path: 'owner/banner', element: <BannerListPage /> },
+              { path: 'owner/usertranfer', element: <UserTranferPage /> },
+            ]
           : []),
         ...(userRole.includes('Administrator')
           ? [

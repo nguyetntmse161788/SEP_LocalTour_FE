@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import axios from 'axios';
-
+import axiosInstance from 'src/utils/axiosInstance';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -18,6 +18,7 @@ import { emptyRows, applyFilter, getComparator, applyFilterPlace } from '../util
 import { PlaceTableRow, UserProps } from '../place-table-row';
 import { PlaceTableHead } from '../place-table-head';
 import { PlaceTableToolbar } from '../place-table-toolbar';
+
 
 // ----------------------------------------------------------------------
 
@@ -31,7 +32,7 @@ const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi',
   }
 
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`, {
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }

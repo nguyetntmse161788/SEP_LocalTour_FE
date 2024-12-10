@@ -11,6 +11,7 @@ import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 interface JwtPayloadWithRole {
   "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
@@ -25,30 +26,57 @@ export function SignInView() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const refreshAccessToken = useCallback(async () => {
+    const refreshToken = Cookies.get('refreshToken');
+    
+    if (!refreshToken) return null;
+  
+    try {
+      const response = await axios.post('https://api.localtour.space/api/Authen/refreshToken', {
+        refreshToken,
+      });
+      console.log('response', response.data);
+      const { accessToken, refreshToken: newRefreshToken } = response.data;
+      localStorage.setItem('accessToken', accessToken);
+      Cookies.set('refreshToken', newRefreshToken, { expires: 7, path: '/' });
+      
+      return accessToken;
+    } catch (e) {
+      console.error('Refresh token failed:', e);
+      return null;
+    }
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     const user = localStorage.getItem('user');
     const currentPath = localStorage.getItem('currentPath') || '/';
-
-    // Kiểm tra xem token có tồn tại và hợp lệ không
+  
     if (token && user) {
       try {
-        const decodedToken = jwtDecode<JwtPayloadWithRole & { exp: number }>(token);
+        const decodedToken = jwtDecode<{ exp: number }>(token);
         const currentTime = Math.floor(Date.now() / 1000);
-
+  
         if (decodedToken.exp && decodedToken.exp > currentTime) {
-          router.replace(currentPath); // Nếu token hợp lệ, chuyển hướng đến trang trước đó
+          router.replace(currentPath); // If token is valid, redirect
         } else {
-          localStorage.clear(); // Xóa localStorage nếu token hết hạn
-          router.push('/sign-in');
+          // Token expired, attempt to refresh
+          refreshAccessToken().then(newToken => {
+            if (newToken) {
+              router.replace(currentPath); // Retry redirection after refresh
+            } else {
+              localStorage.clear();
+              router.push('/sign-in');
+            }
+          });
         }
       } catch (e) {
         console.error('Invalid token:', e);
-        localStorage.clear(); // Xóa localStorage nếu token không hợp lệ
+        localStorage.clear();
         router.push('/sign-in');
       }
     }
-  }, [router]);
+  }, [router, refreshAccessToken]);
 
   const handleSignIn = useCallback(async () => {
     setLoading(true);
@@ -75,6 +103,7 @@ export function SignInView() {
       const data = await response.json();
       localStorage.setItem('accessToken', data.accessToken);  // Lưu token vào localStorage
       localStorage.setItem('userId', data.userId);
+      Cookies.set('refreshToken', data.refreshToken, { expires: 7, path: '/' });
       const decodedToken = jwtDecode<JwtPayloadWithRole>(data.accessToken);
       const userRoles = Array.isArray(decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'])
         ? decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']

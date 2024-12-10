@@ -4,6 +4,7 @@ import axios from 'axios';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import Button from '@mui/material/Button';
+import axiosInstance from 'src/utils/axiosInstance';
 
 export type ReportProps = {
   id: number;
@@ -42,7 +43,7 @@ export function ReportTableRow({ row, selected, onSelectRow }: ReportTableHeadPr
         status: newStatus, // Cập nhật trạng thái
       };
 
-      await axios.put(
+      await axiosInstance.put(
         // https://api.localtour.space/api/UserReport
         `https://api.localtour.space/api/UserReport/${id}`,
         updatedData, // Gửi tất cả dữ liệu nhưng thay đổi status

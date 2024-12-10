@@ -1,5 +1,6 @@
 import { jwtDecode } from 'jwt-decode';
 import { Navigate } from 'react-router-dom';
+import { isTokenExpired, refreshAccessToken } from './authService';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -24,7 +25,15 @@ export function PrivateRoute({ children }: PrivateRouteProps) {
   } catch (error) {
     console.error('Invalid token:', error);
   }
-
+  if (isTokenExpired(token)) {
+    try {
+     refreshAccessToken();
+     return <>{children}</>;
+    } catch (error) {
+      console.error('Failed to auto-refresh token:', error);
+      return <Navigate to="/sign-in" replace />;
+    }
+  }
   // Token không hợp lệ hoặc hết hạn, chuyển hướng đến trang đăng nhập
   localStorage.clear();
   return <Navigate to="/sign-in" replace />;

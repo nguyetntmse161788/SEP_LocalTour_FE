@@ -7,10 +7,11 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import axios from 'axios';
-
+import axiosInstance from 'src/utils/axiosInstance';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { NewActivityForm } from './new-activity-form'; // Import NewEventForm
+
 
 export function PlaceDetailView() {
   const { id } = useParams(); // Lấy ID từ URL
@@ -37,7 +38,7 @@ export function PlaceDetailView() {
       }
 
       try {
-        const response = await axios.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
+        const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

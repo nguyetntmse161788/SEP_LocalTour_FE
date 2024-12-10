@@ -9,6 +9,7 @@ import { Iconify } from 'src/components/iconify';
 import { useEffect, useState } from 'react';
 import { Box, Button, Popover } from '@mui/material';
 import axios from 'axios';
+import axiosInstance from 'src/utils/axiosInstance';
 
 // ----------------------------------------------------------------------
 
@@ -26,7 +27,7 @@ type District = {
 };
 const fetchUserDistricts = async (userId: string) => {
   try {
-    const response = await axios.get(`https://api.localtour.space/api/ModTag/UserTags/${userId}`);
+    const response = await axiosInstance.get(`https://api.localtour.space/api/ModTag/UserTags/${userId}`);
     return response.data.tags;  // List of districts the user manages
   } catch (error) {
     console.error('Error fetching user districts:', error);

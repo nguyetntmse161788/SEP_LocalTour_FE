@@ -7,12 +7,13 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import axios from 'axios';
-
+import axiosInstance from 'src/utils/axiosInstance';
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { NewEventForm } from './new-event-form';
 import { UpdateEventForm } from './update-event-form';
+
 
 
 export function PlaceDetailView() {
@@ -42,7 +43,7 @@ export function PlaceDetailView() {
       }
 
       try {
-        const response = await axios.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
+        const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -68,7 +69,7 @@ export function PlaceDetailView() {
       }
 
       try {
-        const response = await axios.get(`https://api.localtour.space/api/Event/getall?placeid=${id}&languageCode=vi`, {
+        const response = await axiosInstance.get(`https://api.localtour.space/api/Event/getall?placeid=${id}&languageCode=vi`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -93,7 +94,7 @@ export function PlaceDetailView() {
     }
   
     try {
-      const response = await axios.get(`https://api.localtour.space/api/Event/getall?placeid=${id}&languageCode=vi`, {
+      const response = await axiosInstance.get(`https://api.localtour.space/api/Event/getall?placeid=${id}&languageCode=vi`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

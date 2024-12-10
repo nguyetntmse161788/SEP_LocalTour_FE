@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { TextField, Autocomplete, Button, Dialog, DialogTitle, DialogContent, DialogActions, Grid } from '@mui/material';
+import { TextField, Autocomplete, Button, Dialog, DialogTitle, DialogContent, DialogActions, Grid, FormControl, MenuItem, Select, InputLabel, SelectChangeEvent, FormHelperText } from '@mui/material';
 import { Console } from 'console';
 import MapComponent from 'src/components/map/map-component';
+
+import axiosInstance from 'src/utils/axiosInstance';
 import { UserProps } from '../place-table-row';
 
 interface NewPlaceFormProps {
@@ -26,6 +28,11 @@ interface Ward {
   id: string;
   wardName: string;
 }
+const languageOptions = [
+  { label: 'VN', value: 'vi' },
+  { label: 'EN', value: 'en' },
+];
+
 
 function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   const [formData, setFormData] = useState({
@@ -53,7 +60,58 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   const [wards, setWards] = useState<Ward[]>([]);
   const [selectedProvince, setSelectedProvince] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
-
+  const [errors, setErrors] = useState({
+    wardId: '',
+    timeOpen: '',
+    timeClose: '',
+    longitude: '',
+    latitude: '',
+    contactLink: '',
+    placeMedia: '',
+    photoDisplay: '',
+    tags: '',
+    placeTranslations: formData.placeTranslations.map(() => ''),
+  });
+  
+  
+  
+  useEffect(() => {
+    if (!open) {
+      // Reset lại form về trạng thái mặc định khi đóng dialog
+      setFormData({
+        wardId: '',
+        timeOpen: '',
+        timeClose: '',
+        longitude: '',
+        latitude: '',
+        contactLink: '',
+        tags: [],
+        placeTranslations: [],
+        photoDisplay: null,
+        placeMedia: [],
+        isVerified: false,
+        status: '0',
+      });
+      setLongitude('');
+      setLatitude('');
+      setSelectedProvince('');
+      setSelectedDistrict('');
+      setWards([]);
+      setErrors({
+        wardId: '',
+    timeOpen: '',
+    timeClose: '',
+    longitude: '',
+    latitude: '',
+    contactLink: '',
+    placeMedia: '',
+    photoDisplay: '',
+    tags: '',
+    placeTranslations: formData.placeTranslations.map(() => ''),
+    });
+    }
+  }, [open,formData.placeTranslations]);
+  
 
   const handleLocationSelect = (longitudes : string , latitudes : string) => {
     // Cập nhật longitude và latitude vào các ô input
@@ -76,7 +134,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const response = await axios.get('https://api.localtour.space/api/Tag/getAll?Size=1000');
+        const response = await axiosInstance.get('https://api.localtour.space/api/Tag/getAll?Size=1000');
         setTags(response.data.items);
       } catch (error) {
         console.error('Error fetching tags:', error);
@@ -87,10 +145,13 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   }, []);
 
   // Hàm xử lý thay đổi input trong form
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index?: number) => {
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>,
+    index?: number
+  ) => {
     const { name, value } = event.target;
-
-    // Nếu có index (đang sửa một PlaceTranslation cụ thể)
+  
+    // Handle change for PlaceTranslation when index is provided
     if (index !== undefined) {
       setFormData((prevData) => {
         const updatedTranslations = [...prevData.placeTranslations];
@@ -101,14 +162,13 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
         return { ...prevData, placeTranslations: updatedTranslations };
       });
     } else {
-      // Cập nhật các field khác ngoài PlaceTranslation
+      // Handle other input changes
       setFormData((prevData) => ({
         ...prevData,
         [name]: value,
       }));
     }
   };
-
   // Hàm xử lý thay đổi file cho PhotoDisplay
   const handlePhotoDisplayChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files as FileList | null;
@@ -152,7 +212,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
       placeTranslations: [
         ...prevData.placeTranslations,
         {
-          languageCode: '',
+          languageCode: 'vi',
           name: '',
           description: '',
           address: '',
@@ -196,6 +256,71 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
 
   // Hàm xử lý submit form
   const handleSubmit = async () => {
+    let hasErrors = false;
+  const newErrors = {
+    wardId: '',
+    timeOpen: '',
+    timeClose: '',
+    longitude: '',
+    latitude: '',
+    contactLink: '',
+    placeMedia: '',
+    photoDisplay: '',
+    tags: '',
+    placeTranslations: formData.placeTranslations.map(() => ''), // Empty errors for each translation
+  };
+
+  // Validate fields
+  if (!formData.wardId) {
+    newErrors.wardId = 'Please select a ward.';
+    hasErrors = true;
+  }
+  if (!formData.timeOpen) {
+    newErrors.timeOpen = 'Time Open is required.';
+    hasErrors = true;
+  }
+  if (!formData.timeClose) {
+    newErrors.timeClose = 'Time Close is required.';
+    hasErrors = true;
+  }
+  if (!formData.longitude) {
+    newErrors.longitude = 'Longitude is required.';
+    hasErrors = true;
+  }
+  if (!formData.latitude) {
+    newErrors.latitude = 'Latitude is required.';
+    hasErrors = true;
+  }
+  if (!formData.photoDisplay) {
+    newErrors.photoDisplay = 'PhotoDisplay is required.';
+    hasErrors = true;
+  }
+  if (!formData.contactLink) {
+    newErrors.contactLink = 'Contact Link is required.';
+    hasErrors = true;
+  }
+  if (formData.tags.length === 0) {
+    newErrors.tags = 'At least one tag is required.';
+    hasErrors = true;
+  }
+  if (formData.placeMedia.length === 0) {
+    newErrors.placeMedia = 'At least one media is required.';
+    hasErrors = true;
+  }
+  formData.placeTranslations.forEach((translation, index) => {
+    if (!translation.name || !translation.description || !translation.address || !translation.contact) {
+      newErrors.placeTranslations[index] = 'All fields are required for each translation.';
+      hasErrors = true;
+    } else {
+      // Nếu không có lỗi, xóa lỗi trước đó nếu có
+      newErrors.placeTranslations[index] = '';
+    }
+  });
+
+  if (hasErrors) {
+    setErrors(newErrors);
+    return;
+  }
     try {
       const token = localStorage.getItem('accessToken');
       const formDataToSend = new FormData();
@@ -237,7 +362,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
       });
   
       // Gửi yêu cầu POST với formData
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         'https://api.localtour.space/api/Place/create',
         formDataToSend,
         {
@@ -262,7 +387,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
   useEffect(() => {
   const fetchProvinces = async () => {
     try {
-      const response = await axios.get('https://api.localtour.space/api/Address/Province');
+      const response = await axiosInstance.get('https://api.localtour.space/api/Address/Province');
       setProvinces(response.data);
     } catch (error) {
       console.error('Error fetching provinces:', error);
@@ -274,7 +399,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
 
 const fetchDistricts = async (provinceId: any) => {
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Address/District?provinceI=${provinceId}`);
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Address/District?provinceI=${provinceId}`);
     setDistricts(response.data);
   } catch (error) {
     console.error('Error fetching districts:', error);
@@ -283,7 +408,7 @@ const fetchDistricts = async (provinceId: any) => {
 
 const fetchWards = async (districtId: any) => {
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Address/Ward?cityId=${districtId}`);
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Address/Ward?cityId=${districtId}`);
     console.log('Wards Response:', response.data);
     setWards(response.data);
   } catch (error) {
@@ -333,8 +458,16 @@ const fetchWards = async (districtId: any) => {
       wardId: value?.id || '', // Gán wardId hoặc để trống nếu không có giá trị
     }));
   }}
-  renderInput={(params) => <TextField {...params} label="Ward" />}
-  isOptionEqualToValue={(option, value) => option.id === value?.id} // So sánh chính xác giữa option và value
+  renderInput={(params) => (
+    <>
+      <TextField {...params} label="Ward" error={!!errors.wardId} />
+      {errors.wardId && (
+        <FormHelperText error>{errors.wardId}</FormHelperText>
+      )}
+    </>
+  )}
+  isOptionEqualToValue={(option, value) => option.id === value?.id}
+
 />
 
 
@@ -350,6 +483,8 @@ const fetchWards = async (districtId: any) => {
           inputProps={{
             step: 300, // 5 minutes
           }}
+          error={Boolean(errors.timeOpen)}
+          helperText={errors.timeOpen}
         />
         <TextField
           fullWidth
@@ -362,6 +497,8 @@ const fetchWards = async (districtId: any) => {
           inputProps={{
             step: 300, // 5 minutes
           }}
+          error={Boolean(errors.timeClose)}
+          helperText={errors.timeClose}
         />
 
 <TextField
@@ -371,6 +508,8 @@ const fetchWards = async (districtId: any) => {
           value={formData.longitude}
           onChange={(e) => setLongitude(e.target.value)}
           margin="normal"
+          error={Boolean(errors.longitude)}
+          helperText={errors.longitude}
         />
         <TextField
           fullWidth
@@ -379,6 +518,8 @@ const fetchWards = async (districtId: any) => {
           value={formData.latitude}
           onChange={(e) => setLatitude(e.target.value)}
           margin="normal"
+          error={Boolean(errors.latitude)}
+          helperText={errors.latitude}
         />
         <Button onClick={handleOpenMap} variant="outlined">
           Choose on Map
@@ -412,6 +553,8 @@ const fetchWards = async (districtId: any) => {
           value={formData.contactLink}
           onChange={handleInputChange}
           margin="normal"
+          error={Boolean(errors.contactLink)}
+          helperText={errors.contactLink}
         />
 
         {/* Tags - Autocomplete */}
@@ -421,7 +564,14 @@ const fetchWards = async (districtId: any) => {
           options={tags}
           getOptionLabel={(option) => option.tagName}
           onChange={handleTagsChange}
-          renderInput={(params) => <TextField {...params} label="Tags" />}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Tags"
+              error={Boolean(errors.tags)}
+              helperText={errors.tags}
+            />
+          )}
         />
 
         {/* Photo Display */}
@@ -433,7 +583,9 @@ const fetchWards = async (districtId: any) => {
             id="photoDisplay"
             onChange={handlePhotoDisplayChange}
           />
+          {errors.photoDisplay && <div style={{ color: 'red' }}>{errors.photoDisplay}</div>}
         </div>
+        
 
         {/* Place Media */}
         <div style={{ marginTop: '20px' }}>
@@ -462,6 +614,7 @@ const fetchWards = async (districtId: any) => {
               </Grid>
             </Grid>
           ))}
+            {errors.placeMedia && <div style={{ color: 'red' }}>{errors.placeMedia}</div>}
         </div>
 
         {/* Place Translations */}
@@ -471,14 +624,21 @@ const fetchWards = async (districtId: any) => {
           </Button>
           {formData.placeTranslations.map((translation, index) => (
             <div key={index} style={{ marginTop: '15px' }}>
-              <TextField
-                fullWidth
-                label={`Language Code ${index + 1}`}
-                name="languageCode"
-                value={translation.languageCode}
-                onChange={(event) => handleInputChange(event, index)}
-                margin="normal"
-              />
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Language Code</InputLabel>
+                <Select
+                  label="Language Code"
+                  name="languageCode"
+                  value={translation.languageCode}
+                  onChange={(e) => handleInputChange(e, index)}
+                >
+                  {languageOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField
                 fullWidth
                 label={`Name ${index + 1}`}
@@ -486,6 +646,8 @@ const fetchWards = async (districtId: any) => {
                 value={translation.name}
                 onChange={(event) => handleInputChange(event, index)}
                 margin="normal"
+                error={Boolean(errors.placeTranslations[index])}
+                helperText={errors.placeTranslations[index]}
               />
               <TextField
                 fullWidth
@@ -494,6 +656,8 @@ const fetchWards = async (districtId: any) => {
                 value={translation.description}
                 onChange={(event) => handleInputChange(event, index)}
                 margin="normal"
+                error={Boolean(errors.placeTranslations[index])}
+                helperText={errors.placeTranslations[index]}
               />
               <TextField
                 fullWidth
@@ -502,6 +666,8 @@ const fetchWards = async (districtId: any) => {
                 value={translation.address}
                 onChange={(event) => handleInputChange(event, index)}
                 margin="normal"
+                error={Boolean(errors.placeTranslations[index])}
+                helperText={errors.placeTranslations[index]}
               />
               <TextField
                 fullWidth
@@ -510,6 +676,8 @@ const fetchWards = async (districtId: any) => {
                 value={translation.contact}
                 onChange={(event) => handleInputChange(event, index)}
                 margin="normal"
+                error={Boolean(errors.placeTranslations[index])}
+                helperText={errors.placeTranslations[index]}
               />
               <Button
                 variant="outlined"
