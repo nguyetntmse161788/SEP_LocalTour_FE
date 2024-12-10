@@ -7,10 +7,12 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import axios from 'axios';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import axiosInstance from 'src/utils/axiosInstance';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { NewActivityForm } from './new-activity-form'; // Import NewEventForm
+
 
 
 export function PlaceDetailView() {
@@ -19,6 +21,46 @@ export function PlaceDetailView() {
   const [loading, setLoading] = useState<boolean>(true); // Kiểm tra trạng thái loading
   const [openNewActivityForm, setOpenNewActivityForm] = useState(false); // Mở form tạo sự kiện
   const navigate = useNavigate(); // Hook điều hướng
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // Trạng thái của dialog
+  const [activityToDelete, setActivityToDelete] = useState<any>(null); // Lưu hoạt động cần xóa
+
+  // Hàm mở dialog khi nhấn vào thùng rác
+  const handleOpenDeleteDialog = (activity: any) => {
+    setActivityToDelete(activity); // Lưu hoạt động cần xóa
+    setOpenDeleteDialog(true); // Mở dialog
+  };
+
+  // Hàm đóng dialog
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false); // Đóng dialog
+  };
+
+  // Hàm xóa hoạt động
+  const handleDeleteActivity = async () => {
+    if (activityToDelete) {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          console.error('No access token found');
+          return;
+        }
+
+        const response = await axiosInstance.delete(
+          `https://api.localtour.space/api/PlaceActivity/delete?placeid=${place.id}&activityid=${activityToDelete.id}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            }
+          }
+        );
+        console.log('Activity deleted', response.data);
+        setOpenDeleteDialog(false); // Đóng dialog sau khi xóa thành công
+        // Cập nhật lại state hoặc thực hiện các hành động khác nếu cần
+      } catch (error) {
+        console.error("Error deleting activity", error);
+      }
+    }
+  };
 
   // Hàm xử lý sự kiện sau khi tạo thành công
   const handleActivityCreated = (newActivity: any) => {
@@ -210,6 +252,13 @@ export function PlaceDetailView() {
             <Typography variant="h6" fontWeight="bold" textAlign="center" mb={1}>
               {activity.placeActivityTranslations[0]?.activityName}
             </Typography>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => handleOpenDeleteDialog(activity)}
+              startIcon={<Iconify icon="eva:trash-2-fill" />} // Biểu tượng thùng rác
+              sx={{ marginLeft: 'auto', display: 'block' }} // Đẩy nút về phía bên phải
+            />
           </Card>
         </Grid>
       ))}
@@ -224,6 +273,22 @@ export function PlaceDetailView() {
         onActivityCreated={handleActivityCreated}
         placeId={id || ''} 
       />
+            <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Are you sure you want to delete this activity?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">
+            This action cannot be undone. Please confirm if you want to delete this activity.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteActivity} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </DashboardContent>
   );
 }

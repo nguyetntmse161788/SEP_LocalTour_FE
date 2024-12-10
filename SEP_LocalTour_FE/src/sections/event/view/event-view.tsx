@@ -119,13 +119,6 @@ export function EventView() {
         <Typography variant="h4" flexGrow={1}>
           Events
         </Typography>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-        >
-          New event
-        </Button>
       </Box>
 
       <Card>
@@ -161,7 +154,6 @@ export function EventView() {
                   { id: 'startDate - endDate', label: 'Start Date - End Date' },
                   { id: 'status', label: 'Status' },
                   { id: 'actions', label: 'Actions' },
-                  { id: '' },
                 ]}
               />
                <TableBody>

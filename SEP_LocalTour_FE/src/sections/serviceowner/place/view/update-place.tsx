@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { TextField, Autocomplete, Button, Dialog, DialogTitle, DialogContent, DialogActions, Grid } from '@mui/material';
+import { TextField, Autocomplete, Button, Dialog, DialogTitle, DialogContent, DialogActions, Grid, FormHelperText, Select, MenuItem } from '@mui/material';
 import MapComponent from 'src/components/map/map-component';
 import axiosInstance from 'src/utils/axiosInstance';
 // import { UserProps } from '../place-table-row';
@@ -74,6 +74,18 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
   const [selectedProvince, setSelectedProvince] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [initialFormData, setInitialFormData] = useState(formData);
+  const [errors, setErrors] = useState({
+    wardId: '',
+    timeOpen: '',
+    timeClose: '',
+    longitude: '',
+    latitude: '',
+    contactLink: '',
+    placeMedia: '',
+    photoDisplay: '',
+    tags: '',
+    placeTranslations: formData.placeTranslations.map(() => ''),
+  });
   
 
   // Lấy dữ liệu hiện tại của địa điểm từ API
@@ -110,6 +122,18 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
         fetchDistricts(dataprovince.id);
         fetchWards(datadistrict.id);
         fetchTagsForPlace(placeId);
+        setErrors({
+          wardId: '',
+      timeOpen: '',
+      timeClose: '',
+      longitude: '',
+      latitude: '',
+      contactLink: '',
+      placeMedia: '',
+      photoDisplay: '',
+      tags: '',
+      placeTranslations: formData.placeTranslations.map(() => ''),
+      });
       } catch (error) {
         console.error('Error fetching place data:', error);
       }
@@ -215,7 +239,7 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
       placeTranslations: [
         ...prevData.placeTranslations,
         {
-          languageCode: '',
+          languageCode: 'vi',
           name: '',
           description: '',
           address: '',
@@ -368,6 +392,71 @@ const renderPlaceMedia = () => {
   
 
   const handleSubmit = async () => {
+    let hasErrors = false;
+    const newErrors = {
+      wardId: '',
+      timeOpen: '',
+      timeClose: '',
+      longitude: '',
+      latitude: '',
+      contactLink: '',
+      placeMedia: '',
+      photoDisplay: '',
+      tags: '',
+      placeTranslations: formData.placeTranslations.map(() => ''), // Empty errors for each translation
+    };
+  
+    // Validate fields
+    if (!formData.wardId) {
+      newErrors.wardId = 'Please select a ward.';
+      hasErrors = true;
+    }
+    if (!formData.timeOpen) {
+      newErrors.timeOpen = 'Time Open is required.';
+      hasErrors = true;
+    }
+    if (!formData.timeClose) {
+      newErrors.timeClose = 'Time Close is required.';
+      hasErrors = true;
+    }
+    if (!formData.longitude) {
+      newErrors.longitude = 'Longitude is required.';
+      hasErrors = true;
+    }
+    if (!formData.latitude) {
+      newErrors.latitude = 'Latitude is required.';
+      hasErrors = true;
+    }
+    if (!formData.photoDisplay) {
+      newErrors.photoDisplay = 'PhotoDisplay is required.';
+      hasErrors = true;
+    }
+    if (!formData.contactLink) {
+      newErrors.contactLink = 'Contact Link is required.';
+      hasErrors = true;
+    }
+    if (formData.tags.length === 0) {
+      newErrors.tags = 'At least one tag is required.';
+      hasErrors = true;
+    }
+    if (formData.placeMedia.length === 0) {
+      newErrors.placeMedia = 'At least one media is required.';
+      hasErrors = true;
+    }
+    formData.placeTranslations.forEach((translation, index) => {
+      if (!translation.name || !translation.description || !translation.address || !translation.contact) {
+        newErrors.placeTranslations[index] = 'All fields are required for each translation.';
+        hasErrors = true;
+      } else {
+        // Nếu không có lỗi, xóa lỗi trước đó nếu có
+        newErrors.placeTranslations[index] = '';
+      }
+    });
+  
+    if (hasErrors) {
+      setErrors(newErrors);
+      return;
+    }
     try {
       const token = localStorage.getItem('accessToken');
       const formDataToSend = new FormData();
@@ -467,7 +556,16 @@ const renderPlaceMedia = () => {
       wardId: value?.id || '',
     }));
   }}
-  renderInput={(params) => <TextField {...params} label="Ward" />}
+  renderInput={(params) => (
+    <>
+      <TextField {...params} label="Ward" error={!!errors.wardId} />
+      {errors.wardId && (
+        <FormHelperText error>{errors.wardId}</FormHelperText>
+      )}
+    </>
+  )}
+  isOptionEqualToValue={(option, value) => option.id === value?.id}
+
 />
 
 
@@ -485,6 +583,8 @@ const renderPlaceMedia = () => {
           inputProps={{
             step: 300, // 5 minutes
           }}
+          error={Boolean(errors.timeOpen)}
+          helperText={errors.timeOpen}
         />
         <TextField
           fullWidth
@@ -497,6 +597,8 @@ const renderPlaceMedia = () => {
           inputProps={{
             step: 300, // 5 minutes
           }}
+          error={Boolean(errors.timeClose)}
+          helperText={errors.timeClose}
         />
 
 <TextField
@@ -506,6 +608,8 @@ const renderPlaceMedia = () => {
           value={formData.longitude}
           onChange={(e) => setLongitude(e.target.value)}
           margin="normal"
+          error={Boolean(errors.longitude)}
+          helperText={errors.longitude}
         />
         <TextField
           fullWidth
@@ -514,6 +618,8 @@ const renderPlaceMedia = () => {
           value={formData.latitude}
           onChange={(e) => setLatitude(e.target.value)}
           margin="normal"
+          error={Boolean(errors.latitude)}
+          helperText={errors.latitude}
         />
         <Button onClick={handleOpenMap} variant="outlined">
           Choose on Map
@@ -547,6 +653,8 @@ const renderPlaceMedia = () => {
           value={formData.contactLink}
           onChange={handleInputChanges}
           margin="normal"
+          error={Boolean(errors.contactLink)}
+          helperText={errors.contactLink}
         />
 
         {/* Tags - Autocomplete */}
@@ -557,7 +665,14 @@ const renderPlaceMedia = () => {
   getOptionLabel={(option) => option.tagName}  // Hiển thị tên của mỗi tag
   onChange={handleTagsChange}  // Cập nhật khi người dùng thay đổi lựa chọn
   value={tags.filter(tag => formData.tags.includes(tag.id))}  // Chỉ hiển thị những tag đã chọn trong input
-  renderInput={(params) => <TextField {...params} label="Tags" />}
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Tags"
+      error={Boolean(errors.tags)}
+      helperText={errors.tags}
+    />
+  )}
   disableCloseOnSelect  // Giữ các lựa chọn trong input khi nhấn vào tag
 />
 
@@ -612,6 +727,7 @@ const renderPlaceMedia = () => {
       onChange={handlePhotoDisplayChange}
     />
   )}
+   {errors.photoDisplay && <div style={{ color: 'red' }}>{errors.photoDisplay}</div>}
 </div>
 
 
@@ -622,6 +738,7 @@ const renderPlaceMedia = () => {
         <div>
           <h4>Place Media</h4>
           {renderPlaceMedia()}
+          {errors.placeMedia && <div style={{ color: 'red' }}>{errors.placeMedia}</div>}
         </div>
 
         {/* Add New Media */}
@@ -636,14 +753,21 @@ const renderPlaceMedia = () => {
           </Button>
           {formData.placeTranslations.map((translation, index) => (
             <div key={index} style={{ marginTop: '15px' }}>
-              <TextField
-                fullWidth
-                label={`Language Code ${index + 1}`}
-                name="languageCode"
-                value={translation.languageCode}
-                onChange={(event) => handleInputChange(event, index)}
-                margin="normal"
-              />
+              <Select
+      fullWidth
+      value={translation.languageCode || ''}
+      onChange={(event) => {
+        const updatedTranslations = [...formData.placeTranslations];
+        updatedTranslations[index] = {
+          ...updatedTranslations[index],
+          languageCode: event.target.value,
+        };
+        setFormData({ ...formData, placeTranslations: updatedTranslations });
+      }}
+    >
+      <MenuItem value="vi">VN</MenuItem>
+      <MenuItem value="en">EN</MenuItem>
+    </Select>
               <TextField
                 fullWidth
                 label={`Name ${index + 1}`}
@@ -651,6 +775,8 @@ const renderPlaceMedia = () => {
                 value={translation.name}
                 onChange={(event) => handleInputChange(event, index)}
                 margin="normal"
+                error={Boolean(errors.placeTranslations[index])}
+                helperText={errors.placeTranslations[index]}
               />
               <TextField
                 fullWidth
@@ -659,6 +785,8 @@ const renderPlaceMedia = () => {
                 value={translation.description}
                 onChange={(event) => handleInputChange(event, index)}
                 margin="normal"
+                error={Boolean(errors.placeTranslations[index])}
+                helperText={errors.placeTranslations[index]}
               />
               <TextField
                 fullWidth
@@ -667,6 +795,8 @@ const renderPlaceMedia = () => {
                 value={translation.address}
                 onChange={(event) => handleInputChange(event, index)}
                 margin="normal"
+                error={Boolean(errors.placeTranslations[index])}
+                helperText={errors.placeTranslations[index]}
               />
               <TextField
                 fullWidth
@@ -675,6 +805,8 @@ const renderPlaceMedia = () => {
                 value={translation.contact}
                 onChange={(event) => handleInputChange(event, index)}
                 margin="normal"
+                error={Boolean(errors.placeTranslations[index])}
+                helperText={errors.placeTranslations[index]}
               />
               <Button
                 variant="outlined"

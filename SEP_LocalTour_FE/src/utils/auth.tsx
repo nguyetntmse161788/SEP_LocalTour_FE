@@ -45,7 +45,7 @@ export const refreshAccessToken = async (): Promise<string> => {
     // Save the new accessToken in localStorage
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('userId', data.userId);
-      Cookies.set('refreshToken', data.refreshToken, { expires: 7, path: '/' });
+      Cookies.set('refreshToken', data.refreshToken);
       const decodedToken = jwtDecode<JwtPayloadWithRole>(data.accessToken);
       const userRoles = Array.isArray(decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'])
         ? decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']

@@ -14,7 +14,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableNoData } from '../table-no-data';
-import { PlaceTableRow } from '../place-table-row';
+import { PlaceTableRow } from '../all-place-table-row';
 import { PlaceTableHead } from '../place-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
 import { PlaceTableToolbar } from '../place-table-toolbar';
