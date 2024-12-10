@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-
+import axiosInstance from 'src/utils/axiosInstance';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
@@ -25,6 +25,7 @@ import { emptyRows, applyFilter, getComparator } from '../utils';
 
 
 
+
 // ----------------------------------------------------------------------
 
 // Hàm fetchEvents hỗ trợ phân trang
@@ -38,7 +39,7 @@ const fetchEvents = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi')
   }
 
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Event/getallevent`, {
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Event/getallevent`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -66,7 +67,7 @@ const updateEventStatus = async (placeId: number, eventId: number, status: strin
   }
 
   try {
-    const response = await axios.put(
+    const response = await axiosInstance.put(
       `https://api.localtour.space/api/Event/changeStatusEvent`,
       null,
       {

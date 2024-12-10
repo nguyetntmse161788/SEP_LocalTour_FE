@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import axios from 'axios';
+import axiosInstance from 'src/utils/axiosInstance';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
@@ -49,7 +50,7 @@ const fetchPlaces = async (
     }
 
     // Make the GET request
-    const response = await axios.get(url, {
+    const response = await axiosInstance.get(url, {
       headers: {
         Authorization: `Bearer ${token}`,  // Include token for authentication
       },

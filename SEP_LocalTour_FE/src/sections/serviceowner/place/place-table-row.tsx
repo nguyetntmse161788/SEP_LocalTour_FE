@@ -14,11 +14,12 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
-
+import axiosInstance from 'src/utils/axiosInstance';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import axios from 'axios';
 import UpdatePlaceForm from './view/update-place';
+
 
 // ----------------------------------------------------------------------
 
@@ -41,14 +42,16 @@ type UserTableRowProps = {
   selected: boolean;
   onSelectRow: () => void;
   onDeletePlace: any;
+  onUpdatePlace: any;
 };
 
-export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace }: UserTableRowProps) {
+export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpdatePlace }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);  // State for confirmation dialog
   const [openEditDialog, setOpenEditDialog] = useState(false);  // State for the edit dialog
   const [placeIdToEdit, setPlaceIdToEdit] = useState<string>('');
   const navigate = useNavigate();  // Hook for navigation
+  const [places, setPlaces] = useState<UserProps[]>([]);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -86,7 +89,7 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace }: Use
     }
 
     try {
-      await axios.delete(`https://api.localtour.space/api/Place/delete?placeid=${row.id}`, {
+      await axiosInstance.delete(`https://api.localtour.space/api/Place/delete?placeid=${row.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         }
@@ -102,7 +105,12 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace }: Use
   const handleCancelDelete = () => {
     setOpenConfirmDialog(false);  // Close the confirmation dialog
   };
-
+  const handlePlaceUpdated = (updatedPlace: UserProps) => {
+    // Khi cập nhật xong, gọi onUpdatePlace để cập nhật lại danh sách
+    onUpdatePlace(updatedPlace);
+    setOpenEditDialog(false);
+  };
+  
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected} onClick={handleRowClick}>
@@ -169,10 +177,7 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace }: Use
         open={openEditDialog}
         placeId={placeIdToEdit}
         onClose={() => setOpenEditDialog(false)}
-        onPlaceUpdated={() => {
-          // Refresh the place list after saving
-          onDeletePlace(placeIdToEdit); // You can trigger a refresh here
-        }}
+        onPlaceUpdated={handlePlaceUpdated}
       />
     </>
   );

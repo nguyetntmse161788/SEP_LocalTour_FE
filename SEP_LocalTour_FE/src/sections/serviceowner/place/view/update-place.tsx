@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { TextField, Autocomplete, Button, Dialog, DialogTitle, DialogContent, DialogActions, Grid } from '@mui/material';
 import MapComponent from 'src/components/map/map-component';
+import axiosInstance from 'src/utils/axiosInstance';
 // import { UserProps } from '../place-table-row';
 
 
@@ -42,7 +43,10 @@ interface Ward {
   id: string;
   wardName: string;
 }
-
+interface PlaceMedia {
+  type: string,
+  url: string,
+}
 function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlaceFormProps) {
   const [formData, setFormData] = useState({
     wardId: '',
@@ -54,7 +58,7 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
     tags: [] as string[],
     placeTranslations: [] as PlaceTranslation[],
     photoDisplay: null as File | null,
-    placeMedia: [] as (File | null)[],
+    placeMedia: [] as { type: string, url: string }[],
     isVerified: false,
     status: '0',
   });
@@ -69,15 +73,16 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
   const [wards, setWards] = useState<Ward[]>([]);
   const [selectedProvince, setSelectedProvince] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [initialFormData, setInitialFormData] = useState(formData);
+  
 
   // Lấy dữ liệu hiện tại của địa điểm từ API
   useEffect(() => {
     const fetchPlaceData = async () => {
       try {
-        const response = await axios.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${placeId}`);
+        const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?placeid=${placeId}`);
         const placeData = response.data;
-
-        setFormData({
+        const fetchedData = {
           wardId: placeData.wardId || '',
           timeOpen: placeData.timeOpen || '',
           timeClose: placeData.timeClose || '',
@@ -87,14 +92,23 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
           tags: placeData.tags || [],
           placeTranslations: placeData.placeTranslations || [],
           photoDisplay: placeData.photoDisplay,
-          placeMedia: [],
+          placeMedia: placeData.placeMedia.map((media: { type: string, url: string }) => ({
+            type: media.type,
+            url: media.url
+          })),
           isVerified: placeData.isVerified || false,
           status: placeData.status || '0',
-        });
-        setSelectedProvince(placeData.provinceId);
-        setSelectedDistrict(placeData.districtId);
-        fetchDistricts(placeData.provinceId); // Fetch districts for selected province
-        fetchWards(placeData.districtId);
+        };
+        setFormData(fetchedData); 
+        setInitialFormData(fetchedData); 
+        const district = await axiosInstance.get(`https://api.localtour.space/api/Address/getDistrictByWardId?wardId=${placeData.wardId}`);
+        const datadistrict = district.data;
+        setSelectedDistrict(datadistrict.id);
+        const province = await axiosInstance.get(`https://api.localtour.space/api/Address/getProvinceByDistrictId?districtId=${datadistrict.id}`);
+        const dataprovince = province.data;
+        setSelectedProvince(dataprovince.id);
+        fetchDistricts(dataprovince.id);
+        fetchWards(datadistrict.id);
         fetchTagsForPlace(placeId);
       } catch (error) {
         console.error('Error fetching place data:', error);
@@ -102,12 +116,17 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
     };
 
     fetchPlaceData();
-  }, [placeId]);
+  }, [open,placeId]);
+  const handleClose = () => {
+    setFormData(initialFormData); 
+    onClose();
+  };
+  
   const fetchTagsForPlace = async (placeid: string) => {
     try {
-      const response = await axios.get(`https://api.localtour.space/api/Place/getTagsInPlace?placeId=${placeid}`);
+      const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getTagsInPlace?placeId=${placeid}`);
       const tagsForPlace = response.data; // Assuming response.data.items is the list of tags
-      setTags(tagsForPlace); // Store the tags in the `tags` state
+      // setTags(tagsForPlace); // Store the tags in the `tags` state
       setFormData((prevData) => ({
         ...prevData,
         tags: tagsForPlace.map((tag: { id: string }) => tag.id), // Store the tag IDs
@@ -150,7 +169,7 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const response = await axios.get('https://api.localtour.space/api/Tag/getAll');
+        const response = await axiosInstance.get('https://api.localtour.space/api/Tag/getAll?Size=1000');
         setTags(response.data.items);
       } catch (error) {
         console.error('Error fetching tags:', error);
@@ -162,7 +181,7 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
-        const response = await axios.get('https://api.localtour.space/api/Address/Province');
+        const response = await axiosInstance.get('https://api.localtour.space/api/Address/Province');
         setProvinces(response.data);
       } catch (error) {
         console.error('Error fetching provinces:', error);
@@ -174,7 +193,7 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
   
   const fetchDistricts = async (provinceId: any) => {
     try {
-      const response = await axios.get(`https://api.localtour.space/api/Address/District?provinceI=${provinceId}`);
+      const response = await axiosInstance.get(`https://api.localtour.space/api/Address/District?provinceI=${provinceId}`);
       setDistricts(response.data);
     } catch (error) {
       console.error('Error fetching districts:', error);
@@ -183,7 +202,7 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
   
   const fetchWards = async (districtId: any) => {
     try {
-      const response = await axios.get(`https://api.localtour.space/api/Address/Ward?cityId=${districtId}`);
+      const response = await axiosInstance.get(`https://api.localtour.space/api/Address/Ward?cityId=${districtId}`);
       console.log('Wards Response:', response.data);
       setWards(response.data);
     } catch (error) {
@@ -214,21 +233,6 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
     });
   };
 
-  // Hàm xử lý thêm một ảnh mới vào PlaceMedia
-  const addPlaceMedia = () => {
-    setFormData((prevData) => ({
-      ...prevData,
-      placeMedia: [...prevData.placeMedia, null], // Thêm một phần tử null vào mảng placeMedia
-    }));
-  };
-
-  // Hàm xử lý xóa một ảnh trong PlaceMedia
-  const removePlaceMedia = (index: number) => {
-    setFormData((prevData) => {
-      const updatedPlaceMedia = prevData.placeMedia.filter((_, i) => i !== index);
-      return { ...prevData, placeMedia: updatedPlaceMedia };
-    });
-  };
   const handlePhotoDisplayChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files as FileList | null;
     
@@ -240,25 +244,95 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
     }
   };
 
-  const handlePlaceMediaChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const files = event.target.files;
-  
-    if (files && files.length > 0) {
-      // Lưu file vào đúng vị trí trong mảng
-      setFormData((prevData) => {
-        const updatedPlaceMedia = [...prevData.placeMedia];
-        updatedPlaceMedia[index] = files[0]; // Cập nhật file
-        return { ...prevData, placeMedia: updatedPlaceMedia };
+// Handle file input for media 
+const handlePlaceMediaChange = async (
+  event: React.ChangeEvent<HTMLInputElement>, 
+  index: number
+) => {
+  const files = event.target.files;
+  if (files && files.length > 0) {
+    const file = files[0];
+    const updatedPlaceMedia = [...formData.placeMedia];
+    try {
+      // Gửi file đến API để lấy link
+      const formDataToSend = new FormData();
+      formDataToSend.append('files', file);
+
+      const response = await fetch('https://api.localtour.space/api/File/createlink', {
+        method: 'POST',
+        body: formDataToSend,
       });
-    } else {
-      // Nếu không có file, gán null cho vị trí đó (nếu bạn muốn xóa file)
-      setFormData((prevData) => {
-        const updatedPlaceMedia = [...prevData.placeMedia];
-        updatedPlaceMedia[index] = null; // Xóa file
-        return { ...prevData, placeMedia: updatedPlaceMedia };
-      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      const result = await response.json(); // Phản hồi từ API
+      let fileLink = '';
+
+      // Kiểm tra phản hồi và trích xuất link từ mảng tương ứng
+      if (file.type.includes('image') && result.imageUrls && result.imageUrls.length > 0) {
+        fileLink = result.imageUrls[0]; // Lấy link ảnh đầu tiên
+      } else if (file.type.includes('video') && result.videoUrls && result.videoUrls.length > 0) {
+        fileLink = result.videoUrls[0]; // Lấy link video đầu tiên
+      } else {
+        throw new Error('No URL returned for the uploaded file');
+      }
+
+      // Cập nhật dữ liệu media
+      updatedPlaceMedia[index] = { 
+        type: file.type.includes('image') ? 'Image' : 'Video', 
+        url: fileLink, // URL trả về từ API
+      };
+
+      // Cập nhật state
+      setFormData({ ...formData, placeMedia: updatedPlaceMedia });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      // Xử lý lỗi (nếu cần)
     }
-  };
+  }
+};
+
+
+// Handle removing a media item
+const removePlaceMedia = (index: number) => {
+  const updatedPlaceMedia = formData.placeMedia.filter((_, i) => i !== index);
+  setFormData({ ...formData, placeMedia: updatedPlaceMedia });
+};
+
+// Render media based on its type (Image or Video)
+const renderPlaceMedia = () => {
+  return formData.placeMedia.map((media, index) => (
+    <Grid container key={index} spacing={2} alignItems="center">
+      <Grid item xs={6}>
+        {media.url ? (
+          media.type === 'Image' ? (
+            <img src={media.url} alt="Media" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }} />
+          ) : (
+            <video width="100%" height="auto" controls>
+              <source src={media.url} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          )
+        ) : (
+          // No media preview for a new item
+          <div>No media selected</div>
+        )}
+      </Grid>
+      <Grid item xs={6}>
+        {!media.url && ( // Only show input and remove button when no media is selected
+          <>
+            <input type="file" accept="image/*,video/*" onChange={(e) => handlePlaceMediaChange(e, index)} />
+          </>
+        )}
+        <Button variant="contained" color="error" onClick={() => removePlaceMedia(index)}>
+          Remove
+        </Button>
+      </Grid>
+    </Grid>
+  ));
+};
 
 
   // Cập nhật dữ liệu form
@@ -284,12 +358,13 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
   
 
   const handleTagsChange = (event: React.ChangeEvent<{}>, newValue: { id: string; tagName: string }[]) => {
-    // Map through the new selected tags and update the form data
+    // Update the formData tags with the selected tags' ids
     setFormData((prevData) => ({
       ...prevData,
       tags: newValue.map((tag) => tag.id),  // Save only the tag IDs
     }));
   };
+  
   
 
   const handleSubmit = async () => {
@@ -306,15 +381,28 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
       formData.tags.forEach((tagId) => formDataToSend.append('Tags', tagId));
       formDataToSend.append('PlaceTranslation', JSON.stringify(formData.placeTranslations));
 
-      if (formData.photoDisplay) {
-        formDataToSend.append('PhotoDisplay', formData.photoDisplay);
+      let photoDisplayUrl = formData.photoDisplay;
+      if (formData.photoDisplay && formData.photoDisplay instanceof File) {
+        const photoFormData = new FormData();
+        photoFormData.append('file', formData.photoDisplay);
+        
+        const response = await axios.post('https://api.localtour.space/api/File/link', photoFormData);
+        photoDisplayUrl = response.data?.data; // Lấy URL trả về từ API
       }
-
+  
+      formDataToSend.append('PhotoDisplay', photoDisplayUrl as unknown as string);
+        
       formData.placeMedia.forEach((media) => {
-        if (media) {
-          formDataToSend.append('PlaceMedia', media);
+        if (media.url) {
+          if (typeof media.url === 'string') {
+            formDataToSend.append('PlaceMedia', media.url);
+          } else {
+            formDataToSend.append('PlaceMedia', media.url);
+          }
         }
       });
+      
+      
 
       const response = await axios.put(
         `https://api.localtour.space/api/Place/update?placeid=${placeId}`,
@@ -465,36 +553,38 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
         <Autocomplete
   multiple
   id="tags"
-  options={tags}
-  getOptionLabel={(option) => option.tagName}
-  onChange={handleTagsChange}
-  value={tags.filter((tag) => formData.tags.includes(tag.id))} 
+  options={tags}  // Tất cả các tag từ API
+  getOptionLabel={(option) => option.tagName}  // Hiển thị tên của mỗi tag
+  onChange={handleTagsChange}  // Cập nhật khi người dùng thay đổi lựa chọn
+  value={tags.filter(tag => formData.tags.includes(tag.id))}  // Chỉ hiển thị những tag đã chọn trong input
   renderInput={(params) => <TextField {...params} label="Tags" />}
-  disableCloseOnSelect
+  disableCloseOnSelect  // Giữ các lựa chọn trong input khi nhấn vào tag
 />
+
+
+
+
 
 
         {/* Photo Display */}
         <div style={{ marginTop: '20px' }}>
   <div style={{ fontWeight: 'bold' }}>Photo Display</div>
   
-  {/* Kiểm tra nếu photoDisplay là URL */}
-  {formData.photoDisplay && typeof formData.photoDisplay === 'string' ? (
-    // Nếu là URL, hiển thị ảnh
+  {formData.photoDisplay ? (
     <div style={{ position: 'relative', width: '100%', maxWidth: '200px', marginBottom: '10px' }}>
       <img 
-        src={formData.photoDisplay} 
+        src={typeof formData.photoDisplay === 'string' 
+          ? formData.photoDisplay 
+          : URL.createObjectURL(formData.photoDisplay)} 
         alt="Display of the place"
         style={{
           width: '100%',
           height: 'auto',
           maxHeight: '200px',
           objectFit: 'cover',
-          borderRadius: '10px',  // Tạo bo góc cho ảnh
+          borderRadius: '10px',
         }} 
       />
-      
-      {/* Dấu "X" trên góc phải của ảnh */}
       <Button
         variant="contained"
         color="error"
@@ -506,17 +596,15 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
           padding: '5px',
           minWidth: 'unset',
           borderRadius: '50%',
-          fontSize: '16px',  // Kích thước chữ của dấu X
-          backgroundColor: 'rgba(255, 0, 0, 0.7)', // Màu nền đỏ trong suốt
-          color: '#fff', // Màu chữ trắng
-          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',  // Thêm bóng cho nút
+          fontSize: '16px',
+          backgroundColor: 'rgba(255, 0, 0, 0.7)',
+          color: '#fff',
         }}
       >
         X
       </Button>
     </div>
   ) : (
-    // Nếu không phải URL (null hoặc file), hiển thị input để chọn ảnh
     <input
       type="file"
       accept="image/*"
@@ -529,34 +617,17 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
 
 
 
+
         {/* Place Media */}
-        <div style={{ marginTop: '20px' }}>
-          <Button variant="outlined" onClick={addPlaceMedia}>
-            Add Place Media
-          </Button>
-          {formData.placeMedia.map((media, index) => (
-            <Grid container key={index} spacing={2} alignItems="center" style={{ marginTop: '10px' }}>
-              <Grid item>
-                <label htmlFor={`placeMedia-${index}`}>Media {index + 1}</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  id={`placeMedia-${index}`}
-                  onChange={(event) => handlePlaceMediaChange(event, index)}
-                />
-              </Grid>
-              <Grid item>
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={() => removePlaceMedia(index)}
-                >
-                  Remove
-                </Button>
-              </Grid>
-            </Grid>
-          ))}
+        <div>
+          <h4>Place Media</h4>
+          {renderPlaceMedia()}
         </div>
+
+        {/* Add New Media */}
+        <Button variant="contained" color="primary" onClick={() => setFormData({ ...formData, placeMedia: [...formData.placeMedia, { type: '', url: '' }] })}>
+          Add Media
+        </Button>
 
         {/* Place Translations */}
         <div style={{ marginTop: '20px' }}>
@@ -618,7 +689,7 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
         </div>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={handleClose} color="secondary">
           Cancel
         </Button>
         <Button onClick={handleSubmit} color="primary">

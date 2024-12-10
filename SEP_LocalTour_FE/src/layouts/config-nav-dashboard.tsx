@@ -69,6 +69,16 @@ export const navData = (role: string | null): NavItem[] => {
         </Label>
       ),
     },
+    isServiceOwner && {
+      title: 'Banner',
+      path:'/owner/banner',
+      icon: icon('ic-cart'),
+    },
+    isServiceOwner && {
+      title: 'User Tranfer',
+      path:'/owner/usertranfer',
+      icon: icon('ic-cart'),
+    },
     // {
     //   title: 'Product',
     //   path: '/products',

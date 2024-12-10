@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Outlet, Navigate, useRoutes } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
@@ -7,6 +7,7 @@ import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { CurrentPage } from 'src/layouts/components/currentpage';
 import { PrivateRoute } from 'src/sections/auth/privateroute';
+import { refreshAccessToken } from 'src/utils/auth';
 
 // ----------------------------------------------------------------------
 
@@ -26,6 +27,8 @@ export const ServiceOwnerEventPage = lazy(() => import('src/pages/owner/event'))
 export const ServiceOwnerEventViewPage = lazy(() => import('src/pages/owner/place-event-view'));
 export const ServiceOwnerActivityPage = lazy(() => import('src/pages/owner/activity'));
 export const ServiceOwnerActivityViewPage = lazy(() => import('src/pages/owner/place-activity-view'));
+export const BannerListPage = lazy(() => import('src/pages/owner/banner-list'));
+export const UserTranferPage = lazy(() => import('src/pages/owner/usertranfer'));
 
 export const UserRolePage = lazy(() => import('src/pages/admin/user-role'));
 export const UserBanPage = lazy(() => import('src/pages/admin/user-ban'));
@@ -56,7 +59,6 @@ function AppRoutes() {
       return [];
     }
   })();
-  
   return useRoutes([
     {
       element: (
@@ -88,6 +90,8 @@ function AppRoutes() {
               { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
               { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },
               { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
+              { path: 'owner/banner', element: <BannerListPage /> },
+              { path: 'owner/usertranfer', element: <UserTranferPage /> },
             ]
           : []),
           ...(userRole.includes('Administrator')

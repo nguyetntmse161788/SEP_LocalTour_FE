@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Grid } from '@mui/material';
 import axios from 'axios';
+import axiosInstance from 'src/utils/axiosInstance';
 
 interface NewActivityFormProps {
   open: boolean;
@@ -63,7 +64,7 @@ export function NewActivityForm({ open, onClose, onActivityCreated, placeId }: N
     });
 
     try {
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `https://api.localtour.space/api/PlaceActivity/create?placeid=${placeId}`,
         formData,
         {

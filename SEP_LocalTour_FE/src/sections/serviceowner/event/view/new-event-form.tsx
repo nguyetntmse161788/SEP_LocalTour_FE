@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from '@mui/material';
 import axios from 'axios';
+import axiosInstance from 'src/utils/axiosInstance';
 
 interface NewEventFormProps {
   open: boolean;
@@ -15,6 +16,17 @@ export function NewEventForm({ open, onClose, onEventCreated, placeId }: NewEven
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [eventPhoto, setPhoto] = useState<File | null>(null); // Thêm state cho ảnh
+
+  useEffect(() => {
+    if (!open) {
+      // Reset form khi form đóng
+      setEventName('');
+      setDescription('');
+      setStartDate('');
+      setEndDate('');
+      setPhoto(null);
+    }
+  }, [open]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -46,7 +58,7 @@ export function NewEventForm({ open, onClose, onEventCreated, placeId }: NewEven
     console.log("Data being sent to API:", formData);  // Kiểm tra dữ liệu
   
     try {
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `https://api.localtour.space/api/Event/create`,
         formData,
         {
