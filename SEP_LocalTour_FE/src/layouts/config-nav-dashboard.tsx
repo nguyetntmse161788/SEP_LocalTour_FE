@@ -19,7 +19,7 @@ export const navData = (role: string | null): NavItem[] => {
   const isServiceOwner = Array.isArray(role) && role.includes('Service Owner');
 
   const navItems: (NavItem | false)[] = [
-    {
+    isAdmin && {
       title: 'Dashboard',
       path: '/',
       icon: icon('ic-analytics'),

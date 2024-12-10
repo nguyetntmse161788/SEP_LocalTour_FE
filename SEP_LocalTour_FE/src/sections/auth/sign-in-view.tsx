@@ -119,9 +119,16 @@ export function SignInView() {
       // Lưu thông tin người dùng và vai trò vào localStorage
       localStorage.setItem('user', JSON.stringify(data));
       localStorage.setItem('role', JSON.stringify(validUserRoles));
-      localStorage.setItem('currentPath', '/'); // Lưu lại đường dẫn trang chính sau khi đăng nhập
-      
-      router.replace('/');
+      localStorage.setItem('currentPath', '/'); 
+        if (validUserRoles.includes('Administrator')) {
+          router.replace('/'); 
+        } else if (validUserRoles.includes('Moderator')) {
+          router.replace('/place'); 
+        } else if (validUserRoles.includes('Service Owner')) {
+          router.replace('/owner/place'); 
+        } else {
+          router.replace('/404');
+        }
     } catch (err) {
       setError(err.message || 'Invalid phone number or password');
     } finally {

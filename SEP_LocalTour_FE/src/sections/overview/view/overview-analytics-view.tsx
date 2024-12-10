@@ -1,8 +1,9 @@
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { useState, useEffect } from 'react';
 import { _tasks, _posts, _timeline } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 
 import { AnalyticsNews } from '../analytics-news';
 import { AnalyticsTasks } from '../analytics-tasks';
@@ -13,6 +14,7 @@ import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
 import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
 import { AnalyticsCurrentSubject } from '../analytics-current-subject';
 import { AnalyticsConversionRates } from '../analytics-conversion-rates';
+
 
 // ----------------------------------------------------------------------
 
@@ -29,6 +31,36 @@ export function OverviewAnalyticsView() {
     total: 0,
     monthlyData: [],
   });
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [successfulTravelsbyDate, setSuccessfulTravelsbyDate] = useState<number | null>(null);
+  const [successfulTravels, setSuccessfulTravels] = useState<number | null>(null);
+  const [totalSchedulesCreated, setTotalSchedulesCreated] = useState<number | null>(null);
+  const [totalSchedulesCreatedbyDate, setTotalSchedulesCreatedbyDate] = useState<number | null>(null);
+  const [startDateCreated, setStartDateCreated] = useState('');
+  const [endDateCreated, setEndDateCreated] = useState('');
+  const [totalPostsCreated, setTotalPostsCreated] = useState<number | null>(null);
+  const [totalPostsCreatedbyDate, setTotalPostsCreatedbyDate] = useState<number | null>(null);
+  const [startDatePost, setStartDatePost] = useState('');
+  const [endDatePost, setEndDatePost] = useState('');
+
+  const handleClearTravels = () => {
+    setStartDate('');
+    setEndDate('');
+    setSuccessfulTravelsbyDate(null);
+  };
+
+  const handleClearSchedules = () => {
+    setStartDateCreated('');
+    setEndDateCreated('');
+    setTotalSchedulesCreatedbyDate(null);
+  };
+  const handleClearPosts = () => {
+    setStartDatePost('');
+    setEndDatePost('');
+    setTotalPostsCreatedbyDate(null);
+  };
+  
 
   useEffect(() => {
     
@@ -63,6 +95,116 @@ export function OverviewAnalyticsView() {
 
     fetchUserRegistrations();
   }, []); // Fetch data on component mount
+
+  useEffect(() => {
+    const fetchSuccessfulTravels = async () => {
+      const startDateSuccess = '2024-01-01';
+      const endDateSuccess = '2024-12-31';
+      try {
+        const response = await fetch(
+          `https://api.localtour.space/api/Statistic/GetTotalSuccessfulTravelsAsync?startDate=${startDateSuccess}&endDate=${endDateSuccess}`
+        );
+        const data = await response.text();
+      const totalTravels = parseInt(data, 10); 
+      setSuccessfulTravels(totalTravels || 0); 
+      } catch (error) {
+        console.error('Error fetching total successful travels:', error);
+      }
+    };
+
+    fetchSuccessfulTravels();
+  }, []);
+  const handleFetchStatistics = async () => {
+    if (!startDate || !endDate) {
+      alert('Please enter both start and end dates.');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.localtour.space/api/Statistic/GetTotalSuccessfulTravelsAsync?startDate=${startDate}&endDate=${endDate}`
+      );
+      const data = await response.text();
+      const totalTravels = parseInt(data, 10);
+      setSuccessfulTravelsbyDate(totalTravels || 0);
+    } catch (error) {
+      console.error('Error fetching travel statistics:', error);
+      setSuccessfulTravelsbyDate(null);
+    }
+  };
+  useEffect(() => {
+    const fetchTotalSchedulesCreated  = async () => {
+      const startDatebyCreated = '2024-01-01';
+      const endDatebyCreated = '2024-12-31';
+      try {
+        const response = await fetch(
+          `https://api.localtour.space/api/Statistic/GetTotalSchedulesCreatedAsync?startDate=${startDatebyCreated}&endDate=${endDatebyCreated}`
+        );
+        const data = await response.text();
+      const totalTravels = parseInt(data, 10); 
+      setTotalSchedulesCreated(totalTravels || 0); 
+      } catch (error) {
+        console.error('Error fetching total successful travels:', error);
+      }
+    };
+
+    fetchTotalSchedulesCreated();
+  }, []);
+  const handlefetchTotalSchedulesCreated = async () => {
+    if (!startDateCreated || !endDateCreated) {
+      alert('Please enter both start and end dates.');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.localtour.space/api/Statistic/GetTotalSchedulesCreatedAsync?startDate=${startDateCreated}&endDate=${endDateCreated}`
+      );
+      const data = await response.text();
+      const totalTravels = parseInt(data, 10);
+      setTotalSchedulesCreatedbyDate(totalTravels || 0);
+    } catch (error) {
+      console.error('Error fetching travel statistics:', error);
+      setTotalSchedulesCreatedbyDate(null);
+    }
+  };
+  useEffect(() => {
+    const fetchTotalPostsCreated  = async () => {
+      const startDateofPost = '2024-01-01';
+      const endDateofPost = '2024-12-31';
+      try {
+        const response = await fetch(
+          `https://api.localtour.space/api/Statistic/GetTotalPostsCreatedAsync?startDate=${startDateofPost}&endDate=${endDateofPost}`
+        );
+        const data = await response.text();
+      const totalTravels = parseInt(data, 10); 
+      setTotalPostsCreated(totalTravels || 0); 
+      } catch (error) {
+        console.error('Error fetching total successful travels:', error);
+      }
+    };
+
+    fetchTotalPostsCreated();
+  }, []);
+  const handlefetchTotalPostsCreated = async () => {
+    if (!startDatePost || !endDatePost) {
+      alert('Please enter both start and end dates.');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.localtour.space/api/Statistic/GetTotalPostsCreatedAsync?startDate=${startDatePost}&endDate=${endDatePost}`
+      );
+      const data = await response.text();
+      const totalTravels = parseInt(data, 10);
+      setTotalPostsCreatedbyDate(totalTravels || 0);
+    } catch (error) {
+      console.error('Error fetching travel statistics:', error);
+      setTotalPostsCreatedbyDate(null);
+    }
+  };
+
 
   const { total, monthlyData } = userRegistrations;
   const categories = monthlyData.map((item) => item.monthName);
@@ -99,13 +241,13 @@ export function OverviewAnalyticsView() {
 
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="People completing the trip"
-            percent={2.6}
-            total={714000}
+            title="Total Successful Travels By This Year"
+            percent={2.6} // Example percentage, you can replace with actual data
+            total={successfulTravels ?? 0}
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [22, 8, 35, 50, 82, 84, 77, 12],
+              categories: ['2023-2024'], // No chart data for this widget
+              series: [successfulTravels ?? 0],
             }}
           />
         </Grid>
@@ -113,14 +255,14 @@ export function OverviewAnalyticsView() {
         {/* Purchase Orders Widget */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Purchase orders"
+            title="Get Total Schedules Created"
             percent={2.8}
-            total={1723315}
+            total={totalSchedulesCreated ?? 0}
             color="warning"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [40, 70, 50, 28, 70, 75, 7, 64],
+              categories: ['2023-2024'], // No chart data for this widget
+              series: [totalSchedulesCreated ?? 0],
             }}
           />
         </Grid>
@@ -128,14 +270,14 @@ export function OverviewAnalyticsView() {
         {/* Messages Widget */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Messages"
+            title="Get Total Posts Created"
             percent={3.6}
-            total={234}
+            total={totalPostsCreated ?? 0}
             color="error"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [56, 30, 23, 54, 47, 40, 62, 73],
+              categories: ['2023-2024'], // No chart data for this widget
+              series: [totalPostsCreated ?? 0],
             }}
           />
         </Grid>
@@ -156,7 +298,205 @@ export function OverviewAnalyticsView() {
           }}
         />
       </Grid>
+
+      <Grid item xs={12}>
+      <Typography variant="h4" sx={{ mb: 3 }}>
+      Total Successful Travels
+      </Typography>
+    </Grid>
+
+    {/* Start Date and End Date on the same line */}
+    <Grid container spacing={3} alignItems="center">
+      <Grid item xs={12} md={6}>
+        <TextField
+          label="Start Date"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+        />
       </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          label="End Date"
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+    <Grid container spacing={2}>
+      <Grid item>
+        <Button variant="contained" color="primary" onClick={handleFetchStatistics}>
+          Get Statistics
+        </Button>
+      </Grid>
+      <Grid item>
+        <Button variant="outlined" color="secondary" onClick={handleClearTravels}>
+          Clear
+        </Button>
+      </Grid>
+    </Grid>
+  </Grid>
+      {successfulTravels !== null && (
+        <Grid item xs={12}>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Start Date</TableCell>
+                  <TableCell>End Date</TableCell>
+                  <TableCell align="right">Successful Travels</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell>{startDate}</TableCell>
+                  <TableCell>{endDate}</TableCell>
+                  <TableCell align="right">{successfulTravelsbyDate}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
+      )}
+    </Grid>
+
+    <Grid item xs={12}>
+      <Typography variant="h4" sx={{ mb: 3 }}>
+      Total Schedules Created
+      </Typography>
+    </Grid>
+
+    {/* Start Date and End Date on the same line */}
+    <Grid container spacing={3} alignItems="center">
+      <Grid item xs={12} md={6}>
+        <TextField
+          label="Start Date"
+          type="date"
+          value={startDateCreated}
+          onChange={(e) => setStartDateCreated(e.target.value)}
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          label="End Date"
+          type="date"
+          value={endDateCreated}
+          onChange={(e) => setEndDateCreated(e.target.value)}
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+    <Grid container spacing={2}>
+      <Grid item>
+        <Button variant="contained" color="primary" onClick={handlefetchTotalSchedulesCreated}>
+          Get Statistics
+        </Button>
+      </Grid>
+      <Grid item>
+        <Button variant="outlined" color="secondary" onClick={handleClearSchedules}>
+          Clear
+        </Button>
+      </Grid>
+    </Grid>
+  </Grid>
+      {successfulTravels !== null && (
+        <Grid item xs={12}>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Start Date</TableCell>
+                  <TableCell>End Date</TableCell>
+                  <TableCell align="right">Successful Travels</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell>{startDateCreated}</TableCell>
+                  <TableCell>{endDateCreated}</TableCell>
+                  <TableCell align="right">{totalSchedulesCreatedbyDate}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
+      )}
+    </Grid>
+
+    <Grid item xs={12}>
+      <Typography variant="h4" sx={{ mb: 3 }}>
+      Total Posts Created
+      </Typography>
+    </Grid>
+
+    {/* Start Date and End Date on the same line */}
+    <Grid container spacing={3} alignItems="center">
+      <Grid item xs={12} md={6}>
+        <TextField
+          label="Start Date"
+          type="date"
+          value={startDatePost}
+          onChange={(e) => setStartDatePost(e.target.value)}
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          label="End Date"
+          type="date"
+          value={endDatePost}
+          onChange={(e) => setEndDatePost(e.target.value)}
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+    <Grid container spacing={2}>
+      <Grid item>
+        <Button variant="contained" color="primary" onClick={handlefetchTotalPostsCreated}>
+          Get Statistics
+        </Button>
+      </Grid>
+      <Grid item>
+        <Button variant="outlined" color="secondary" onClick={handleClearPosts}>
+          Clear
+        </Button>
+      </Grid>
+    </Grid>
+  </Grid>
+      {successfulTravels !== null && (
+        <Grid item xs={12}>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Start Date</TableCell>
+                  <TableCell>End Date</TableCell>
+                  <TableCell align="right">Successful Travels</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell>{startDatePost}</TableCell>
+                  <TableCell>{endDatePost}</TableCell>
+                  <TableCell align="right">{totalPostsCreatedbyDate}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
+      )}
+    </Grid>
+  </Grid>
     </DashboardContent>
   );
 }

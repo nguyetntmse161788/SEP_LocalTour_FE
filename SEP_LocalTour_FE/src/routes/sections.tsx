@@ -14,7 +14,7 @@ import { refreshAccessToken } from 'src/utils/auth';
 // ----------------------------------------------------------------------
 
 export const HomePage = lazy(() => import('src/pages/home'));
-export const UserProfile = lazy(() => import('src/components/user/user-profile'));
+export const UserProfile = lazy(() => import('src/pages/profile'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/admin/user'));
 export const PlacePage = lazy(() => import('src/pages/place'));
@@ -74,7 +74,6 @@ function AppRoutes() {
         </PrivateRoute>
       ),
       children: [
-        { element: <HomePage />, index: true },
 
         ...(userRole.includes('Moderator')
           ? [
@@ -97,10 +96,12 @@ function AppRoutes() {
               { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
               { path: 'owner/banner', element: <BannerListPage /> },
               { path: 'owner/usertranfer', element: <UserTranferPage /> },
+              { path: 'profile', element: <UserProfile /> }
             ]
           : []),
         ...(userRole.includes('Administrator')
           ? [
+            { element: <HomePage />, index: true },
             { path: 'admin/user', element: <UserPage /> },
             { path: 'admin/role', element: <UserRolePage /> },
             // { path: 'admin', element: <AdminPage /> },
