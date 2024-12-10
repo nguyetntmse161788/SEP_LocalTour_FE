@@ -1,7 +1,7 @@
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Box, Typography, Button, Avatar, CircularProgress, Grid, Paper, Divider, Stack } from '@mui/material';
-import { format } from 'date-fns'; // Thư viện để xử lý ngày tháng
+import { useLocation, useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { Box, CircularProgress, Typography, Paper, Grid, Avatar, Divider, Stack, FormControl, InputLabel, Select, MenuItem, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 
 interface BannerHistory {
   id: string;
@@ -30,31 +30,33 @@ export function BannerDetailPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [updating, setUpdating] = useState<string | null>(null);
+  const [newStatus, setNewStatus] = useState<{ [key: string]: string }>({});
+  const [openDialog, setOpenDialog] = useState<boolean>(false); // state for dialog visibility
+  const [timeStart, setTimeStart] = useState<string>('');
+  const [timeEnd, setTimeEnd] = useState<string>('');
+  const [bannerId, setBannerId] = useState<string>('');
 
   useEffect(() => {
     if (!bannerDetail) {
       const token = localStorage.getItem('authToken');
       if (!token) {
         setError('No authentication token found. Please log in.');
-        navigate('/login');  // Chuyển hướng đến trang đăng nhập nếu không có token
+        navigate('/login');
         return;
       }
 
-      setLoading(true);
-      const bannerId = state?.banner?.id;
-      if (!bannerId) {
+      if (state?.banner?.id) {
+        setLoading(true);
+        fetchBannerDetail(state.banner.id, token); // Use state.banner.id directly
+      } else {
         setError('No banner ID available.');
-        setLoading(false);
-        return;
       }
-
-      fetchBannerDetail(bannerId, token);
     }
-  }, [bannerDetail, state?.banner?.id, navigate]); // Đảm bảo 'navigate' được bao gồm trong dependencies
+  }, [bannerDetail, state?.banner?.id, navigate]);
 
-  const fetchBannerDetail = async (bannerId: string, token: string) => {
+  const fetchBannerDetail = async (id: string, token: string) => { // Renamed the parameter to `id`
     try {
-      const response = await fetch(`https://api.localtour.space/api/Banner/GetDetail?id=${bannerId}`, {
+      const response = await fetch(`https://api.localtour.space/api/Banner/GetAll?id=${id}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -77,20 +79,22 @@ export function BannerDetailPage() {
 
   const handleStatusChange = async (historyId: string, currentStatus: string) => {
     setUpdating(historyId);
-
-    const newStatus = currentStatus === 'Active' ? 'Hide' : 'Active';
-
+  
     const token = localStorage.getItem('authToken');
     if (!token) {
       setError('No authentication token found. Please log in.');
-      setUpdating(null);
       navigate('/login');
       return;
     }
-
+  
+    const selectedStatus = newStatus[historyId] || currentStatus;
+  
+    console.log('historyId:', historyId); // In ra giá trị của historyId
+    console.log('selectedStatus:', selectedStatus); // In ra giá trị của selectedStatus
+  
     try {
       const response = await fetch(
-        `https://api.localtour.space/api/Banner/UpdateHistoryStatus?bannerHistoryId=${historyId}&status=${newStatus}`,
+        `https://api.localtour.space/api/Banner/UpdateHistoryStatus?bannerHistoryId=${historyId}&status=${selectedStatus}`,
         {
           method: 'POST',
           headers: {
@@ -99,29 +103,78 @@ export function BannerDetailPage() {
           },
         }
       );
-
+  
       if (!response.ok) {
         const errorData = await response.json();
-        console.log(errorData); // Log the error data
         throw new Error(errorData.message || 'Error updating status');
       }
-
-      // Cập nhật lại trạng thái của bannerDetail
-      if (bannerDetail) {
-        setBannerDetail((prev) => ({
-          ...prev!,
-          bannerHistories: prev!.bannerHistories.map((history) =>
-            history.id === historyId ? { ...history, status: newStatus } : history
-          ),
-        }));
-      }
+  
+      setBannerDetail((prev) => ({
+        ...prev!,
+        bannerHistories: prev!.bannerHistories.map((history) =>
+          history.id === historyId ? { ...history, status: selectedStatus } : history
+        ),
+      }));
     } catch (err: any) {
       setError(err.message || 'An error occurred while updating status');
     } finally {
       setUpdating(null);
     }
   };
+  
 
+  const handleStatusSelect = (historyId: string, status: string) => {
+    setNewStatus((prev) => ({ ...prev, [historyId]: status }));
+  };
+
+  const handleRunBanner = () => {
+    setOpenDialog(true);
+  };
+
+  const handleSubmitBannerHistory = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setError('No authentication token found. Please log in.');
+      navigate('/login');
+      return;
+    }
+  
+    console.log('bannerId:', bannerId); // In ra bannerId
+    console.log('timeStart:', timeStart); // In ra timeStart
+    console.log('timeEnd:', timeEnd); // In ra timeEnd
+  
+    try {
+      console.log('Data to send:', { bannerId, timeStart, timeEnd });
+      const response = await fetch('https://api.localtour.space/api/Banner/CreateHistory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          bannerId,
+          timeStart,
+          timeEnd,
+        }),
+      });
+  
+      console.log('Response status:', response.status); 
+      console.log('Response body:', await response.json()); 
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error data:', errorData); // Kiểm tra lỗi từ server
+        throw new Error(errorData.message || 'Error creating banner history');
+      }
+  
+      setOpenDialog(false);
+      alert('Banner history created successfully!');
+    } catch (err: any) {
+      console.error('Error occurred:', err); // In ra lỗi nếu có
+      setError(err.message || 'An error occurred while creating banner history');
+    }
+  };
+  
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
@@ -139,13 +192,7 @@ export function BannerDetailPage() {
       {bannerDetail && (
         <Paper elevation={3} sx={{ maxWidth: 900, mx: 'auto', p: 4, borderRadius: 2 }}>
           <Grid container spacing={3} alignItems="center">
-            <Grid item>
-              <Button variant="contained" onClick={() => { /* Thêm logic xử lý cho nút Run ở đây */ }}>
-                Run Banner
-              </Button>
-            </Grid>
-
-            <Grid item xs={12} textAlign="center" sx={{ marginLeft: 'auto', marginRight: 'auto' }}>
+            <Grid item xs={12} textAlign="center">
               <Typography variant="h5" gutterBottom>
                 Banner Details
               </Typography>
@@ -154,17 +201,12 @@ export function BannerDetailPage() {
 
             <Grid item xs={12} container spacing={2} alignItems="center">
               <Grid item>
-                <Avatar
-                  src={bannerDetail.authorProfileImage}
-                  alt={bannerDetail.authorName}
-                  sx={{ width: 56, height: 56, border: '2px solid', borderColor: 'primary.main' }}
-                />
+                <Avatar src={bannerDetail.authorProfileImage} alt={bannerDetail.authorName} sx={{ width: 56, height: 56 }} />
               </Grid>
               <Grid item>
                 <Typography variant="h6">{bannerDetail.authorName}</Typography>
                 <Typography variant="body2" color="textSecondary">
-                  {format(new Date(bannerDetail.createdDate), 'PPpp')} |{' '}
-                  {format(new Date(bannerDetail.updatedDate), 'PPpp')}
+                  {format(new Date(bannerDetail.createdDate), 'PPpp')}
                 </Typography>
               </Grid>
             </Grid>
@@ -172,7 +214,13 @@ export function BannerDetailPage() {
             <Divider sx={{ width: '100%' }} />
 
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom>
+              <Button variant="contained" onClick={handleRunBanner} sx={{ mt: 3 }}>
+                Run Banner
+              </Button>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography variant="h6">
                 Banner History
               </Typography>
               {bannerDetail.bannerHistories.length === 0 ? (
@@ -180,7 +228,17 @@ export function BannerDetailPage() {
               ) : (
                 <Stack spacing={2}>
                   {bannerDetail.bannerHistories.map((history) => (
-                    <Box key={history.id} sx={{ border: '1px solid #ddd', borderRadius: 2, p: 2 }}>
+                    <Box
+                      key={history.id}
+                      sx={{
+                        border: '1px solid #ddd',
+                        borderRadius: 2,
+                        p: 2,
+                        gap: 2,
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
+                    >
                       <Typography variant="body1" color="textSecondary">
                         Time Start: {format(new Date(history.timeStart), 'PPpp')}
                       </Typography>
@@ -190,30 +248,77 @@ export function BannerDetailPage() {
                       <Typography variant="body1">
                         <strong>Status:</strong> {history.status}
                       </Typography>
-                      
-                      <Button
-                        variant="contained"
-                        onClick={() => handleStatusChange(history.id, history.status)}
-                        disabled={updating === history.id}
-                      >
-                        {updating === history.id ? 'Updating...' : 'Change Status'}
-                      </Button>
+                      <Grid container alignItems="center" spacing={2}>
+                        <Grid item xs={4}>
+                          <FormControl fullWidth>
+                            <InputLabel>Status</InputLabel>
+                            <Select
+                              value={newStatus[history.id] || history.status}
+                              onChange={(e) => handleStatusSelect(history.id, e.target.value)}
+                            >
+                              <MenuItem value="Active">Active</MenuItem>
+                              <MenuItem value="Hide">Hide</MenuItem>
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={3} textAlign="right">
+                          <Button
+                            variant="contained"
+                            onClick={() => handleStatusChange(history.id, history.status)}
+                            disabled={updating === history.id}
+                            sx={{ minWidth: 120 }}
+                          >
+                            {updating === history.id ? 'Updating...' : 'Change Status'}
+                          </Button>
+                        </Grid>
+                      </Grid>
                     </Box>
                   ))}
                 </Stack>
               )}
             </Grid>
 
-            <Grid item xs={12} textAlign="center">
-              <Button variant="contained" sx={{ mt: 3 }} onClick={() => navigate(-1)}>
-                Back to list
-              </Button>
-            </Grid>
+
           </Grid>
         </Paper>
       )}
+
+      {/* Dialog for selecting timeStart and timeEnd */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Select Banner Run Time</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Time Start"
+            type="datetime-local"
+            fullWidth
+            value={timeStart}
+            onChange={(e) => setTimeStart(e.target.value)}
+            sx={{ mb: 2 }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            label="Time End"
+            type="datetime-local"
+            fullWidth
+            value={timeEnd}
+            onChange={(e) => setTimeEnd(e.target.value)}
+            sx={{ mb: 2 }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmitBannerHistory} color="primary">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
-
-export default BannerDetailPage;
