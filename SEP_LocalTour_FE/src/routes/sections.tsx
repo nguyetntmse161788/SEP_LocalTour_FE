@@ -7,6 +7,8 @@ import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { CurrentPage } from 'src/layouts/components/currentpage';
 import { PrivateRoute } from 'src/sections/auth/privateroute';
+import { BannerView } from 'src/sections/admin/banner/view/banner-view';
+import { BannerDetailPage } from 'src/sections/admin/banner/view/banner-view-detail';
 // ----------------------------------------------------------------------
 
 export const HomePage = lazy(() => import('src/pages/home'));
@@ -104,6 +106,8 @@ function AppRoutes() {
             { path: 'admin/role', element: <UserRolePage /> },
             { path: 'admin/updateUser', element: <UserUpdatePage /> },
             { path: 'admin/reportUser', element: <ReportUserView /> },
+            { path: 'admin/bannerUser', element: <BannerView /> },
+            { path: 'admin/bannerUser/:id', element: <BannerDetailPage /> },
             { path: 'profile', element: <UserProfile /> }
 
           ]

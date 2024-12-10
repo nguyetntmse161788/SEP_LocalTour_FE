@@ -52,7 +52,7 @@
   dependencies:
     "@babel/types" "^7.26.0"
 
-"@babel/runtime@^7.12.5", "@babel/runtime@^7.18.3", "@babel/runtime@^7.23.9", "@babel/runtime@^7.26.0", "@babel/runtime@^7.5.5", "@babel/runtime@^7.7.6", "@babel/runtime@^7.8.7":
+"@babel/runtime@^7.12.5", "@babel/runtime@^7.18.3", "@babel/runtime@^7.23.9", "@babel/runtime@^7.25.7", "@babel/runtime@^7.26.0", "@babel/runtime@^7.5.5", "@babel/runtime@^7.7.6", "@babel/runtime@^7.8.7":
   version "7.26.0"
   resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.26.0.tgz"
   integrity sha512-FDSOghenHTiToteC/QRlv2q3DhPZ/oOXTBoirfWNx1Cx3TMVcGWQtMMmQcSvb/JjpNeGzx8Pq/b4fKEJuWm1sw==
@@ -359,15 +359,15 @@
     "@babel/runtime" "^7.26.0"
 
 "@mui/lab@^5.0.0-alpha.173":
-  version "5.0.0-alpha.173"
-  resolved "https://registry.npmjs.org/@mui/lab/-/lab-5.0.0-alpha.173.tgz"
-  integrity sha512-Gt5zopIWwxDgGy/MXcp6GueD84xFFugFai4hYiXY0zowJpTVnIrTQCQXV004Q7rejJ7aaCntX9hpPJqCrioshA==
+  version "5.0.0-alpha.174"
+  resolved "https://registry.npmjs.org/@mui/lab/-/lab-5.0.0-alpha.174.tgz"
+  integrity sha512-6jw+vcjfnDr/V4qzqwOPFwoqzxejGfm9F0k9E92QLmtFv5F0pH73OjmQDzALL7zrcwR4iV4D94iJZ1xFawiREA==
   dependencies:
     "@babel/runtime" "^7.23.9"
     "@mui/base" "5.0.0-beta.40"
-    "@mui/system" "^5.16.5"
+    "@mui/system" "^5.16.8"
     "@mui/types" "^7.2.15"
-    "@mui/utils" "^5.16.5"
+    "@mui/utils" "^5.16.8"
     clsx "^2.1.0"
     prop-types "^15.8.1"
 
@@ -429,20 +429,6 @@
     csstype "^3.1.3"
     prop-types "^15.8.1"
 
-"@mui/system@^5.16.5":
-  version "5.16.8"
-  resolved "https://registry.npmjs.org/@mui/system/-/system-5.16.8.tgz"
-  integrity sha512-L32TaFDFpGIi1g6ysRtmhc9zDgrlxDXu3NlrGE8gAsQw/ziHrPdr0PNr20O0POUshA1q14W4dNZ/z0Nx2F9lhA==
-  dependencies:
-    "@babel/runtime" "^7.23.9"
-    "@mui/private-theming" "^5.16.8"
-    "@mui/styled-engine" "^5.16.8"
-    "@mui/types" "^7.2.15"
-    "@mui/utils" "^5.16.8"
-    clsx "^2.1.0"
-    csstype "^3.1.3"
-    prop-types "^15.8.1"
-
 "@mui/system@^5.16.8":
   version "5.16.8"
   resolved "https://registry.npmjs.org/@mui/system/-/system-5.16.8.tgz"
@@ -476,7 +462,7 @@
   resolved "https://registry.npmjs.org/@mui/types/-/types-7.2.19.tgz"
   integrity sha512-6XpZEM/Q3epK9RN8ENoXuygnqUQxE+siN/6rGRi2iwJPgBUR25mphYQ9ZI87plGh58YoZ5pp40bFvKYOCDJ3tA==
 
-"@mui/utils@^5.15.14", "@mui/utils@^5.16.5", "@mui/utils@^5.16.8":
+"@mui/utils@^5.15.14", "@mui/utils@^5.16.6 || ^6.0.0", "@mui/utils@^5.16.8":
   version "5.16.8"
   resolved "https://registry.npmjs.org/@mui/utils/-/utils-5.16.8.tgz"
   integrity sha512-P/yb7BSWallQUeiNGxb+TM8epHteIUC8gzNTdPV2VfKhVY/EnGliHgt5np0GPkjQ7EzwDi/+gBevrAJtf+K94A==
@@ -499,6 +485,27 @@
     clsx "^2.1.1"
     prop-types "^15.8.1"
     react-is "^18.3.1"
+
+"@mui/x-date-pickers@^7.23.1":
+  version "7.23.1"
+  resolved "https://registry.npmjs.org/@mui/x-date-pickers/-/x-date-pickers-7.23.1.tgz"
+  integrity sha512-Jr4beZ7r2lvWBaFnkIAg9BgiNFcfeJy4AUe3MbG10BBSZyB++odGqhOUAIGqkP7MpUzEGlTv4NUaaD7gYTAQPg==
+  dependencies:
+    "@babel/runtime" "^7.25.7"
+    "@mui/utils" "^5.16.6 || ^6.0.0"
+    "@mui/x-internals" "7.23.0"
+    "@types/react-transition-group" "^4.4.11"
+    clsx "^2.1.1"
+    prop-types "^15.8.1"
+    react-transition-group "^4.4.5"
+
+"@mui/x-internals@7.23.0":
+  version "7.23.0"
+  resolved "https://registry.npmjs.org/@mui/x-internals/-/x-internals-7.23.0.tgz"
+  integrity sha512-bPclKpqUiJYIHqmTxSzMVZi6MH51cQsn5U+8jskaTlo3J4QiMeCYJn/gn7YbeR9GOZFp8hetyHjoQoVHKRXCig==
+  dependencies:
+    "@babel/runtime" "^7.25.7"
+    "@mui/utils" "^5.16.6 || ^6.0.0"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -640,7 +647,7 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react-transition-group@^4.4.10":
+"@types/react-transition-group@^4.4.10", "@types/react-transition-group@^4.4.11":
   version "4.4.11"
   resolved "https://registry.npmjs.org/@types/react-transition-group/-/react-transition-group-4.4.11.tgz"
   integrity sha512-RM05tAniPZ5DZPzzNFP+DmrcOdD0efDUxMy3145oljWSl3x9ZV5vhme98gTxFrj2lhXvmGNnUiuDyJgY9IKkNA==
@@ -1136,6 +1143,11 @@ data-view-byte-offset@^1.0.0:
     call-bind "^1.0.6"
     es-errors "^1.3.0"
     is-data-view "^1.0.1"
+
+date-fns@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.npmjs.org/date-fns/-/date-fns-4.1.0.tgz"
+  integrity sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==
 
 dayjs@^1.11.13:
   version "1.11.13"

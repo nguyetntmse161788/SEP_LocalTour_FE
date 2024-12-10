@@ -197,7 +197,7 @@ export function UserRolePage() {
 
           <Box textAlign="center" marginTop={2}>
             <Button variant="text" onClick={() => navigate('/admin/user')} sx={{ width: '100%' }}>
-              Go to Profile
+              Back to List
             </Button>
           </Box>
         </CardContent>
