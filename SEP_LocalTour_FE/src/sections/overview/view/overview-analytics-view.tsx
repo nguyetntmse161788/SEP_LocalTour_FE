@@ -220,7 +220,7 @@ export function OverviewAnalyticsView() {
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
-        Hi, Welcome back 👋
+      Statistics during the year
       </Typography>
 
       <Grid container spacing={3}>
@@ -241,7 +241,7 @@ export function OverviewAnalyticsView() {
 
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Total Successful Travels By This Year"
+            title="Total Successful Travels"
             percent={2.6} // Example percentage, you can replace with actual data
             total={successfulTravels ?? 0}
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
