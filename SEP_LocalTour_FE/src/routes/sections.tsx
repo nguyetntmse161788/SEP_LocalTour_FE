@@ -64,6 +64,14 @@ function AppRoutes() {
   })();
   return useRoutes([
     {
+      path: '/',
+      element: (
+        <PrivateRoute>
+          <Navigate to={getDefaultRouteByRole(userRole)} replace />
+        </PrivateRoute>
+      ),
+    },
+    {
       element: (
         <PrivateRoute>
           <DashboardLayout>
@@ -149,3 +157,14 @@ export function Router() {
     </>
   );
 }
+function getDefaultRouteByRole(userRole: string[]): string {
+  if (userRole.includes('Administrator')) {
+    return '/'; // Trang chính cho admin
+  } else if (userRole.includes('Moderator')) {
+    return '/place'; // Trang chính cho Moderator
+  } else if (userRole.includes('Service Owner')) {
+    return '/owner/place'; // Trang chính cho Service Owner
+  }
+  return '/sign-in'; // Mặc định, chuyển hướng về trang đăng nhập nếu không có vai trò
+}
+

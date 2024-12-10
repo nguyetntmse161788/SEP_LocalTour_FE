@@ -32,20 +32,44 @@ export function SignInView() {
     if (!refreshToken) return null;
   
     try {
-      const response = await axios.post('https://api.localtour.space/api/Authen/refreshToken', {
-        refreshToken,
+      const response = await fetch('https://api.localtour.space/api/Authen/refreshToken', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: refreshToken       
+        }),
       });
-      console.log('response', response.data);
-      const { accessToken, refreshToken: newRefreshToken } = response.data;
+      const data = await response.json();
+      const { accessToken, refreshToken: newRefreshToken } = data.accessToken;
       localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('userId', data.userId);
+      Cookies.set('refreshToken', data.refreshToken, { expires: 7, path: '/' });
+      const decodedToken = jwtDecode<JwtPayloadWithRole>(data.accessToken);
+      const userRoles = Array.isArray(decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'])
+        ? decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+        : [decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']];
+      
+      const validRoles = ['Administrator', 'Moderator', 'Service Owner'];
+      const validUserRoles = userRoles.filter(role => validRoles.includes(role));
+
+      if (validUserRoles.length === 0) {
+        throw new Error('You do not have permission to access this page');
+      }
+
+      // Lưu thông tin người dùng và vai trò vào localStorage
+      localStorage.setItem('user', JSON.stringify(data));
+      localStorage.setItem('role', JSON.stringify(validUserRoles));
+      localStorage.setItem('currentPath', '/'); 
       Cookies.set('refreshToken', newRefreshToken, { expires: 7, path: '/' });
       
       return accessToken;
     } catch (e) {
       console.error('Refresh token failed:', e);
-      return null;
+      router.push('/sign-in');
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -126,8 +150,6 @@ export function SignInView() {
           router.replace('/place'); 
         } else if (validUserRoles.includes('Service Owner')) {
           router.replace('/owner/place'); 
-        } else {
-          router.replace('/404');
         }
     } catch (err) {
       setError(err.message || 'Invalid phone number or password');
