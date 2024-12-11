@@ -15,13 +15,14 @@ export type ReportProps = {
   status: string;
 };
 
-type ReportTableHeadProps = {
+type ReportTableRowProps = {
   row: ReportProps;
   selected: boolean;
   onSelectRow: () => void;
+  onStatusUpdate: (updatedReports: ReportProps[]) => void;  // Callback for status update
 };
 
-export function ReportTableRow({ row, selected, onSelectRow }: ReportTableHeadProps) {
+export function ReportTableRow({ row, selected, onSelectRow, onStatusUpdate }: ReportTableRowProps) {
   const navigate = useNavigate();
 
   // Hàm cập nhật trạng thái
@@ -33,7 +34,6 @@ export function ReportTableRow({ row, selected, onSelectRow }: ReportTableHeadPr
     }
 
     try {
-      // Tạo đối tượng payload với tất cả các trường, chỉ thay đổi status
       const updatedData = {
         id: row.id,
         userReportId: row.userReportId,
@@ -44,13 +44,17 @@ export function ReportTableRow({ row, selected, onSelectRow }: ReportTableHeadPr
       };
 
       await axiosInstance.put(
-        // https://api.localtour.space/api/UserReport
         `https://api.localtour.space/api/UserReport/${id}`,
-        updatedData, // Gửi tất cả dữ liệu nhưng thay đổi status
+        updatedData, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert(`Report has been updated to: ${newStatus}`);
-      // Có thể gọi lại dữ liệu sau khi cập nhật nếu cần thiết.
+      
+      // Re-fetch the report data after update
+      const response = await axiosInstance.get('https://localhost:44388/api/UserReport/GetAll', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      onStatusUpdate(response.data);  // Notify parent to update reports list
     } catch (err) {
       if (axios.isAxiosError(err)) {
         console.error('Error message:', err.message);
@@ -66,7 +70,6 @@ export function ReportTableRow({ row, selected, onSelectRow }: ReportTableHeadPr
   return (
     <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
       <TableCell>{row.id}</TableCell>
-      {/* <TableCell>{row.userReportId}</TableCell> */}
       <TableCell>{row.userId}</TableCell>
       <TableCell>{row.content}</TableCell>
       <TableCell>{new Date(row.reportDate).toLocaleString()}</TableCell>

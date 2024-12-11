@@ -11,17 +11,9 @@ import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
-
-import { DashboardContent } from 'src/layouts/dashboard';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-
-import { TableEmptyRows } from 'src/sections/user/table-empty-rows';
-import { TableNoData } from 'src/sections/user/table-no-data';
-import { UserTableHead } from 'src/sections/admin/user/user-table-head';
-import { UserTableToolbar } from 'src/sections/user/user-table-toolbar';
-import { applyFilter2, getComparator, emptyRows } from 'src/sections/admin/user/utils';
 import { ReportProps, ReportTableRow } from '../report-table-row';
+import { applyFilter2, getComparator } from '../../user/utils';
+import { useTable } from '../../user/view';
 
 export function ReportUserView() {
   const [userReports, setUserReports] = useState<ReportProps[]>([]);
@@ -31,46 +23,21 @@ export function ReportUserView() {
   const table = useTable();
 
   const navigate = useNavigate();
-  const memoizedNavigate = useCallback(() => navigate('/some-path'), [navigate]);
-
-
-  const handleAuthError = useCallback((message: string) => {
-    setError(message);
-    setLoading(false);
-    navigate('/sign-in');
-  }, [navigate]);
   
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
-  
     if (!token) {
-      handleAuthError('No access token found. Please log in.');
+      alert('No access token found. Please log in.');
       return;
     }
-  
-    const decodedToken = JSON.parse(atob(token.split('.')[1]));
-    const currentTime = Math.floor(Date.now() / 1000);
-  
-    if (decodedToken.exp < currentTime) {
-      handleAuthError('Token has expired. Please log in again.');
-      return;
-    }
-  
-    fetchUserReports(token);
-  }, [memoizedNavigate, handleAuthError]);  // `handleAuthError` is now stable
 
-  // const handleAuthError = (message: string) => {
-  //   setError(message);
-  //   setLoading(false);
-  //   navigate('/login');
-  // };
+    fetchUserReports(token);
+  }, []);  // Only fetch reports on component mount
 
   const fetchUserReports = async (token: string) => {
     setLoading(true);
     try {
-      // https://api.localtour.space/api/UserReport
-      // https://localhost:44388/api/UserReport
-      const response = await axios.get('https://api.localtour.space/api/UserReport', {
+      const response = await axios.get('https://api.localtour.space/api/UserReport/GetAll', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUserReports(response.data);
@@ -78,6 +45,16 @@ export function ReportUserView() {
       setError('Failed to fetch user reports');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Callback to update the report list when status is updated
+  const handleStatusUpdate = async (updatedReports: ReportProps[]) => {
+    setUserReports(updatedReports);
+    // Re-fetch user reports after updating status
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      fetchUserReports(token);
     }
   };
 
@@ -100,7 +77,6 @@ export function ReportUserView() {
         <Button
           variant="contained"
           color="inherit"
-          startIcon={<Iconify icon="mingcute:add-line" />}
           onClick={() => navigate('/create-report')}
         >
           New Report
@@ -108,64 +84,31 @@ export function ReportUserView() {
       </Box>
 
       <Card>
-        <UserTableToolbar
-          filterName={filterName}
-          onFilterName={(e) => {
-            setFilterName(e.target.value);
-            table.onResetPage();
-          }}
-          numSelected={0}
-        />
+        <TableContainer sx={{ overflow: 'unset' }}>
+          <Table sx={{ minWidth: 800 }}>
+            <TableBody>
+              {error && (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ color: 'error.main' }}>
+                    {error}
+                  </TableCell>
+                </TableRow>
+              )}
 
-        <Scrollbar>
-          <TableContainer sx={{ overflow: 'unset' }}>
-            <Table sx={{ minWidth: 800 }}>
-              <UserTableHead
-                order={table.order}
-                orderBy={table.orderBy}
-                rowCount={userReports.length}
-                numSelected={table.selected.length}
-                onSort={table.onSort}
-                headLabel={[
-                  { id: 'id', label: 'ID' },
-                  { id: 'userId', label: 'User ID' },
-                  { id: 'content', label: 'Content' },
-                  { id: 'reportDate', label: 'Report Date' },
-                  { id: 'status', label: 'Status' },
-                  { id: 'action', label: 'Action' },
-                ]}
-              />
-
-              <TableBody>
-                {error && (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ color: 'error.main' }}>
-                      {error}
-                    </TableCell>
-                  </TableRow>
-                )}
-
-                {dataFiltered
-                  .slice(table.page * table.rowsPerPage, table.page * table.rowsPerPage + table.rowsPerPage)
-                  .map((row) => (
-                    <ReportTableRow
-                      key={row.userId}
-                      row={row}
-                      selected={table.selected.includes(row.userId)}
-                      onSelectRow={() => table.onSelectRow(row.userId)}
-                    />
-                  ))}
-
-                <TableEmptyRows
-                  height={68}
-                  emptyRows={emptyRows(table.page, table.rowsPerPage, userReports.length)}
-                />
-
-                {notFound && <TableNoData searchQuery={filterName} />}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Scrollbar>
+              {dataFiltered
+                .slice(table.page * table.rowsPerPage, table.page * table.rowsPerPage + table.rowsPerPage)
+                .map((row) => (
+                  <ReportTableRow
+                    key={row.id}
+                    row={row}
+                    selected={table.selected.includes(row.userId)}
+                    onSelectRow={() => table.onSelectRow(row.userId)}
+                    onStatusUpdate={handleStatusUpdate}  // Pass status update handler
+                  />
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
         <TablePagination
           component="div"
@@ -179,64 +122,4 @@ export function ReportUserView() {
       </Card>
     </Box>
   );
-}
-
-export function useTable() {
-  const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('userReportId');
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-
-  const onSort = useCallback((id: string) => {
-    const isAsc = orderBy === id && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(id);
-  }, [order, orderBy]);
-
-  const onSelectAllRows = useCallback((checked: boolean, newSelecteds: string[]) => {
-    if (checked) {
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  }, []);
-
-  const onSelectRow = useCallback(
-    (inputValue: string) => {
-      setSelected((prev) =>
-        prev.includes(inputValue)
-          ? prev.filter((value) => value !== inputValue)
-          : [...prev, inputValue]
-      );
-    },
-    []
-  );
-
-  const onResetPage = useCallback(() => setPage(0), []);
-  const onChangePage = useCallback((_: any, newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const onChangeRowsPerPage = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRowsPerPage(parseInt(event.target.value, 10));
-      onResetPage();
-    },
-    [onResetPage]
-  );
-
-  return {
-    page,
-    order,
-    orderBy,
-    rowsPerPage,
-    selected,
-    onSort,
-    onSelectRow,
-    onSelectAllRows,
-    onResetPage,
-    onChangePage,
-    onChangeRowsPerPage,
-  };
 }
