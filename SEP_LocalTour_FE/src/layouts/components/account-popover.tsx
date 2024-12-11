@@ -65,7 +65,11 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
       try {
         const userId = localStorage.getItem('userId');
         let token = localStorage.getItem('accessToken');
-        if (!token || isTokenExpired(token)) {
+        if (!token) {
+          router.push('/sign-in');
+          return;
+        }
+        if (isTokenExpired(token)) {
           try {
             token = await refreshAccessToken();  // Refresh the access token if it's expired
           } catch (error) {

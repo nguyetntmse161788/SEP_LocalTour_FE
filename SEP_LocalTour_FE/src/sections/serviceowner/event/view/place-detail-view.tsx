@@ -179,14 +179,16 @@ export function PlaceDetailView() {
         >
           Back to List
         </Button>
-        <Typography variant="h4">Place Detail</Typography>
-        <Button
+        <Typography variant="h4" sx={{ flexGrow: 1, textAlign: 'center' }}>
+    Place Detail
+  </Typography>
+        {/* <Button
           variant="contained"
           color="secondary"
           startIcon={<Iconify icon="mingcute:edit-line" />}
         >
           Edit
-        </Button>
+        </Button> */}
       </Box>
 
       <Grid container spacing={3}>
@@ -295,9 +297,9 @@ export function PlaceDetailView() {
             </Typography>
 
             <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Button variant="outlined" size="small" color="primary">
+              {/* <Button variant="outlined" size="small" color="primary">
                 View
-              </Button>
+              </Button> */}
               <Button
                 variant="outlined"
                 size="small"

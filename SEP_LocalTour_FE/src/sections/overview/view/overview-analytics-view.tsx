@@ -211,8 +211,8 @@ export function OverviewAnalyticsView() {
   const series = monthlyData.map((item) => item.registrationCount);
 
   // Convert percent to number
-  const percent = ((total - 0 / 1) * 100).toFixed(2); // This is a string, so parse it as a float
-  const percentAsNumber = parseFloat(percent);
+  // const percent = ((total - 0 / 1) * 100).toFixed(2); // This is a string, so parse it as a float
+  // const percentAsNumber = parseFloat(percent);
 
   const chartCategories = userRegistrations.monthlyData.map((data: any) => data.monthName);
   const chartSeriesData = userRegistrations.monthlyData.map((data: any) => data.registrationCount);
@@ -227,8 +227,7 @@ export function OverviewAnalyticsView() {
         {/* User Registration Widget */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="User Register By This Year"
-            percent={percentAsNumber}
+            title="User Registation By This Year"
             total={total}
             color="secondary"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
@@ -241,8 +240,7 @@ export function OverviewAnalyticsView() {
 
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Total Successful Travels"
-            percent={2.6} // Example percentage, you can replace with actual data
+            title="Total Successful Travels By This Year"
             total={successfulTravels ?? 0}
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
@@ -255,8 +253,7 @@ export function OverviewAnalyticsView() {
         {/* Purchase Orders Widget */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Get Total Schedules Created"
-            percent={2.8}
+            title="Total Schedules Created By This Year"
             total={totalSchedulesCreated ?? 0}
             color="warning"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
@@ -270,8 +267,7 @@ export function OverviewAnalyticsView() {
         {/* Messages Widget */}
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
-            title="Get Total Posts Created"
-            percent={3.6}
+            title="Total Posts Created By This Year"
             total={totalPostsCreated ?? 0}
             color="error"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}

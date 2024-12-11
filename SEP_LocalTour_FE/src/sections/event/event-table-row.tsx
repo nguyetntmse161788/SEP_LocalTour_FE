@@ -27,6 +27,7 @@ export type EventProps = {
   eventStatus: string;
   createdAt: string;
   updatedAt: string;
+  eventPhotoDisplay:string;
 };
 
 type EventTableRowProps = {
@@ -74,7 +75,7 @@ export function EventTableRow({ row, selected, onSelectRow,onUpdateStatus }: Eve
         tabIndex={-1}
         role="checkbox"
         selected={selected}
-        onClick={handleRowClick} // Xử lý click cho toàn bộ dòng
+        // onClick={handleRowClick} // Xử lý click cho toàn bộ dòng
       >
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
@@ -84,7 +85,7 @@ export function EventTableRow({ row, selected, onSelectRow,onUpdateStatus }: Eve
           <Box gap={2} display="flex" alignItems="center">
             <Avatar
               alt={row.eventName || 'N/A'}
-              src={`/static/mock-images/events/event-${row.id}.jpg`} // Giả sử bạn có ảnh mẫu
+              src={row.eventPhotoDisplay} // Giả sử bạn có ảnh mẫu
             />
             {row.eventName || 'N/A'}
           </Box>

@@ -1,4 +1,5 @@
-import { getAccessToken } from './authService';
+import { getAccessToken } from "src/utils/auth";
+
 
 export const apiClient = async (url: string, options: RequestInit = {}) => {
   try {

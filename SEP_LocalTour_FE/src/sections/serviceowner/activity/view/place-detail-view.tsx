@@ -54,6 +54,7 @@ export function PlaceDetailView() {
           }
         );
         console.log('Activity deleted', response.data);
+        await fetchPlaceDetail();
         setOpenDeleteDialog(false); // Đóng dialog sau khi xóa thành công
         // Cập nhật lại state hoặc thực hiện các hành động khác nếu cần
       } catch (error) {
@@ -63,38 +64,35 @@ export function PlaceDetailView() {
   };
 
   // Hàm xử lý sự kiện sau khi tạo thành công
-  const handleActivityCreated = (newActivity: any) => {
-    setPlace((prevPlace: any) => ({
-      ...prevPlace,
-      placeActivities: [...(prevPlace.placeActivities || []), newActivity],
-    }));
+  const handleActivityCreated = async () => {
+    await fetchPlaceDetail(); // Fetch the updated data from the server
+    setOpenNewActivityForm(false); // Close the form after successful creation
   };
 
-  // Fetch dữ liệu Place từ API
+  const fetchPlaceDetail = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setPlace(response.data); // Lưu dữ liệu place
+      setLoading(false); // Đặt loading thành false khi đã lấy dữ liệu
+    } catch (error) {
+      console.error("Error fetching place details", error);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPlaceDetail = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        console.error('No access token found');
-        return;
-      }
-
-      try {
-        const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setPlace(response.data); // Lưu dữ liệu place
-        setLoading(false); // Đặt loading thành false khi đã lấy dữ liệu
-      } catch (error) {
-        console.error("Error fetching place details", error);
-        setLoading(false);
-      }
-    };
-
     fetchPlaceDetail();
-  }, [id]); // Khi ID thay đổi, sẽ gọi lại API
+  }, [id]);
 
   if (loading) {
     return (
@@ -131,14 +129,16 @@ export function PlaceDetailView() {
         >
           Back to List
         </Button>
-        <Typography variant="h4">Place Detail</Typography>
-        <Button
+        <Typography variant="h4" sx={{ flexGrow: 1, textAlign: 'center' }}>
+    Place Detail
+  </Typography>
+        {/* <Button
           variant="contained"
           color="secondary"
           startIcon={<Iconify icon="mingcute:edit-line" />}
         >
           Edit
-        </Button>
+        </Button> */}
       </Box>
 
       <Grid container spacing={3}>
@@ -223,9 +223,9 @@ export function PlaceDetailView() {
                 overflow: 'hidden',
               }}
             >
-              {place.photoDisplay ? (
+              {activity.photoDisplay ? (
                 <img 
-                  src={place.photoDisplay} 
+                  src={activity.photoDisplay} 
                   alt={place.placeTranslations[0]?.name || 'Unnamed Place'} 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                 />

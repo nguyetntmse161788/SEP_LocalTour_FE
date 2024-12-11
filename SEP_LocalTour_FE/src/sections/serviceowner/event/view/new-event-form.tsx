@@ -158,10 +158,11 @@ export function NewEventForm({ open, onClose, onEventCreated, placeId }: NewEven
       resetForm(); 
     } catch (error) {
       console.error("Error creating event", error);
+      alert('Failed to create event.');
     }
   }catch (error) {
     console.error('Error creating event:', error);
-    alert('Failed to create place.');
+    alert('Failed to create event.');
   }
 };
   const resetForm = () => {
