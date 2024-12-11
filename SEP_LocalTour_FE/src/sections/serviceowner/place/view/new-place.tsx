@@ -150,6 +150,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     index?: number
   ) => {
     const { name, value } = event.target;
+    
   
     // Handle change for PlaceTranslation when index is provided
     if (index !== undefined) {
@@ -420,8 +421,8 @@ const fetchWards = async (districtId: any) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>New Place</DialogTitle>
-      <DialogContent>
+      <DialogTitle sx={{ pb: 2, paddingBottom: '16px' }}>New Place</DialogTitle>  {/* Thêm padding-bottom và margin-bottom */}
+      <DialogContent sx={{ paddingTop: '24px' }}> 
         {/* WardId */}
         <Autocomplete
   fullWidth
@@ -433,7 +434,9 @@ const fetchWards = async (districtId: any) => {
     setWards([]);
     fetchDistricts(value?.id);
   }}
-  renderInput={(params) => <TextField {...params} label="Province" />}
+  renderInput={(params) => <TextField {...params} label="Province"  InputLabelProps={{
+    shrink: true, // Đảm bảo label luôn thu nhỏ
+  }} />}
 />
 
 <Autocomplete
@@ -444,7 +447,9 @@ const fetchWards = async (districtId: any) => {
     setSelectedDistrict(value?.id || '');
     fetchWards(value?.id);
   }}
-  renderInput={(params) => <TextField {...params} label="District" />}
+  renderInput={(params) => <TextField {...params} label="District"  InputLabelProps={{
+    shrink: true, // Đảm bảo label luôn thu nhỏ
+  }}/>}
 />
 
 <Autocomplete
@@ -460,7 +465,9 @@ const fetchWards = async (districtId: any) => {
   }}
   renderInput={(params) => (
     <>
-      <TextField {...params} label="Ward" error={!!errors.wardId} />
+      <TextField {...params} label="Ward" error={!!errors.wardId}  InputLabelProps={{
+        shrink: true, // Đảm bảo label luôn thu nhỏ
+      }}/>
       {errors.wardId && (
         <FormHelperText error>{errors.wardId}</FormHelperText>
       )}
@@ -480,6 +487,9 @@ const fetchWards = async (districtId: any) => {
           value={formData.timeOpen}
           onChange={handleInputChange}
           margin="normal"
+          InputLabelProps={{
+            shrink: true, // Đảm bảo label luôn thu nhỏ
+          }}
           inputProps={{
             step: 300, // 5 minutes
           }}
@@ -494,6 +504,9 @@ const fetchWards = async (districtId: any) => {
           value={formData.timeClose}
           onChange={handleInputChange}
           margin="normal"
+          InputLabelProps={{
+            shrink: true, // Đảm bảo label luôn thu nhỏ
+          }}
           inputProps={{
             step: 300, // 5 minutes
           }}
@@ -508,6 +521,9 @@ const fetchWards = async (districtId: any) => {
           value={formData.longitude}
           onChange={(e) => setLongitude(e.target.value)}
           margin="normal"
+          InputLabelProps={{
+            shrink: true, // Đảm bảo label luôn thu nhỏ
+          }}
           error={Boolean(errors.longitude)}
           helperText={errors.longitude}
         />
@@ -518,6 +534,9 @@ const fetchWards = async (districtId: any) => {
           value={formData.latitude}
           onChange={(e) => setLatitude(e.target.value)}
           margin="normal"
+          InputLabelProps={{
+            shrink: true, // Đảm bảo label luôn thu nhỏ
+          }}
           error={Boolean(errors.latitude)}
           helperText={errors.latitude}
         />
@@ -553,6 +572,9 @@ const fetchWards = async (districtId: any) => {
           value={formData.contactLink}
           onChange={handleInputChange}
           margin="normal"
+          InputLabelProps={{
+            shrink: true, // Đảm bảo label luôn thu nhỏ
+          }}
           error={Boolean(errors.contactLink)}
           helperText={errors.contactLink}
         />
@@ -570,6 +592,9 @@ const fetchWards = async (districtId: any) => {
               label="Tags"
               error={Boolean(errors.tags)}
               helperText={errors.tags}
+              InputLabelProps={{
+                shrink: true, // Đảm bảo label luôn thu nhỏ
+              }}
             />
           )}
         />

@@ -32,6 +32,7 @@ export const ServiceOwnerActivityPage = lazy(() => import('src/pages/owner/activ
 export const ServiceOwnerActivityViewPage = lazy(() => import('src/pages/owner/place-activity-view'));
 export const BannerListPage = lazy(() => import('src/pages/owner/banner-list'));
 export const UserTranferPage = lazy(() => import('src/pages/owner/usertranfer'));
+export const ServiceOwnerPlaceAllDetailPage = lazy(() => import('src/pages/owner/all-place-detail'));
 
 export const UserRolePage = lazy(() => import('src/pages/admin/user-role'));
 export const UserBanPage = lazy(() => import('src/pages/admin/user-ban'));
@@ -98,6 +99,7 @@ function AppRoutes() {
               { path: 'owner/place', element: <ServiceOwnerPlacePage /> },
               { path: 'owner/place/:id', element: <ServiceOwnerPlaceViewPage /> },
               { path: 'owner/created', element: <ServiceOwnerPlaceCreatedPage /> },
+              { path: 'owner/created/:id', element: <ServiceOwnerPlaceAllDetailPage /> },
               { path: 'owner/event', element: <ServiceOwnerEventPage /> },
               { path: 'owner/event/place/:id', element: <ServiceOwnerEventViewPage /> },
               { path: 'owner/activity', element: <ServiceOwnerActivityPage /> },

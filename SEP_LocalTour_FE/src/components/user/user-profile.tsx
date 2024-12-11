@@ -11,6 +11,7 @@ import {
   Button,
 } from '@mui/material';
 import axios from 'axios';
+import { isTokenExpired, refreshAccessToken } from 'src/utils/auth';
 
 interface User {
   fullName: string;
@@ -33,15 +34,19 @@ interface User {
 export function UserProfile() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-
+  
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const userId = localStorage.getItem('userId');
-        const token = localStorage.getItem('accessToken');
-
-        if (!userId || !token) {
-          throw new Error('User not authenticated');
+        let token = localStorage.getItem('accessToken');
+        if (!token || isTokenExpired(token)) {
+          try {
+            token = await refreshAccessToken();  // Refresh the access token if it's expired
+          } catch (error) {
+            console.error('Unable to refresh access token');
+            throw new Error('Token refresh failed');
+          }
         }
 
         const response = await axios.get(

@@ -3,7 +3,7 @@
 export const _workspaces = [
   {
     id: 'team-1',
-    name: 'Tab',
+    name: 'Manager',
     logo: `/assets/icons/workspaces/logo-1.webp`,
   },
 ];

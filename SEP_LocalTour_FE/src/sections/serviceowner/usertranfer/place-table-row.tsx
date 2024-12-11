@@ -119,6 +119,10 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace, onUpd
     navigate(`/owner/place/${row.id}`);
   };
   const handleOpenConfirmDialog = () => {
+    if (!selectedUser) {
+      alert('Please select a user to transfer ownership.');
+    return;
+    }
     setOpenConfirmDialog(true);
   };
 

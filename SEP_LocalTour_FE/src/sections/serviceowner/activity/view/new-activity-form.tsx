@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Grid } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 import axiosInstance from 'src/utils/axiosInstance';
 
@@ -29,6 +29,19 @@ export function NewActivityForm({ open, onClose, onActivityCreated, placeId }: N
   const [photoDisplay, setPhotoDisplay] = useState<File | null>(null);
   const [displayNumber, setDisplayNumber] = useState<number>(1);  // New state for DisplayNumber
 
+  useEffect(() => {
+    if (!open) {
+      // Reset form khi form đóng
+      setPhotoDisplay(null);
+      setLanguageCode('vi');
+      setDisplayNumber(1);
+      setPlaceActivityTranslations([
+        { languageCode: 'vi', activityName: '', price: 0, description: '', priceType: '', discount: 0 }
+      ]);
+    }
+  }, [open]);
+ 
+
   const [placeActivityTranslations, setPlaceActivityTranslations] = useState<PlaceActivityTranslation[]>([
     { languageCode, activityName, price, description, priceType, discount }
   ]);
@@ -36,6 +49,10 @@ export function NewActivityForm({ open, onClose, onActivityCreated, placeId }: N
   const [placeActivityMedium, setPlaceActivityMedium] = useState<(File | null)[]>([]);
 
   const handleCreateActivity = async () => {
+    if (!photoDisplay || placeActivityMedium.length < 1 ||!displayNumber) {
+      alert('Please fill out all required fields');
+      return;
+    }
     const token = localStorage.getItem('accessToken');
     if (!token) {
       console.error('No access token found');
@@ -48,6 +65,10 @@ export function NewActivityForm({ open, onClose, onActivityCreated, placeId }: N
 
     // Add PlaceActivityTranslations to form data
     placeActivityTranslations.forEach(translation => {
+      if (!translation.activityName || translation.price <=0 || !translation.description || !translation.priceType) {
+        alert('Please fill out all required fields');
+        return;  // Không gửi formData nếu có thiếu trường bắt buộc
+      }
       formData.append('PlaceActivityTranslations', JSON.stringify(translation));
     });
 
@@ -156,13 +177,17 @@ export function NewActivityForm({ open, onClose, onActivityCreated, placeId }: N
                 onChange={(e) => handleTranslationChange(index, 'activityName', e.target.value)}
                 margin="normal"
               />
-              <TextField
-                label="Language Code"
-                fullWidth
-                value={translation.languageCode}
-                onChange={(e) => handleTranslationChange(index, 'languageCode', e.target.value)}
-                margin="normal"
-              />
+              <FormControl fullWidth margin="normal">
+              <InputLabel>Language</InputLabel>
+              <Select
+                value={languageCode}
+                onChange={(e) => setLanguageCode(e.target.value)}
+                label="Language"
+              >
+                <MenuItem value="vi">VN</MenuItem> {/* VN - "vi" */}
+                <MenuItem value="en">EN</MenuItem> {/* EN - "en" */}
+              </Select>
+            </FormControl>
               <TextField
                 label="Description"
                 fullWidth
