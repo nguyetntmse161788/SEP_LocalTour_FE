@@ -31,10 +31,11 @@ export function BannerDetailPage() {
   const [error, setError] = useState<string>('');
   const [updating, setUpdating] = useState<string | null>(null);
   const [newStatus, setNewStatus] = useState<{ [key: string]: string }>({});
+
   const [openDialog, setOpenDialog] = useState<boolean>(false); // state for dialog visibility
   const [timeStart, setTimeStart] = useState<string>('');
   const [timeEnd, setTimeEnd] = useState<string>('');
-  const [bannerId, setBannerId] = useState<string>('');
+  const [bannerId, setBannerId] = useState<string>(''); // BannerId state
 
   useEffect(() => {
     if (!bannerDetail) {
@@ -51,10 +52,13 @@ export function BannerDetailPage() {
       } else {
         setError('No banner ID available.');
       }
+    } else {
+      // Once bannerDetail is set, set the bannerId to the banner's id
+      setBannerId(bannerDetail.id);
     }
   }, [bannerDetail, state?.banner?.id, navigate]);
 
-  const fetchBannerDetail = async (id: string, token: string) => { // Renamed the parameter to `id`
+  const fetchBannerDetail = async (id: string, token: string) => {
     try {
       const response = await fetch(`https://api.localtour.space/api/Banner/GetAll?id=${id}`, {
         method: 'GET',
@@ -80,7 +84,7 @@ export function BannerDetailPage() {
   const handleStatusChange = async (historyId: string, currentStatus: string) => {
     setUpdating(historyId);
   
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       setError('No authentication token found. Please log in.');
       navigate('/login');
@@ -89,18 +93,20 @@ export function BannerDetailPage() {
   
     const selectedStatus = newStatus[historyId] || currentStatus;
   
-    console.log('historyId:', historyId); // In ra giá trị của historyId
-    console.log('selectedStatus:', selectedStatus); // In ra giá trị của selectedStatus
-  
     try {
+      const formData = new FormData();
+
+      formData.append('bannerHistoryId', historyId);
+      formData.append('status', selectedStatus);
+  
       const response = await fetch(
         `https://api.localtour.space/api/Banner/UpdateHistoryStatus?bannerHistoryId=${historyId}&status=${selectedStatus}`,
         {
-          method: 'POST',
+          method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
+          body: formData, // Using FormData to send the data
         }
       );
   
@@ -109,6 +115,7 @@ export function BannerDetailPage() {
         throw new Error(errorData.message || 'Error updating status');
       }
   
+      // Update the local state after successful status change
       setBannerDetail((prev) => ({
         ...prev!,
         bannerHistories: prev!.bannerHistories.map((history) =>
@@ -121,7 +128,6 @@ export function BannerDetailPage() {
       setUpdating(null);
     }
   };
-  
 
   const handleStatusSelect = (historyId: string, status: string) => {
     setNewStatus((prev) => ({ ...prev, [historyId]: status }));
@@ -132,19 +138,14 @@ export function BannerDetailPage() {
   };
 
   const handleSubmitBannerHistory = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       setError('No authentication token found. Please log in.');
       navigate('/login');
       return;
     }
   
-    console.log('bannerId:', bannerId); // In ra bannerId
-    console.log('timeStart:', timeStart); // In ra timeStart
-    console.log('timeEnd:', timeEnd); // In ra timeEnd
-  
     try {
-      console.log('Data to send:', { bannerId, timeStart, timeEnd });
       const response = await fetch('https://api.localtour.space/api/Banner/CreateHistory', {
         method: 'POST',
         headers: {
@@ -152,29 +153,32 @@ export function BannerDetailPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          bannerId,
+          bannerId, // Use dynamically set bannerId
           timeStart,
           timeEnd,
         }),
       });
   
-      console.log('Response status:', response.status); 
-      console.log('Response body:', await response.json()); 
-  
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error data:', errorData); // Kiểm tra lỗi từ server
         throw new Error(errorData.message || 'Error creating banner history');
       }
   
+      // Close the dialog after successful submission
       setOpenDialog(false);
+  
+      // Refetch the banner details
+      await fetchBannerDetail(bannerId, token);  // Re-fetch banner details
+  
       alert('Banner history created successfully!');
+  
+      // Redirect back to the admin banner page
+      navigate('/admin/bannerUser'); // Navigating to the admin/banner page
     } catch (err: any) {
-      console.error('Error occurred:', err); // In ra lỗi nếu có
       setError(err.message || 'An error occurred while creating banner history');
     }
   };
-  
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
@@ -277,8 +281,12 @@ export function BannerDetailPage() {
                 </Stack>
               )}
             </Grid>
-
-
+          </Grid>
+          {/* Back to List button */}
+          <Grid container justifyContent="flex-start" sx={{ mt: 3 }}>
+            <Button variant="outlined" onClick={() => navigate('/admin/bannerUser')}>
+              Back to List
+            </Button>
           </Grid>
         </Paper>
       )}
@@ -304,7 +312,6 @@ export function BannerDetailPage() {
             fullWidth
             value={timeEnd}
             onChange={(e) => setTimeEnd(e.target.value)}
-            sx={{ mb: 2 }}
             InputLabelProps={{
               shrink: true,
             }}
