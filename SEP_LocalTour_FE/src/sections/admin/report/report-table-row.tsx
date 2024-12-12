@@ -46,13 +46,13 @@ export function ReportTableRow({ row, selected, onSelectRow, onStatusUpdate }: R
       await axiosInstance.put(
         `https://api.localtour.space/api/UserReport/${id}`,
         updatedData, 
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token} `} }
       );
       alert(`Report has been updated to: ${newStatus}`);
       
       // Re-fetch the report data after update
       const response = await axiosInstance.get('https://localhost:44388/api/UserReport/GetAll', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token} `}
       });
       onStatusUpdate(response.data);  // Notify parent to update reports list
     } catch (err) {

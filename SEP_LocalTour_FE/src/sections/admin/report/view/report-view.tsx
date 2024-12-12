@@ -37,8 +37,8 @@ export function ReportUserView() {
   const fetchUserReports = async (token: string) => {
     setLoading(true);
     try {
-      const response = await axios.get('https://api.localtour.space/api/UserReport/GetAll', {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await axios.get('https://api.localtour.space/api/UserReport', {
+        headers: { Authorization: `Bearer ${token} `},
       });
       setUserReports(response.data);
     } catch (err) {
@@ -74,13 +74,13 @@ export function ReportUserView() {
         <Typography variant="h4" sx={{ flexGrow: 1 }}>
           User Reports
         </Typography>
-        <Button
+        {/* <Button
           variant="contained"
           color="inherit"
           onClick={() => navigate('/create-report')}
         >
           New Report
-        </Button>
+        </Button> */}
       </Box>
 
       <Card>

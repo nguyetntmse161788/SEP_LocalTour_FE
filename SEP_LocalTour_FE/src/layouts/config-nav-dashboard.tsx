@@ -68,11 +68,6 @@ export const navData = (role: string | null): NavItem[] => {
       title: 'Place Activity',
       path: '/owner/activity',
       icon: icon('ic-cart'),
-      info: (
-        <Label color="error" variant="inverted">
-          +3
-        </Label>
-      ),
     },
     isServiceOwner && {
       title: 'Banner',
