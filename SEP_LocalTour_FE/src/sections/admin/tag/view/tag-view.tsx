@@ -160,7 +160,7 @@ export function TagView() {
                 }
                 headLabel={[
                   { id: 'tagName', label: 'Name' },
-                  { id: 'tagVi', label: 'tên' },
+                  { id: 'tagVi', label: 'Tên' },
                   { id: 'Action', label: 'Action'},
                 ]}
               />

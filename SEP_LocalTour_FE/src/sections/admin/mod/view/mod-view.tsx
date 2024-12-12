@@ -95,6 +95,7 @@ export function ModView() {
                   { id: 'userId', label: 'User ID' },
                   { id: 'username', label: 'User Name' },
                   { id: 'fullName', label: 'Full Name' },
+                      { id: 'managerPlace', label: 'Manager Place' },
                   { id: 'button', label: 'Action' }
                 ]}
               />

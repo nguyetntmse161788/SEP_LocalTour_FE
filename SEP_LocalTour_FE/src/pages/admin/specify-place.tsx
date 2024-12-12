@@ -2,16 +2,16 @@ import { Helmet } from 'react-helmet-async';
 
 import { CONFIG } from 'src/config-global';
 
-import { SpecifyPlace } from 'src/sections/admin/mod/view/specify-place';
+import { ModView } from 'src/sections/admin/mod/view/mod-view';
 
 export default function SpecifyPage() {
   return (
     <>
       <Helmet>
-        <title> {`Blog - ${CONFIG.appName}`}</title>
+        <title> {`Manage Moderator - ${CONFIG.appName}`}</title>
       </Helmet>
 
-      <SpecifyPlace />
+      <ModView />
     </>
   );
 }

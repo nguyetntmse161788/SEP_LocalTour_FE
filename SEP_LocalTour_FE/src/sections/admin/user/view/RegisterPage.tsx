@@ -34,7 +34,7 @@ export function RegisterPage() {
     }
 
     try {
-      const response = await axios.post('https://localhost:44388/api/User/CreateModerate', {
+      const response = await axios.post('https://api.localtour.space/api/User/CreateModerate', {
         email,
         password,
         confirmPassword,

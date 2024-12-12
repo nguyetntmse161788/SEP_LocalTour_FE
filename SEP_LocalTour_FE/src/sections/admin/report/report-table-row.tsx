@@ -51,7 +51,7 @@ export function ReportTableRow({ row, selected, onSelectRow, onStatusUpdate }: R
       alert(`Report has been updated to: ${newStatus}`);
       
       // Re-fetch the report data after update
-      const response = await axiosInstance.get('https://localhost:44388/api/UserReport/GetAll', {
+      const response = await axiosInstance.get('https://api.localtour.space/api/UserReport', {
         headers: { Authorization: `Bearer ${token} `}
       });
       onStatusUpdate(response.data);  // Notify parent to update reports list

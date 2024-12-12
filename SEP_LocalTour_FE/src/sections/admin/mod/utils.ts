@@ -71,7 +71,7 @@ export function applyFilter({ inputData, comparator, filterName }: ApplyFilterPr
     const lowerCaseFilter = filterName.toLowerCase();
     filteredData = filteredData.filter(
       (user) =>
-        (user.userId && user.userId.toLowerCase().includes(lowerCaseFilter))
+        (user.fullName && user.fullName.toLowerCase().includes(lowerCaseFilter))
     );
   }
 

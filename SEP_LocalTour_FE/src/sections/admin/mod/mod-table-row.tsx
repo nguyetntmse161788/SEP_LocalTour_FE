@@ -1,10 +1,10 @@
-import { TableRow, TableCell, Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Chip, Box } from '@mui/material';
+import { TableRow, TableCell, Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, Chip, Box, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import axios from 'axios';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export type Tag = {
-  cityId: number;  // ID của thành phố
-  cityName: string; // Tên thành phố
+export type District = {
+  id: number;  // ID của district
+  name: string; // Tên district
 };
 
 export type ModProps = {
@@ -12,7 +12,7 @@ export type ModProps = {
   id: string; // `id` là `userId` ở đây
   username: string;
   profilePictureUrl: string;
-  tags: Tag[];
+  districts: District[];
 };
 
 type ModTableRowProps = {
@@ -23,8 +23,58 @@ type ModTableRowProps = {
 
 export function ModTableRow({ row, selected, onSelectRow }: ModTableRowProps) {
   const [openDialog, setOpenDialog] = useState(false);
-  const [tagInput, setTagInput] = useState(''); // To store the input from user
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]); // To store selected tags
+  const [provinces, setProvinces] = useState<any[]>([]); // Store provinces
+  const [districtList, setDistrictList] = useState<any[]>([]); // Store districts
+  const [selectedProvince, setSelectedProvince] = useState<string>(''); // Selected province
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | string>(''); // Currently selected district ID
+  const [selectedDistricts, setSelectedDistricts] = useState<District[]>([]); // To store selected districts
+  const [managerPlaces, setManagerPlaces] = useState<District[]>([]);
+
+  // Fetch provinces and districts
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const response = await axios.get('https://api.localtour.space/api/Address/Province');
+        setProvinces(response.data);
+      } catch (error) {
+        console.error('Error fetching provinces', error);
+      }
+    };
+
+    fetchProvinces();
+  }, []);
+
+  useEffect(() => {
+    const fetchDistricts = async () => {
+      if (!selectedProvince) return;
+      try {
+        const response = await axios.get(`https://api.localtour.space/api/Address/District?provinceI=${selectedProvince}`);
+        setDistrictList(response.data);
+      } catch (error) {
+        console.error('Error fetching districts', error);
+      }
+    };
+
+    fetchDistricts();
+  }, [selectedProvince]);
+  useEffect(() => {
+    const fetchManagerDistricts = async () => {
+      try {
+        const response = await axios.get(`https://api.localtour.space/api/ModTag/UserTags/${row.id}`); // Assuming this endpoint returns districts the manager handles
+        const cityTags = response.data.tags; // Assuming the response structure
+        setManagerPlaces(cityTags.map((tag: { cityId: number; cityName: string }) => ({
+          id: tag.cityId,
+          name: tag.cityName
+        })));
+      } catch (error) {
+        console.error('Error fetching manager\'s districts', error);
+      }
+    };
+
+    if (row.id) {
+      fetchManagerDistricts();
+    }
+  }, [row.id]);
 
   // Function to handle opening the dialog
   const handleOpenDialog = () => {
@@ -34,32 +84,42 @@ export function ModTableRow({ row, selected, onSelectRow }: ModTableRowProps) {
   // Function to handle closing the dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    setSelectedProvince('');
+    setSelectedDistrictId('');
+    setSelectedDistricts([]);
   };
 
-  // Function to handle adding a tag to the list of selected tags
-  const handleAddTag = () => {
-    if (tagInput.trim() !== '') {
-      setSelectedTags([...selectedTags, { cityId: Date.now(), cityName: tagInput }]); // Use Date.now() as a placeholder for cityId
-      setTagInput(''); // Reset input field
+  // Function to handle adding selected district to the list of selected districts
+  const handleAddDistrict = () => {
+    if (!selectedDistrictId) return;
+
+    const districtToAdd = districtList.find(district => district.id === selectedDistrictId);
+    if (districtToAdd) {
+      setSelectedDistricts((prevSelectedDistricts) => [
+        ...prevSelectedDistricts,
+        { id: districtToAdd.id, name: districtToAdd.name }
+      ]);
+      setSelectedDistrictId(''); // Reset selected district after adding
     }
   };
 
-  // Function to handle removing a tag from the selected tags
-  const handleRemoveTag = (cityId: number) => {
-    setSelectedTags(selectedTags.filter(tag => tag.cityId !== cityId));
+  // Function to handle removing a district from the selected list
+  const handleRemoveDistrict = (districtId: number) => {
+    setSelectedDistricts(selectedDistricts.filter(district => district.id !== districtId));
   };
 
-  const handleSubmitTags = async () => {
+  const handleSubmitDistricts = async () => {
     try {
       const formData = new FormData();
-      formData.append('userId', row.id);
-      selectedTags.forEach(tag => {
-        formData.append('tags[]', JSON.stringify(tag)); 
+
+      // Add each selected district's districtId to the FormData
+      selectedDistricts.forEach(district => {
+        formData.append('TagIds[]', district.id.toString()); // Only append the districtId
       });
 
       // Send the form data via POST request
-      const response = await axios.post(
-        `https://api.localtour.space/api/ModTag`, 
+      const response = await axios.put(
+        `https://api.localtour.space/api/ModTag/${row.id}`, 
         formData,
         {
           headers: {
@@ -68,10 +128,24 @@ export function ModTableRow({ row, selected, onSelectRow }: ModTableRowProps) {
         }
       );
 
-      console.log('Tags assigned successfully', response.data);
+      console.log('Districts assigned successfully', response.data);
       setOpenDialog(false); // Close dialog after submission
+      const fetchManagerDistricts = async () => {
+        try {
+          const response = await axios.get(`https://api.localtour.space/api/ModTag/UserTags/${row.id}`);
+          const cityTags = response.data.tags;
+          setManagerPlaces(cityTags.map((tag: { cityId: number; cityName: string }) => ({
+            id: tag.cityId,
+            name: tag.cityName
+          })));
+        } catch (error) {
+          console.error('Error fetching manager\'s districts', error);
+        }
+      };
+  
+      fetchManagerDistricts();
     } catch (error) {
-      console.error('Error assigning tags', error);
+      console.error('Error assigning districts', error);
     }
   };
 
@@ -85,6 +159,16 @@ export function ModTableRow({ row, selected, onSelectRow }: ModTableRowProps) {
         <TableCell>{row.username}</TableCell>
         <TableCell>{row.fullName}</TableCell>
         <TableCell>
+          {/* Display Manager's Places (districts) */}
+          {managerPlaces.length > 0 ? (
+            managerPlaces.map((district) => (
+              <Chip key={district.id} label={district.name} color="primary" sx={{ marginRight: 1 }} />
+            ))
+          ) : (
+            'N/A'
+          )}
+        </TableCell>
+        <TableCell>
           <Button
             variant="outlined"
             color="success"
@@ -96,51 +180,68 @@ export function ModTableRow({ row, selected, onSelectRow }: ModTableRowProps) {
         </TableCell>
       </TableRow>
 
-      {/* Dialog for specifying tags */}
+      {/* Dialog for specifying districts */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Enter Tags</DialogTitle>
+        <DialogTitle>Enter Districts</DialogTitle>
         <DialogContent>
-          {/* Render selected tags as chips */}
+          {/* Render selected districts as chips */}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {selectedTags.map(tag => (
+            {selectedDistricts.map(district => (
               <Chip
-                key={tag.cityId}
-                label={tag.cityName}
-                onDelete={() => handleRemoveTag(tag.cityId)}
+                key={district.id}
+                label={district.name}
+                onDelete={() => handleRemoveDistrict(district.id)}
                 color="primary"
               />
             ))}
           </Box>
 
-          {/* Input field for entering tags */}
-          <TextField
-            label="Enter Tag"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            fullWidth
-            sx={{ marginTop: 2 }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleAddTag(); // Add tag when pressing Enter
-              }
-            }}
-          />
+          {/* Province Selection */}
+          <FormControl fullWidth sx={{ marginTop: 2 }}>
+            <InputLabel>Province</InputLabel>
+            <Select
+              value={selectedProvince}
+              onChange={(e) => setSelectedProvince(e.target.value)}
+              label="Province"
+            >
+              {provinces.map((province) => (
+                <MenuItem key={province.id} value={province.id}>
+                  {province.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-          {/* Button to add tag */}
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ marginTop: 2 }}
-            onClick={handleAddTag} // Add the tag when clicked
-          >
-            Add Tag
-          </Button>
+          {/* District Selection */}
+          {selectedProvince && (
+            <FormControl fullWidth sx={{ marginTop: 2 }}>
+              <InputLabel>District</InputLabel>
+              <Select
+                value={selectedDistrictId}
+                onChange={(e) => setSelectedDistrictId(e.target.value)}
+                label="District"
+              >
+                {districtList.length > 0 ? (
+                  districtList.map((district) => (
+                    <MenuItem key={district.id} value={district.id}>
+                      {district.name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No options</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="secondary">
             Cancel
           </Button>
-          <Button onClick={handleSubmitTags} color="primary">
+          <Button onClick={handleAddDistrict} color="primary" disabled={!selectedDistrictId}>
+            Add District
+          </Button>
+          <Button onClick={handleSubmitDistricts} color="primary">
             Submit
           </Button>
         </DialogActions>

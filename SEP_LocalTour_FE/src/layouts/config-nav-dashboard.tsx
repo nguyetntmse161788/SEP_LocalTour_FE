@@ -30,7 +30,7 @@ export const navData = (role: string | null): NavItem[] => {
       icon: icon('ic-user'),
     },
     isAdmin && {
-      title: 'Manage Mod',
+      title: 'Manage Moderator',
       path: '/admin/mod',
       icon: icon('ic-user'),
     },
