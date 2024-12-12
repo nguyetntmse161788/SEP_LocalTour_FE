@@ -190,18 +190,6 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
       <TableCell>{row.address}</TableCell> */}
       <TableCell>{row.roles.join(', ')}</TableCell>
       <TableCell>
-        {/* <IconButton>
-          <Iconify icon="eva:more-vertical-fill" />
-        </IconButton> */}
-        {/* <Button
-          variant="outlined"
-          color="primary"
-          sx={{ margin: '0 5px' }}
-          onClick={() => navigate('/admin/updateUser', { state: { user: row } })}
-        >
-          Update Profile
-        </Button> */}
-
         <Button variant="outlined" color="primary" sx={{ margin: '0 5px' }} onClick={() => handleSetRole(row.id, row.username, row.roles)}>
           Set Role
         </Button>

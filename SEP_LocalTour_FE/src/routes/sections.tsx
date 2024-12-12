@@ -15,6 +15,7 @@ export const HomePage = lazy(() => import('src/pages/home'));
 export const UserProfile = lazy(() => import('src/pages/profile'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/admin/user'));
+export const ModPage = lazy(() => import('src/pages/admin/manage-mod'));
 export const PlacePage = lazy(() => import('src/pages/place'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
@@ -40,6 +41,7 @@ export const RegisterPage = lazy(() => import('src/pages/admin/register-user'));
 export const BannerViewPage = lazy(() => import('src/pages/admin/banner-view'));
 export const BannerViewDetailPage = lazy(() => import('src/pages/admin/banner-view-detail'));
 export const TagViewPage = lazy(() => import('src/pages/admin/tag-view'));
+export const SpecifyPage = lazy(() => import('src/pages/admin/specify-place'));
 // ----------------------------------------------------------------------
 
 const renderFallback = (
@@ -114,6 +116,8 @@ function AppRoutes() {
           ? [
             { element: <HomePage />, index: true },
             { path: 'admin/user', element: <UserPage /> },
+            { path: 'admin/mod', element: <ModPage /> },
+            { path: 'admin/specify-place', element: <SpecifyPage /> },
             { path: 'admin/role', element: <UserRolePage /> },
             // { path: 'admin', element: <AdminPage /> },
             { path: 'admin/register', element: <RegisterPage /> },
@@ -168,7 +172,7 @@ function getDefaultRouteByRole(userRole: string[]): string {
     return '/place'; // Trang chính cho Moderator
   } else if (userRole.includes('Service Owner')) {
     return '/owner/place'; // Trang chính cho Service Owner
-  }
+  }else
   return '/sign-in'; // Mặc định, chuyển hướng về trang đăng nhập nếu không có vai trò
 }
 
