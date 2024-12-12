@@ -107,14 +107,16 @@ export function PlaceDetailAll() {
         >
           Back to List
         </Button>
-        <Typography variant="h4">Place Detail</Typography>
-        <Button
+        <Typography variant="h4" sx={{ flexGrow: 1, textAlign: 'center' }}>
+    Place Detail
+  </Typography>
+        {/* <Button
           variant="contained"
           color="secondary"
           startIcon={<Iconify icon="mingcute:edit-line" />}
         >
           Edit
-        </Button>
+        </Button> */}
       </Box>
 
       <Grid container spacing={3}>

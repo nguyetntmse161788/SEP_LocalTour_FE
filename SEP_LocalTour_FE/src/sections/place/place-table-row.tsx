@@ -116,13 +116,6 @@ return (
           <Iconify icon="eva:arrow-forward-outline" width={22} />
         </IconButton>
       </TableCell>
-      
-      {/* Cột menu dấu 3 chấm */}
-      <TableCell align="right">
-        <IconButton onClick={handleOpenPopover}> {/* Khi nhấn vào dấu 3 chấm, mở menu */}
-          <Iconify icon="eva:more-vertical-fill" width={22} />
-        </IconButton>
-      </TableCell>
     </TableRow>
 
     <Popover
@@ -148,15 +141,6 @@ return (
           },
         }}
       >
-        <MenuItem onClick={handleClosePopover}>
-          <Iconify icon="solar:pen-bold" />
-          Edit
-        </MenuItem>
-
-        <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
-          <Iconify icon="solar:trash-bin-trash-bold" />
-          Delete
-        </MenuItem>
       </MenuList>
     </Popover>
   </>

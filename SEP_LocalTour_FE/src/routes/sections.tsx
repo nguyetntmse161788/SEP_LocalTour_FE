@@ -7,8 +7,6 @@ import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { CurrentPage } from 'src/layouts/components/currentpage';
 import { PrivateRoute } from 'src/sections/auth/privateroute';
-import { BannerView } from 'src/sections/admin/banner/view/banner-view';
-import { BannerDetailPage } from 'src/sections/admin/banner/view/banner-view-detail';
 import { refreshAccessToken } from 'src/utils/auth';
 
 // ----------------------------------------------------------------------
@@ -39,6 +37,8 @@ export const UserBanPage = lazy(() => import('src/pages/admin/user-ban'));
 export const ReportUserView = lazy(() => import('src/pages/admin/user-report'))
 export const UserUpdatePage = lazy(() => import('src/pages/admin/user-update'));
 export const RegisterPage = lazy(() => import('src/pages/admin/register-user'));
+export const BannerViewPage = lazy(() => import('src/pages/admin/banner-view'));
+export const BannerViewDetailPage = lazy(() => import('src/pages/admin/banner-view-detail'));
 // ----------------------------------------------------------------------
 
 const renderFallback = (
@@ -120,8 +120,8 @@ function AppRoutes() {
             { path: 'admin/role', element: <UserRolePage /> },
             { path: 'admin/updateUser', element: <UserUpdatePage /> },
             { path: 'admin/reportUser', element: <ReportUserView /> },
-            { path: 'admin/bannerUser', element: <BannerView /> },
-            { path: 'admin/bannerUser/:id', element: <BannerDetailPage /> },
+            { path: 'admin/bannerUser', element: <BannerViewPage /> },
+            { path: 'admin/bannerUser/:id', element: <BannerViewDetailPage /> },
             { path: 'profile', element: <UserProfile /> }
 
           ]

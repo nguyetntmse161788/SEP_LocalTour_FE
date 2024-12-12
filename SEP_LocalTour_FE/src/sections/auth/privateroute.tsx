@@ -1,6 +1,6 @@
 import { jwtDecode } from 'jwt-decode';
 import { Navigate } from 'react-router-dom';
-import { isTokenExpired, refreshAccessToken } from './authService';
+import { isTokenExpired, refreshAccessToken } from 'src/utils/auth';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
