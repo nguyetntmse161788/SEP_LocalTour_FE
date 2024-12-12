@@ -39,6 +39,7 @@ export const UserUpdatePage = lazy(() => import('src/pages/admin/user-update'));
 export const RegisterPage = lazy(() => import('src/pages/admin/register-user'));
 export const BannerViewPage = lazy(() => import('src/pages/admin/banner-view'));
 export const BannerViewDetailPage = lazy(() => import('src/pages/admin/banner-view-detail'));
+export const TagViewPage = lazy(() => import('src/pages/admin/tag-view'));
 // ----------------------------------------------------------------------
 
 const renderFallback = (
@@ -122,6 +123,7 @@ function AppRoutes() {
             { path: 'admin/reportUser', element: <ReportUserView /> },
             { path: 'admin/bannerUser', element: <BannerViewPage /> },
             { path: 'admin/bannerUser/:id', element: <BannerViewDetailPage /> },
+            { path: 'admin/tag', element: <TagViewPage /> },
             { path: 'profile', element: <UserProfile /> }
 
           ]

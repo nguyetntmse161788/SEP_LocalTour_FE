@@ -79,6 +79,11 @@ export const navData = (role: string | null): NavItem[] => {
       path:'/owner/usertranfer',
       icon: icon('ic-cart'),
     },
+    isAdmin && {
+      title: 'Tag',
+      path: '/admin/tag',
+      icon: icon('ic-user'),
+    },
     // {
     //   title: 'Product',
     //   path: '/products',
