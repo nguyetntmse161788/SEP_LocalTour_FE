@@ -8,23 +8,25 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import axios from 'axios';
-import NewPlaceForm from '../view/new-place';
 
+import axiosInstance from 'src/utils/axiosInstance';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableNoData } from '../table-no-data';
-import { PlaceTableRow } from '../place-table-row';
+import { PlaceTableRow } from '../all-place-table-row';
 import { PlaceTableHead } from '../place-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
 import { PlaceTableToolbar } from '../place-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
 import type { UserProps } from '../place-table-row';
+import NewPlaceForm from './new-place';
+
 
 // ----------------------------------------------------------------------
 
 // Hàm fetchPlaces có sử dụng token từ localStorage
-const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi') => {
+const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi',searchTerm = '',Status:  string | null = '') => {
   const token = localStorage.getItem('accessToken');
   console.log('Access Token:', token);  // Kiểm tra token
   
@@ -34,7 +36,7 @@ const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi')
   }
 
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}`, {
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }
@@ -58,19 +60,29 @@ export function PlaceCreatedView() {
   const [openNewPlaceForm, setOpenNewPlaceForm] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);  // Lưu trang hiện tại
   const [rowsPerPage, setRowsPerPage] = useState(5);  // Sử dụng state để lưu rowsPerPage
+  const [filterStatus, setFilterStatus] = useState<string | null>('');
 
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
+      const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode, filterName, filterStatus);  // Lấy cả items và totalCount
       setPlaces(items);  // Cập nhật danh sách places
-      setTotalCount(totalCount);  // Cập nhật totalCount
+      setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
     };
     fetchData();
-  }, [pageNumber, rowsPerPage, languageCode]);  // Thêm rowsPerPage vào dependencies
+  }, [pageNumber, rowsPerPage, languageCode,filterName,filterStatus]);  // Thêm rowsPerPage vào dependencies
 
-  const handlePlaceCreated = (newPlace: UserProps) => {
-    setPlaces((prevPlaces) => [...prevPlaces, newPlace]); // Thêm place mới vào đầu danh sách
+  const handlePlaceCreated = async (newPlace: UserProps) => {
+    const placeWithImageAndStatus = {
+      ...newPlace,
+      status: newPlace.status ?? '0',  // Default to '0' if status is null/undefined
+      isVerified: newPlace.isVerified ?? false,
+      photoDisplay: newPlace.photoDisplay
+    };
+    setPlaces((prevPlaces) => [...prevPlaces, placeWithImageAndStatus ]); // Thêm place mới vào đầu danh sách
     setTotalCount((prevCount) => prevCount + 1); // Tăng tổng số lượng bản ghi
+    const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);
+    setPlaces(items);  // Cập nhật lại danh sách places
+    setTotalCount(fetchedTotalCount); 
   };
   const table = useTable();
 
@@ -78,8 +90,21 @@ export function PlaceCreatedView() {
     inputData: places,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
+    filterStatus,
   });
-
+  const handleDeletePlace = (placeId: string) => {
+    setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== placeId));
+  };
+  const handlePlaceUpdated = async (updatedPlace: UserProps) => {
+    // Update the place in the list
+    setPlaces((prevPlaces) =>
+      prevPlaces.map((place) =>
+        place.id === updatedPlace.id ? updatedPlace : place
+      )
+    );
+    const { items } = await fetchPlaces(pageNumber, rowsPerPage, languageCode, filterName, filterStatus);
+    setPlaces(items); 
+  };
   const notFound = !dataFiltered.length && !!filterName;
 
   return (
@@ -104,7 +129,11 @@ export function PlaceCreatedView() {
           filterName={filterName}
           onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
             setFilterName(event.target.value);
-            table.onResetPage();
+            setPageNumber(1);
+          }}
+          onFilterStatus={(status) => {
+            setFilterStatus(status || ''); 
+            setPageNumber(1);
           }}
         />
 
@@ -145,6 +174,8 @@ export function PlaceCreatedView() {
                       row={row}
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
+                      onDeletePlace={handleDeletePlace}
+                      onUpdatePlace={handlePlaceUpdated}
                     />
                   ))}
 

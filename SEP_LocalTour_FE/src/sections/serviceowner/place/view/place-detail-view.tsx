@@ -10,6 +10,7 @@ import axios from 'axios';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
+import axiosInstance from 'src/utils/axiosInstance';
 
 export function PlaceDetailView() {
   const { id } = useParams(); // Lấy ID từ URL
@@ -27,7 +28,7 @@ export function PlaceDetailView() {
       }
 
       try {
-        const response = await axios.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
+        const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -52,7 +53,7 @@ export function PlaceDetailView() {
 
     try {
       console.log(`Changing status to: ${status}`); // Log trạng thái để kiểm tra
-      const response = await axios.put(
+      const response = await axiosInstance.put(
         `https://api.localtour.space/api/Place/changeStatusPlace?placeid=${id}&status=${status}`,
         {},
         {
@@ -106,14 +107,16 @@ export function PlaceDetailView() {
         >
           Back to List
         </Button>
-        <Typography variant="h4">Place Detail</Typography>
-        <Button
+        <Typography variant="h4" sx={{ flexGrow: 1, textAlign: 'center' }}>
+    Place Detail
+  </Typography>
+        {/* <Button
           variant="contained"
           color="secondary"
           startIcon={<Iconify icon="mingcute:edit-line" />}
         >
           Edit
-        </Button>
+        </Button> */}
       </Box>
 
       <Grid container spacing={3}>
@@ -151,7 +154,7 @@ export function PlaceDetailView() {
                 <Typography variant="h6">Latitude: {place.latitude}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="h6">Status: {place.status === '1' ? 'Approved' : place.status === '2' ? 'Rejected' : 'Pending'}</Typography>
+                <Typography variant="h6">Status: {place.status === 'Approved' ? 'Approved' : place.status === 'Rejected' ? 'Rejected' : 'Pending'}</Typography>
               </Grid>
             </Grid>
 
@@ -174,110 +177,7 @@ export function PlaceDetailView() {
           )}
         </Grid>
       </Grid>
-      {place.placeActivities?.length > 0 && (
-  <Box mt={4}>
-    {/* Tiêu đề Place Activity */}
-    <Typography variant="h5" mb={3}>
-      Place Activity
-    </Typography>
-
-    {/* Danh sách các Activity */}
-    <Grid container spacing={3}>
-      {place.placeActivities.map((activity: any) => (
-        <Grid item xs={12} sm={6} md={4} lg={3} key={activity.id}>
-          {/* Card hiển thị thông tin Activity */}
-          <Card sx={{ p: 2, boxShadow: 2, borderRadius: 2 }}>
-            <Box position="relative" mb={2}>
-              {/* Hình ảnh Activity */}
-              {activity.photoDisplay ? (
-                <img
-                  src={activity.photoDisplay}
-                  alt={activity.placeActivityTranslations[0]?.activityName || "Activity"}
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    borderRadius: "8px",
-                    objectFit: "cover",
-                  }}
-                />
-              ) : (
-                // Nếu không có ảnh, hiển thị chữ cái đầu của Name
-                <Box
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                  sx={{
-                    width: "100%",
-                    height: 200,
-                    borderRadius: "8px",
-                    backgroundColor: "#f0f0f0",
-                    fontSize: "3rem",
-                    fontWeight: "bold",
-                    color: "#888",
-                  }}
-                >
-                  {activity.placeActivityTranslations[0]?.activityName?.charAt(0)}
-                </Box>
-              )}
-
-              {/* Badge SALE */}
-              {activity.placeActivityTranslations[0]?.discount > 0 && (
-                <Box
-                  position="absolute"
-                  top={8}
-                  right={8}
-                  bgcolor="error.main"
-                  color="white"
-                  px={1}
-                  py={0.5}
-                  borderRadius={1}
-                  fontSize="12px"
-                  fontWeight="bold"
-                >
-                  SALE
-                </Box>
-              )}
-            </Box>
-
-            {/* Tên Activity */}
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              textAlign="center"
-              mb={1}
-            >
-              {activity.placeActivityTranslations[0]?.activityName}
-            </Typography>
-
-            {/* Giá và thông tin bổ sung */}
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Box>
-                {/* Giá Activity */}
-                <Typography variant="subtitle1" color="text.secondary">
-                  {new Intl.NumberFormat('vi-VN', {
-                    style: 'currency',
-                    currency: activity.placeActivityTranslations[0]?.priceType && /^[A-Z]{3}$/.test(activity.placeActivityTranslations[0]?.priceType)
-                      ? activity.placeActivityTranslations[0]?.priceType 
-                      : 'VND', // Default to 'VND' if invalid
-                  }).format(activity.placeActivityTranslations[0]?.price)}
-                </Typography>
-              </Box>
-
-              {/* Trạng thái hoặc nút thêm */}
-              <Button
-                variant="outlined"
-                size="small"
-                color="primary"
-              >
-                View
-              </Button>
-            </Box>
-          </Card>
-        </Grid>
-      ))}
-    </Grid>
-  </Box>
-)}
+      
 
     </DashboardContent>
   );

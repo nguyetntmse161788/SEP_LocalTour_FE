@@ -1,7 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios'; // Import axios
+import { useState, useCallback } from 'react';
 
-import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
@@ -10,10 +8,10 @@ import TableBody from '@mui/material/TableBody';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
 
+import { _users } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -29,68 +27,28 @@ import type { UserProps } from '../user-table-row';
 // ----------------------------------------------------------------------
 
 export function UserView() {
-  const navigate = useNavigate();
-  const [users, setUsers] = useState<UserProps[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const table = useTable();
+
   const [filterName, setFilterName] = useState('');
-  const table = useTable(); // Hook quản lý bảng
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setError('No access token found. Please log in.');
-      setLoading(false);
-      navigate('/login');
-      return;
-    }
-  
-    const decodedToken = JSON.parse(atob(token.split('.')[1]));
-    const currentTime = Math.floor(Date.now() / 1000);
-  
-    if (decodedToken.exp < currentTime) {
-      setError('Token has expired. Please log in again.');
-      setLoading(false);
-      navigate('/login');
-      return;
-    }
-  
-    fetchUsers(token);
-  }, [navigate]);
-  
-  const fetchUsers = async (token: string) => {
-    try {
-      const response = await axios.get('https://api.localtour.space/api/User', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(response.data);
-    } catch (err) {
-      setError('Failed to fetch users');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-
-  // Dữ liệu đã lọc theo tìm kiếm
-  const dataFiltered = applyFilter({
-    inputData: users,
+  const dataFiltered: UserProps[] = applyFilter({
+    inputData: _users,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
   });
 
   const notFound = !dataFiltered.length && !!filterName;
 
-  if (loading) return <div>Loading...</div>;
-
   return (
-    <Box sx={{ p: 3 }}>
+    <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
+        <Typography variant="h4" flexGrow={1}>
+          Users
+        </Typography>
         <Button
           variant="contained"
           color="inherit"
           startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={() => navigate('/register')}
         >
           New user
         </Button>
@@ -98,12 +56,12 @@ export function UserView() {
 
       <Card>
         <UserTableToolbar
+          numSelected={table.selected.length}
           filterName={filterName}
-          onFilterName={(e) => {
-            setFilterName(e.target.value);
+          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setFilterName(event.target.value);
             table.onResetPage();
           }}
-          numSelected={0}
         />
 
         <Scrollbar>
@@ -112,40 +70,25 @@ export function UserView() {
               <UserTableHead
                 order={table.order}
                 orderBy={table.orderBy}
-                rowCount={users.length}
+                rowCount={_users.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}
-                // onSelectAllRows={(checked) =>
-                //   table.onSelectAllRows(checked, users.map((user) => user.id))
-                // }
+                onSelectAllRows={(checked) =>
+                  table.onSelectAllRows(
+                    checked,
+                    _users.map((user) => user.id)
+                  )
+                }
                 headLabel={[
-                  { id: 'avatar', label: 'Avatar' },
-                  // { id: 'id', label: 'Id' },
-                  { id: 'username', label: 'Username' },
-                  { id: 'email', label: 'Email' },
-                  { id: 'fullname', label: 'Full Name' },
-                  { id: 'phone', label: 'Phone' },
-                  { id: 'DoB', label: 'Date of Birth' },
-                  { id: 'address', label: 'Address' },
-                  { id: 'button', label: 'Action' },  // Changed to more appropriate label
+                  { id: 'name', label: 'Name' },
+                  { id: 'company', label: 'Company' },
+                  { id: 'role', label: 'Role' },
+                  { id: 'isVerified', label: 'Verified', align: 'center' },
+                  { id: 'status', label: 'Status' },
+                  { id: '' },
                 ]}
               />
-
               <TableBody>
-                {loading && (
-                  <TableRow>
-                    <TableCell colSpan={8} align="center">Loading...</TableCell>  {/* Adjusted to cover all columns */}
-                  </TableRow>
-                )}
-
-                {error && (
-                  <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ color: 'error.main' }}>
-                      {error}
-                    </TableCell>
-                  </TableRow>
-                )}
-
                 {dataFiltered
                   .slice(
                     table.page * table.rowsPerPage,
@@ -162,7 +105,7 @@ export function UserView() {
 
                 <TableEmptyRows
                   height={68}
-                  emptyRows={emptyRows(table.page, table.rowsPerPage, users.length)}
+                  emptyRows={emptyRows(table.page, table.rowsPerPage, _users.length)}
                 />
 
                 {notFound && <TableNoData searchQuery={filterName} />}
@@ -174,29 +117,34 @@ export function UserView() {
         <TablePagination
           component="div"
           page={table.page}
-          count={users.length}
+          count={_users.length}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
           onRowsPerPageChange={table.onChangeRowsPerPage}
         />
       </Card>
-    </Box>
+    </DashboardContent>
   );
 }
 
+// ----------------------------------------------------------------------
+
 export function useTable() {
   const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('username');
+  const [orderBy, setOrderBy] = useState('name');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selected, setSelected] = useState<string[]>([]);
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
 
-  const onSort = useCallback((id: string) => {
-    const isAsc = orderBy === id && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(id);
-  }, [order, orderBy]);
+  const onSort = useCallback(
+    (id: string) => {
+      const isAsc = orderBy === id && order === 'asc';
+      setOrder(isAsc ? 'desc' : 'asc');
+      setOrderBy(id);
+    },
+    [order, orderBy]
+  );
 
   const onSelectAllRows = useCallback((checked: boolean, newSelecteds: string[]) => {
     if (checked) {
@@ -208,17 +156,20 @@ export function useTable() {
 
   const onSelectRow = useCallback(
     (inputValue: string) => {
-      setSelected((prev) =>
-        prev.includes(inputValue)
-          ? prev.filter((value) => value !== inputValue)
-          : [...prev, inputValue]
-      );
+      const newSelected = selected.includes(inputValue)
+        ? selected.filter((value) => value !== inputValue)
+        : [...selected, inputValue];
+
+      setSelected(newSelected);
     },
-    []
+    [selected]
   );
 
-  const onResetPage = useCallback(() => setPage(0), []);
-  const onChangePage = useCallback((_: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+  const onResetPage = useCallback(() => {
+    setPage(0);
+  }, []);
+
+  const onChangePage = useCallback((event: unknown, newPage: number) => {
     setPage(newPage);
   }, []);
 
@@ -233,14 +184,14 @@ export function useTable() {
   return {
     page,
     order,
-    orderBy,
-    rowsPerPage,
-    selected,
     onSort,
+    orderBy,
+    selected,
+    rowsPerPage,
     onSelectRow,
-    onSelectAllRows,
     onResetPage,
     onChangePage,
+    onSelectAllRows,
     onChangeRowsPerPage,
   };
 }

@@ -10,6 +10,7 @@ import axios from 'axios';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
+import axiosInstance from 'src/utils/axiosInstance';
 
 export function PlaceDetailView() {
   const { id } = useParams(); // Lấy ID từ URL
@@ -27,7 +28,7 @@ export function PlaceDetailView() {
       }
 
       try {
-        const response = await axios.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
+        const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -52,7 +53,7 @@ export function PlaceDetailView() {
 
     try {
       console.log(`Changing status to: ${status}`); // Log trạng thái để kiểm tra
-      const response = await axios.put(
+      const response = await axiosInstance.put(
         `https://api.localtour.space/api/Place/changeStatusPlace?placeid=${id}&status=${status}`,
         {},
         {
@@ -106,14 +107,16 @@ export function PlaceDetailView() {
         >
           Back to List
         </Button>
-        <Typography variant="h4">Place Detail</Typography>
-        <Button
+        <Typography variant="h4" sx={{ flexGrow: 1, textAlign: 'center' }}>
+    Place Detail
+  </Typography>
+        {/* <Button
           variant="contained"
           color="secondary"
           startIcon={<Iconify icon="mingcute:edit-line" />}
         >
           Edit
-        </Button>
+        </Button> */}
       </Box>
 
       <Grid container spacing={3}>
@@ -151,29 +154,30 @@ export function PlaceDetailView() {
                 <Typography variant="h6">Latitude: {place.latitude}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="h6">Status: {place.status === '1' ? 'Approved' : place.status === '2' ? 'Rejected' : 'Pending'}</Typography>
+                <Typography variant="h6">Status: {place.status === 'Approved' ? 'Approved' : place.status === 'Rejected' ? 'Rejected' : 'Pending'}</Typography>
               </Grid>
             </Grid>
 
             {/* Show Approve/Reject buttons with disabled state */}
             <Box mt={3} display="flex" gap={2}>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={() => handleChangeStatus('1')}  // Approve
-                disabled={place.status === '1'} // Disable nếu đã Approve
-              >
-                Approved
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={() => handleChangeStatus('2')}  // Reject
-                disabled={place.status === '2'} // Disable nếu đã Reject
-              >
-                Rejected
-              </Button>
-            </Box>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => handleChangeStatus('Approved')}  // Approve
+              disabled={place.status === 'Approved'} // Disable if already Approved
+            >
+              Approved
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => handleChangeStatus('Rejected')}  // Reject
+              disabled={place.status === 'Rejected'} // Disable if already Rejected
+            >
+              Rejected
+            </Button>
+          </Box>
+
           </Card>
 
           {/* Additional Translations */}

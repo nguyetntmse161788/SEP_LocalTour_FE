@@ -88,7 +88,7 @@ return (
       <TableCell>{row.placeTranslation[0]?.description || 'N/A'}</TableCell>
 
       <TableCell align="center">
-        {row.status === '0' ? (
+        {row.status === 'Pending' ? (
           '-'
         ) : (
           <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />
@@ -96,17 +96,17 @@ return (
       </TableCell>
 
       <TableCell>
-        <Label color={ 
-          row.status === '0' ? 'warning' : 
-          row.status === '1' ? 'success' : 
-          row.status === '2' ? 'error' : 
-          'default'
-        }>
-          {row.status === '0' ? 'Pending' : 
-          row.status === '1' ? 'Approved' : 
-          row.status === '2' ? 'Rejected' : row.status}
-        </Label>
-      </TableCell>
+  <Label 
+    color={
+      row.status === 'Pending' ? 'warning' :
+      row.status === 'Approved' ? 'success' :
+      row.status === 'Rejected' ? 'error' :
+      'default'
+    }
+  >
+    {row.status}
+  </Label>
+</TableCell>
 
       {/* Cột mũi tên điều hướng */}
       <TableCell align="right">

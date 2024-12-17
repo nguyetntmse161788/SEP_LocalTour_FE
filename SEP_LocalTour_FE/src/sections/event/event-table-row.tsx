@@ -27,6 +27,7 @@ export type EventProps = {
   eventStatus: string;
   createdAt: string;
   updatedAt: string;
+  eventPhotoDisplay:string;
 };
 
 type EventTableRowProps = {
@@ -74,7 +75,7 @@ export function EventTableRow({ row, selected, onSelectRow,onUpdateStatus }: Eve
         tabIndex={-1}
         role="checkbox"
         selected={selected}
-        onClick={handleRowClick} // Xử lý click cho toàn bộ dòng
+        // onClick={handleRowClick} // Xử lý click cho toàn bộ dòng
       >
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
@@ -84,7 +85,7 @@ export function EventTableRow({ row, selected, onSelectRow,onUpdateStatus }: Eve
           <Box gap={2} display="flex" alignItems="center">
             <Avatar
               alt={row.eventName || 'N/A'}
-              src={`/static/mock-images/events/event-${row.id}.jpg`} // Giả sử bạn có ảnh mẫu
+              src={row.eventPhotoDisplay} // Giả sử bạn có ảnh mẫu
             />
             {row.eventName || 'N/A'}
           </Box>
@@ -115,35 +116,30 @@ export function EventTableRow({ row, selected, onSelectRow,onUpdateStatus }: Eve
 
 
       <TableCell align="center">
-        {/* Nút Approve */}
-        <Button
-          variant="contained"
-          color="success"
-          size="small"
-          disabled={row.eventStatus === 'Approved'} // Disable nếu trạng thái là Approved
-          onClick={() => onUpdateStatus('Approved')}
-        >
-          Approve
-        </Button>
-        {/* Nút Reject */}
-        <Button
-          variant="contained"
-          color="error"
-          size="small"
-          sx={{ ml: 1 }}
-          disabled={row.eventStatus === 'Rejected'} // Disable nếu trạng thái là Rejected
-          onClick={() => onUpdateStatus('Rejected')}
-        >
-          Reject
-        </Button>
-      </TableCell>
-
-        {/* Menu Dấu 3 chấm */}
-        <TableCell align="right">
-          <IconButton onClick={handleOpenPopover}>
-            <Iconify icon="eva:more-vertical-fill" width={22} />
-          </IconButton>
-        </TableCell>
+  {/* Sử dụng Box để sắp xếp các nút */}
+  <Box display="flex" gap={1} justifyContent="center">
+    {/* Nút Approve */}
+    <Button
+      variant="contained"
+      color="success"
+      size="small"
+      disabled={row.eventStatus === 'Approved'} // Disable nếu trạng thái là Approved
+      onClick={() => onUpdateStatus('Approved')}
+    >
+      Approve
+    </Button>
+    {/* Nút Reject */}
+    <Button
+      variant="contained"
+      color="error"
+      size="small"
+      disabled={row.eventStatus === 'Rejected'} // Disable nếu trạng thái là Rejected
+      onClick={() => onUpdateStatus('Rejected')}
+    >
+      Reject
+    </Button>
+  </Box>
+</TableCell>
       </TableRow>
 
       {/* Menu Popover */}
@@ -154,32 +150,6 @@ export function EventTableRow({ row, selected, onSelectRow,onUpdateStatus }: Eve
         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <MenuList
-          disablePadding
-          sx={{
-            p: 0.5,
-            gap: 0.5,
-            width: 140,
-            display: 'flex',
-            flexDirection: 'column',
-            [`& .${menuItemClasses.root}`]: {
-              px: 1,
-              gap: 2,
-              borderRadius: 0.75,
-              [`&.${menuItemClasses.selected}`]: { bgcolor: 'action.selected' },
-            },
-          }}
-        >
-          <MenuItem onClick={handleClosePopover}>
-            <Iconify icon="solar:pen-bold" />
-            Edit
-          </MenuItem>
-
-          <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem>
-        </MenuList>
       </Popover>
     </>
   );

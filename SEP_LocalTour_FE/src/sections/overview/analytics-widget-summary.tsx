@@ -19,7 +19,6 @@ import { Chart, useChart } from 'src/components/chart';
 type Props = CardProps & {
   title: string;
   total: number;
-  percent: number;
   color?: ColorType;
   icon: React.ReactNode;
   chart: {
@@ -34,7 +33,7 @@ export function AnalyticsWidgetSummary({
   title,
   total,
   chart,
-  percent,
+  // percent,
   color = 'primary',
   sx,
   ...other
@@ -72,11 +71,11 @@ export function AnalyticsWidgetSummary({
         alignItems: 'center',
       }}
     >
-      <Iconify width={20} icon={percent < 0 ? 'eva:trending-down-fill' : 'eva:trending-up-fill'} />
+      {/* <Iconify width={20} icon={percent < 0 ? 'eva:trending-down-fill' : 'eva:trending-up-fill'} />
       <Box component="span" sx={{ typography: 'subtitle2' }}>
         {percent > 0 && '+'}
         {fPercent(percent)}
-      </Box>
+      </Box> */}
     </Box>
   );
 

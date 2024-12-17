@@ -8,10 +8,18 @@ import Checkbox from '@mui/material/Checkbox';
 import MenuList from '@mui/material/MenuList';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
-import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
-
+import MenuItem from '@mui/material/MenuItem';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
+import axiosInstance from 'src/utils/axiosInstance';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import axios from 'axios';
+import UpdatePlaceForm from './view/update-place';
+
 
 // ----------------------------------------------------------------------
 
@@ -33,11 +41,17 @@ type UserTableRowProps = {
   row: UserProps;
   selected: boolean;
   onSelectRow: () => void;
+  onDeletePlace: any;
+  onUpdatePlace: any;
 };
 
-export function PlaceTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpdatePlace }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
-  const navigate = useNavigate();  // Hook điều hướng
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);  // State for confirmation dialog
+  const [openEditDialog, setOpenEditDialog] = useState(false);  // State for the edit dialog
+  const [placeIdToEdit, setPlaceIdToEdit] = useState<string>('');
+  const navigate = useNavigate();  // Hook for navigation
+  const [places, setPlaces] = useState<UserProps[]>([]);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -48,115 +62,123 @@ export function PlaceTableRow({ row, selected, onSelectRow }: UserTableRowProps)
     setOpenPopover(null);
   }, []);
 
- // Hàm điều hướng khi bấm vào mũi tên ngang (IconButton)
- const handleNavigateToDetail = (event: React.MouseEvent<HTMLButtonElement>) => {
-  event.stopPropagation(); // Ngăn không cho sự kiện điều hướng khi nhấn mũi tên
-  navigate(`/owner/place/${row.id}`);  // Điều hướng tới trang chi tiết của Place
-};
+  // Navigate to detail page
+  const handleNavigateToDetail = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    navigate(`/owner/place/${row.id}`);
+  };
+  const handleOpenEditDialog = (placeId: string) => {
+    setPlaceIdToEdit(placeId);
+    setOpenEditDialog(true);
+    handleClosePopover();
+  };
+  // Handle Row Click
+  const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
+    if (event.target instanceof HTMLButtonElement || event.target instanceof HTMLInputElement) {
+      return;
+    }
+    navigate(`/owner/place/${row.id}`);
+  };
 
-// Hàm xử lý sự kiện khi bấm vào dòng bảng
-const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
-  if (event.target instanceof HTMLButtonElement || event.target instanceof HTMLInputElement) {
-    // Nếu click vào checkbox hoặc button thì không điều hướng
-    return;
-  }
-  navigate(`/owner/place/${row.id}`);  // Điều hướng tới trang chi tiết của Place
-};
+  // Delete place
+  const handleDeletePlace = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
 
-return (
-  <>
-    <TableRow 
-      hover 
-      tabIndex={-1} 
-      role="checkbox" 
-      selected={selected} 
-      onClick={handleRowClick}  // Xử lý sự kiện click cho toàn bộ dòng
-    >
-      <TableCell padding="checkbox">
-        <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
-      </TableCell>
+    try {
+      await axiosInstance.delete(`https://api.localtour.space/api/Place/delete?placeid=${row.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      // Call the parent function to update the state (remove the place)
+      onDeletePlace(row.id);
+    } catch (error) {
+      console.error("Error deleting place:", error);
+    }
+    setOpenConfirmDialog(false);  // Close the confirmation dialog after deletion
+  };
 
-      <TableCell component="th" scope="row">
-        <Box gap={2} display="flex" alignItems="center">
-          <Avatar alt={row.placeTranslation[0]?.name || 'N/A'} src={row.photoDisplay} />
-          {row.placeTranslation[0]?.name || 'N/A'}
-        </Box>
-      </TableCell>
+  const handleCancelDelete = () => {
+    setOpenConfirmDialog(false);  // Close the confirmation dialog
+  };
+  const handlePlaceUpdated = (updatedPlace: UserProps) => {
+    // Khi cập nhật xong, gọi onUpdatePlace để cập nhật lại danh sách
+    onUpdatePlace(updatedPlace);
+    setOpenEditDialog(false);
+  };
+  
+  return (
+    <>
+      <TableRow hover tabIndex={-1} role="checkbox" selected={selected} onClick={handleRowClick}>
+        <TableCell padding="checkbox">
+          <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
+        </TableCell>
+        <TableCell component="th" scope="row">
+          <Box gap={2} display="flex" alignItems="center">
+            <Avatar alt={row.placeTranslation[0]?.name || 'N/A'} src={row.photoDisplay} />
+            {row.placeTranslation[0]?.name || 'N/A'}
+          </Box>
+        </TableCell>
+        <TableCell>{row.placeTranslation[0]?.address || 'N/A'}</TableCell>
+        <TableCell>{row.placeTranslation[0]?.description || 'N/A'}</TableCell>
+        <TableCell align="center">
+          {row.status === 'Pending' ? '-' : <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />}
+        </TableCell>
+        <TableCell>
+          <Label color={row.status === 'Pending' ? 'warning' : row.status === 'Approved' ? 'success' : row.status === 'Rejected' ? 'error' : 'default'}>
+            {row.status}
+          </Label>
+        </TableCell>
+        <TableCell align="right">
+          <IconButton onClick={handleNavigateToDetail}>
+            <Iconify icon="eva:arrow-forward-outline" width={22} />
+          </IconButton>
+        </TableCell>
+        <TableCell align="right">
+          <IconButton onClick={handleOpenPopover}>
+            <Iconify icon="eva:more-vertical-fill" width={22} />
+          </IconButton>
+        </TableCell>
+      </TableRow>
 
-      <TableCell>{row.placeTranslation[0]?.address || 'N/A'}</TableCell>
+      <Popover open={!!openPopover} anchorEl={openPopover} onClose={handleClosePopover}>
+        <MenuList disablePadding sx={{ p: 0.5, gap: 0.5, width: 140, display: 'flex', flexDirection: 'column' }}>
+          <MenuItem onClick={() => { handleOpenEditDialog(row.id); handleClosePopover(); }}>
+            <Iconify icon="solar:pen-bold" />
+            Edit
+          </MenuItem>
+          <MenuItem onClick={() => { setOpenConfirmDialog(true); handleClosePopover(); }} sx={{ color: 'error.main' }}>
+            <Iconify icon="solar:trash-bin-trash-bold" />
+            Delete
+          </MenuItem>
+        </MenuList>
+      </Popover>
 
-      <TableCell>{row.placeTranslation[0]?.description || 'N/A'}</TableCell>
-
-      <TableCell align="center">
-        {row.status === '0' ? (
-          '-'
-        ) : (
-          <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />
-        )}
-      </TableCell>
-
-      <TableCell>
-        <Label color={ 
-          row.status === '0' ? 'warning' : 
-          row.status === '1' ? 'success' : 
-          row.status === '2' ? 'error' : 
-          'default'
-        }>
-          {row.status === '0' ? 'Pending' : 
-          row.status === '1' ? 'Approved' : 
-          row.status === '2' ? 'Rejected' : row.status}
-        </Label>
-      </TableCell>
-
-      {/* Cột mũi tên điều hướng */}
-      <TableCell align="right">
-        <IconButton onClick={handleNavigateToDetail}> {/* Khi nhấn vào mũi tên, điều hướng */}
-          <Iconify icon="eva:arrow-forward-outline" width={22} />
-        </IconButton>
-      </TableCell>
-      
-      {/* Cột menu dấu 3 chấm */}
-      <TableCell align="right">
-        <IconButton onClick={handleOpenPopover}> {/* Khi nhấn vào dấu 3 chấm, mở menu */}
-          <Iconify icon="eva:more-vertical-fill" width={22} />
-        </IconButton>
-      </TableCell>
-    </TableRow>
-
-    <Popover
-      open={!!openPopover}
-      anchorEl={openPopover}
-      onClose={handleClosePopover}
-      anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-    >
-      <MenuList
-        disablePadding
-        sx={{
-          p: 0.5,
-          gap: 0.5,
-          width: 140,
-          display: 'flex',
-          flexDirection: 'column',
-          [`& .${menuItemClasses.root}`]: {
-            px: 1,
-            gap: 2,
-            borderRadius: 0.75,
-            [`&.${menuItemClasses.selected}`]: { bgcolor: 'action.selected' },
-          },
-        }}
-      >
-        <MenuItem onClick={handleClosePopover}>
-          <Iconify icon="solar:pen-bold" />
-          Edit
-        </MenuItem>
-
-        <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
-          <Iconify icon="solar:trash-bin-trash-bold" />
-          Delete
-        </MenuItem>
-      </MenuList>
-    </Popover>
-  </>
-);
+      {/* Confirmation Dialog */}
+      <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete this place?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeletePlace} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <UpdatePlaceForm
+        open={openEditDialog}
+        placeId={placeIdToEdit}
+        onClose={() => setOpenEditDialog(false)}
+        onPlaceUpdated={handlePlaceUpdated}
+      />
+    </>
+  );
 }

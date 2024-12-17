@@ -1,5 +1,5 @@
 import type { IconButtonProps } from '@mui/material/IconButton';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
@@ -11,6 +11,9 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 import { useRouter, usePathname } from 'src/routes/hooks';
 import { _myAccount } from 'src/_mock';
+import Cookies from 'js-cookie';
+import axios from 'axios';
+import { isTokenExpired, refreshAccessToken } from 'src/utils/auth';
 // ----------------------------------------------------------------------
 export type AccountPopoverProps = IconButtonProps & {
   data?: {
@@ -20,11 +23,30 @@ export type AccountPopoverProps = IconButtonProps & {
     info?: React.ReactNode;
   }[];
 };
+interface User {
+  fullName: string;
+  userName: string;
+  userProfileImage: string;
+  email: string;
+  dateOfBirth: string | null;
+  gender: string | null;
+  address: string | null;
+  phoneNumber: string;
+  totalSchedules: number;
+  totalPosteds: number;
+  totalReviews: number;
+  totalFollowed: number;
+  totalFollowers: number;
+  isFollowed: boolean;
+  isHasPassword: boolean;
+}
 export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
   }, []);
@@ -38,13 +60,51 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     },
     [handleClosePopover, router]
   );
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        let token = localStorage.getItem('accessToken');
+        if (!token) {
+          router.push('/sign-in');
+          return;
+        }
+        if (isTokenExpired(token)) {
+          try {
+            token = await refreshAccessToken();  // Refresh the access token if it's expired
+          } catch (error) {
+            console.error('Unable to refresh access token');
+            throw new Error('Token refresh failed');
+          }
+        }
+        
+        const response = await axios.get(
+          `https://api.localtour.space/api/User/getProfile?userId=${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setUser(response.data);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
   // Hàm xử lý đăng xuất
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
     localStorage.removeItem('role');
     localStorage.removeItem('currentPath');
-    window.location.href = '/sign-in';  // Chuyển hướng tới trang đăng nhập
+    Cookies.remove('refreshToken');
+    router.push('/sign-in');  // Chuyển hướng tới trang đăng nhập
   };
   return (
     <>
@@ -60,8 +120,8 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
         }}
         {...other}
       >
-        <Avatar src={userData?.photoURL} alt={userData?.fullName} sx={{ width: 1, height: 1 }}>
-          {userData?.fullName?.charAt(0).toUpperCase()}
+        <Avatar src={user?.userProfileImage} alt={user?.userName} sx={{ width: 1, height: 1 }}>
+          {user?.userName?.charAt(0).toUpperCase()}
         </Avatar>
       </IconButton>
       <Popover
@@ -78,10 +138,10 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
       >
         <Box sx={{ p: 2, pb: 1.5 }}>
           <Typography variant="subtitle2" noWrap>
-            {userData?.fullName}
+            {user?.userName}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {userData?.phoneNumber}
+            {user?.fullName}
           </Typography>
         </Box>
         <Divider sx={{ borderStyle: 'dashed' }} />

@@ -1,19 +1,16 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
 
 import { useState } from 'react';
-
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 
 import { _langs, _notifications } from 'src/_mock';
-
 import { Iconify } from 'src/components/iconify';
-
 import { Main } from './main';
 import { layoutClasses } from '../classes';
 import { NavMobile, NavDesktop } from './nav';
-import { navData, adminNavData } from '../config-nav-dashboard';
+import { navData } from '../config-nav-dashboard';
 import { Searchbar } from '../components/searchbar';
 import { _workspaces } from '../config-nav-workspace';
 import { MenuButton } from '../components/menu-button';
@@ -21,7 +18,6 @@ import { LayoutSection } from '../core/layout-section';
 import { HeaderSection } from '../core/header-section';
 import { AccountPopover } from '../components/account-popover';
 import { LanguagePopover } from '../components/language-popover';
-import { NotificationsPopover } from '../components/notifications-popover';
 
 // ----------------------------------------------------------------------
 
@@ -30,23 +26,23 @@ export type DashboardLayoutProps = {
   children: React.ReactNode;
   header?: {
     sx?: SxProps<Theme>;
+    showAlert?: boolean; // Optional: allow dynamic control of alert visibility
   };
-  userRole?: string; // Add a prop for the user role
 };
 
-export function DashboardLayout({ sx, children, header, userRole }: DashboardLayoutProps) {
+export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) {
   const theme = useTheme();
-
   const [navOpen, setNavOpen] = useState(false);
 
   const layoutQuery: Breakpoint = 'lg';
   const role = JSON.parse(localStorage.getItem('role') || '[]');
   const navItems = navData(role);
-  console.log('Role::::', role);
+  console.log('Role:', role);
+
   return (
     <LayoutSection
       /** **************************************
-       * Header
+       * Header Section
        *************************************** */
       headerSection={
         <HeaderSection
@@ -59,11 +55,11 @@ export function DashboardLayout({ sx, children, header, userRole }: DashboardLay
           }}
           sx={header?.sx}
           slots={{
-            topArea: (
-              <Alert severity="info" sx={{ display: 'none', borderRadius: 0 }}>
+            topArea: header?.showAlert ? (
+              <Alert severity="info" sx={{ borderRadius: 0 }}>
                 This is an info Alert.
               </Alert>
-            ),
+            ) : null, // Conditionally render alert
             leftArea: (
               <>
                 <MenuButton
@@ -83,25 +79,19 @@ export function DashboardLayout({ sx, children, header, userRole }: DashboardLay
             ),
             rightArea: (
               <Box gap={1} display="flex" alignItems="center">
-                <Searchbar />
-                <LanguagePopover data={_langs} />
-                <NotificationsPopover data={_notifications} />
+                {/* <Searchbar /> */}
+                {/* <LanguagePopover data={_langs} /> */}
                 <AccountPopover
                   data={[
                     {
                       label: 'Home',
                       href: '/',
-                      icon: <Iconify width={22} icon="solar:home-angle-bold-duotone" />,
-                    },
-                    {
-                      label: 'Profile',
-                      href: '#',
                       icon: <Iconify width={22} icon="solar:shield-keyhole-bold-duotone" />,
                     },
                     {
-                      label: 'Settings',
-                      href: '#',
-                      icon: <Iconify width={22} icon="solar:settings-bold-duotone" />,
+                      label: 'Profile',
+                      href: '/profile',
+                      icon: <Iconify width={22} icon="solar:shield-keyhole-bold-duotone" />,
                     },
                   ]}
                 />
@@ -111,17 +101,17 @@ export function DashboardLayout({ sx, children, header, userRole }: DashboardLay
         />
       }
       /** **************************************
-       * Sidebar
+       * Sidebar Section
        *************************************** */
       sidebarSection={
         <NavDesktop data={navItems} layoutQuery={layoutQuery} workspaces={_workspaces} />
       }
       /** **************************************
-       * Footer
+       * Footer Section
        *************************************** */
-      footerSection={null}
+      footerSection={null} // Can be expanded as needed
       /** **************************************
-       * Style
+       * Layout Styles
        *************************************** */
       cssVars={{
         '--layout-nav-vertical-width': '300px',

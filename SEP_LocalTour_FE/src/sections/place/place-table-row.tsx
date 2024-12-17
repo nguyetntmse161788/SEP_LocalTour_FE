@@ -22,7 +22,7 @@ export type UserProps = {
   description: string;
   status: string;
   photoDisplay: string;
-  
+  wardName: string;
   placeTranslation: [
     { name: string, address: string, description: string },
   ],
@@ -86,9 +86,10 @@ return (
       <TableCell>{row.placeTranslation[0]?.address || 'N/A'}</TableCell>
 
       <TableCell>{row.placeTranslation[0]?.description || 'N/A'}</TableCell>
+      <TableCell>{row.wardName || 'N/A'}</TableCell>
 
       <TableCell align="center">
-        {row.status === '0' ? (
+        {row.status === 'Pending' ? (
           '-'
         ) : (
           <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />
@@ -96,29 +97,23 @@ return (
       </TableCell>
 
       <TableCell>
-        <Label color={ 
-          row.status === '0' ? 'warning' : 
-          row.status === '1' ? 'success' : 
-          row.status === '2' ? 'error' : 
-          'default'
-        }>
-          {row.status === '0' ? 'Pending' : 
-          row.status === '1' ? 'Approved' : 
-          row.status === '2' ? 'Rejected' : row.status}
-        </Label>
-      </TableCell>
+  <Label 
+    color={
+      row.status === 'Pending' ? 'warning' :
+      row.status === 'Approved' ? 'success' :
+      row.status === 'Rejected' ? 'error' :
+      'default'
+    }
+  >
+    {row.status}
+  </Label>
+</TableCell>
+
 
       {/* Cột mũi tên điều hướng */}
       <TableCell align="right">
         <IconButton onClick={handleNavigateToDetail}> {/* Khi nhấn vào mũi tên, điều hướng */}
           <Iconify icon="eva:arrow-forward-outline" width={22} />
-        </IconButton>
-      </TableCell>
-      
-      {/* Cột menu dấu 3 chấm */}
-      <TableCell align="right">
-        <IconButton onClick={handleOpenPopover}> {/* Khi nhấn vào dấu 3 chấm, mở menu */}
-          <Iconify icon="eva:more-vertical-fill" width={22} />
         </IconButton>
       </TableCell>
     </TableRow>
@@ -146,15 +141,6 @@ return (
           },
         }}
       >
-        <MenuItem onClick={handleClosePopover}>
-          <Iconify icon="solar:pen-bold" />
-          Edit
-        </MenuItem>
-
-        <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
-          <Iconify icon="solar:trash-bin-trash-bold" />
-          Delete
-        </MenuItem>
       </MenuList>
     </Popover>
   </>

@@ -19,19 +19,39 @@ export const navData = (role: string | null): NavItem[] => {
   const isServiceOwner = Array.isArray(role) && role.includes('Service Owner');
 
   const navItems: (NavItem | false)[] = [
-    {
+    isAdmin && {
       title: 'Dashboard',
       path: '/',
       icon: icon('ic-analytics'),
     },
-    {
+    isAdmin && {
       title: 'User',
-      path: '/user',
+      path: '/admin/user',
       icon: icon('ic-user'),
     },
-    {
+    isAdmin && {
+      title: 'Manage Moderator',
+      path: '/admin/mod',
+      icon: icon('ic-user'),
+    },
+    isAdmin && {
+      title: 'User Report',
+      path: '/admin/reportUser',
+      icon: icon('ic-user'),
+    },
+    isAdmin && {
+      title: 'Banner Report',
+      path: '/admin/bannerUser',
+      icon: icon('ic-user'),
+    },
+    isServiceOwner&& {
       title: 'Place',
-      path: isAdmin ? '/place' : isModerator ? '/mod/place' : isServiceOwner ? '/owner/place' : '/404',
+      path: '/owner/place',
+      icon: icon('ic-cart'),
+    },
+    isModerator && {
+      title: 'Place',
+      path:'/place',
       icon: icon('ic-cart'),
     },
     isServiceOwner && {
@@ -39,112 +59,57 @@ export const navData = (role: string | null): NavItem[] => {
       path: '/owner/created',
       icon: icon('ic-cart'),
     },
-    {
+    isServiceOwner && {
       title: 'Event',
-      path: isAdmin ? '/event' : isModerator ? '/mod/event' : isServiceOwner ? '/owner/event' : '/404',
+      path:'/owner/event',
       icon: icon('ic-cart'),
     },
-    {
+    isModerator && {
+      title: 'Event',
+      path: '/event',
+      icon: icon('ic-cart'),
+    },
+    isServiceOwner && {
       title: 'Place Activity',
-      path: isAdmin ? '/activity' : isModerator ? '/mod/activity' : isServiceOwner ? '/owner/activity' : '/404',
+      path: '/owner/activity',
       icon: icon('ic-cart'),
-      info: (
-        <Label color="error" variant="inverted">
-          +3
-        </Label>
-      ),
     },
-    {
-      title: 'Product',
-      path: '/products',
+    isServiceOwner && {
+      title: 'Banner',
+      path:'/owner/banner',
       icon: icon('ic-cart'),
-      info: (
-        <Label color="error" variant="inverted">
-          +3
-        </Label>
-      ),
     },
-    {
-      title: 'Blog',
-      path: '/blog',
-      icon: icon('ic-blog'),
+    isServiceOwner && {
+      title: 'User Tranfer',
+      path:'/owner/usertranfer',
+      icon: icon('ic-cart'),
     },
-    {
-      title: 'Not found',
-      path: '/404',
-      icon: icon('ic-disabled'),
+    isAdmin && {
+      title: 'Tag',
+      path: '/admin/tag',
+      icon: icon('ic-user'),
     },
+    // {
+    //   title: 'Product',
+    //   path: '/products',
+    //   icon: icon('ic-cart'),
+    //   info: (
+    //     <Label color="error" variant="inverted">
+    //       +3
+    //     </Label>
+    //   ),
+    // },
+    // {
+    //   title: 'Blog',
+    //   path: '/blog',
+    //   icon: icon('ic-blog'),
+    // },
+    // {
+    //   title: 'Not found',
+    //   path: '/404',
+    //   icon: icon('ic-disabled'),
+    // },
   ];
 
   return navItems.filter((item): item is NavItem => Boolean(item));
 };
-export const navData = [
-  {
-    title: 'Dashboard',
-    path: '/',
-    icon: icon('ic-analytics'),
-  },
-  {
-    title: 'User',
-    path: '/admin',
-    icon: icon('ic-user'),
-  },
-  {
-    title: 'User Report',
-    path: '/reportUser',
-    icon: icon('ic-user'),
-  },
-  {
-    title: 'Place',
-    path: '/place',
-    icon: icon('ic-user'),
-  },
-  {
-    title: 'Product',
-    path: '/products',
-    icon: icon('ic-cart'),
-    info: (
-      <Label color="error" variant="inverted">
-        +3
-      </Label>
-    ),
-  },
-  {
-    title: 'Blog',
-    path: '/blog',
-    icon: icon('ic-blog'),
-  },
-  {
-    title: 'Sign in',
-    path: '/sign-in',
-    icon: icon('ic-lock'),
-  },
-  {
-    title: 'Not found',
-    path: '/404',
-    icon: icon('ic-disabled'),
-  },
-];
-
-export const adminNavData = [
-  {
-    title: 'User',
-    path: '/admin',
-    icon: icon('ic-user'),
-  },
-  {
-    title: 'Blog',
-    path: '/blog',
-    icon: icon('ic-blog'),
-  },
-//   {
-//     title: 'Sign in',
-//     path: '/sign-in',
-//     icon: icon('ic-lock'),
-//   },
-  {
-    title: 'Not found',
-    path: '/404',
-    icon: icon('ic-disabled'),
-  },
-];

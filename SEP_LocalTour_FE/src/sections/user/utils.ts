@@ -1,5 +1,5 @@
 import type { UserProps } from './user-table-row';
-import { ReportProps } from '../report/report-table-row';
+
 // ----------------------------------------------------------------------
 
 export const visuallyHidden = {
@@ -57,11 +57,6 @@ type ApplyFilterProps = {
   filterName: string;
   comparator: (a: any, b: any) => number;
 };
-type ApplyFilterProps2 = {
-  reportData: ReportProps[];
-  filterName: string;
-  comparator: (a: any, b: any) => number;
-};
 
 export function applyFilter({ inputData, comparator, filterName }: ApplyFilterProps) {
   const stabilizedThis = inputData.map((el, index) => [el, index] as const);
@@ -76,28 +71,9 @@ export function applyFilter({ inputData, comparator, filterName }: ApplyFilterPr
 
   if (filterName) {
     inputData = inputData.filter(
-      (user) => user.fullName.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
+      (user) => user.name.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
     );
   }
 
   return inputData;
-}
-export function applyFilter2({ reportData, comparator, filterName }: ApplyFilterProps2) {
-  const stabilizedThis = reportData.map((el, index) => [el, index] as const);
-
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
-  });
-
-  reportData = stabilizedThis.map((el) => el[0]);
-
-  // if (filterName) {
-  //   reportData = reportData.filter(
-  //     (user) => user.fullName.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
-  //   );
-  // }
-
-  return reportData;
 }

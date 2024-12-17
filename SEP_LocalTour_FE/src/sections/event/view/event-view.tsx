@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import axiosInstance from 'src/utils/axiosInstance';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
@@ -7,18 +9,22 @@ import TableBody from '@mui/material/TableBody';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
-import axios from 'axios';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { TableNoData } from '../table-no-data';
-import { EventTableRow } from 'src/sections/event/event-table-row'; 
-import { EventTableHead } from 'src/sections/event/event-table-head';
-import { TableEmptyRows } from '../table-empty-rows';
-import { EventTableToolbar } from 'src/sections/event/event-table-toolbar';
-import { emptyRows, applyFilter, getComparator } from '../utils';
+
 import type { EventProps } from 'src/sections/event/event-table-row';
+import { EventTableRow } from 'src/sections/event/event-table-row';
+import { EventTableHead } from 'src/sections/event/event-table-head';
+import { EventTableToolbar } from 'src/sections/event/event-table-toolbar';
+import { TableEmptyRows } from '../table-empty-rows';
+import { TableNoData } from '../table-no-data';
+import { emptyRows, applyFilter, getComparator } from '../utils';
+
+
+
+
 
 // ----------------------------------------------------------------------
 
@@ -33,7 +39,7 @@ const fetchEvents = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi')
   }
 
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Event/getallevent`, {
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Event/getallevent`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -61,7 +67,7 @@ const updateEventStatus = async (placeId: number, eventId: number, status: strin
   }
 
   try {
-    const response = await axios.put(
+    const response = await axiosInstance.put(
       `https://api.localtour.space/api/Event/changeStatusEvent`,
       null,
       {
@@ -89,12 +95,12 @@ export function EventView() {
   // Lấy dữ liệu sự kiện khi component được render lần đầu
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount } = await fetchEvents(pageNumber, rowsPerPage, languageCode);  // Lấy dữ liệu sự kiện theo phân trang
+      const { items, totalCount: fetchedTotalCount } = await fetchEvents(pageNumber, rowsPerPage, languageCode);  // Lấy dữ liệu sự kiện theo phân trang
       setEvents(items);  // Cập nhật danh sách sự kiện
-      setTotalCount(totalCount);  // Cập nhật tổng số sự kiện
+      setTotalCount(fetchedTotalCount);  // Cập nhật tổng số sự kiện
     };
     fetchData();
-  }, [pageNumber, rowsPerPage, languageCode]);  // Chạy lại khi các giá trị này thay đổi
+  }, [pageNumber, rowsPerPage, languageCode, totalCount]);  // Chạy lại khi các giá trị này thay đổi
 
   const table = useTable();
 
@@ -113,13 +119,6 @@ export function EventView() {
         <Typography variant="h4" flexGrow={1}>
           Events
         </Typography>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-        >
-          New event
-        </Button>
       </Box>
 
       <Card>
@@ -155,7 +154,6 @@ export function EventView() {
                   { id: 'startDate - endDate', label: 'Start Date - End Date' },
                   { id: 'status', label: 'Status' },
                   { id: 'actions', label: 'Actions' },
-                  { id: '' },
                 ]}
               />
                <TableBody>

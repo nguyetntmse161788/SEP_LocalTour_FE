@@ -8,24 +8,21 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import axios from 'axios';
-
+import axiosInstance from 'src/utils/axiosInstance';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableNoData } from '../table-no-data';
-import { EventTableRow } from 'src/sections/event/event-table-row'; 
-import { EventTableHead } from 'src/sections/event/event-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
-import { EventTableToolbar } from 'src/sections/event/event-table-toolbar';
 import { emptyRows, applyFilter, getComparator, applyFilterPlace } from '../utils';
-import type { EventProps } from 'src/sections/event/event-table-row';
 import { PlaceTableRow, UserProps } from '../place-table-row';
 import { PlaceTableHead } from '../place-table-head';
 import { PlaceTableToolbar } from '../place-table-toolbar';
 
+
 // ----------------------------------------------------------------------
 
-const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi') => {
+const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi',searchTerm = '',Status='Approved') => {
   const token = localStorage.getItem('accessToken');
   console.log('Access Token:', token);  // Kiểm tra token
   
@@ -35,7 +32,7 @@ const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi')
   }
 
   try {
-    const response = await axios.get(`https://api.localtour.space/api/Place/getAll?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}`, {
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }
@@ -61,12 +58,12 @@ export function PlaceView() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { items, totalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);  // Lấy cả items và totalCount
+      const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode,filterName);  // Lấy cả items và totalCount
       setPlaces(items);  // Cập nhật danh sách places
-      setTotalCount(totalCount);  // Cập nhật totalCount
+      setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
     };
     fetchData();
-  }, [pageNumber, rowsPerPage, languageCode]);  // Thêm rowsPerPage vào dependencies
+  }, [pageNumber, rowsPerPage, languageCode,filterName]);  // Thêm rowsPerPage vào dependencies
 
   const table = useTable();
 
@@ -92,7 +89,7 @@ export function PlaceView() {
           filterName={filterName}
           onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
             setFilterName(event.target.value);
-            table.onResetPage();
+            setPageNumber(1);
           }}
         />
 
