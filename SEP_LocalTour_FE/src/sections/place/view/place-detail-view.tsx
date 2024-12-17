@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';  
+import { useState, useEffect,useRef } from 'react';  
 import { useParams, useNavigate } from 'react-router-dom'; 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -7,17 +7,29 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import axios from 'axios';
-
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import axiosInstance from 'src/utils/axiosInstance';
+import Webcam from 'react-webcam';
+import { Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
+interface ImageData {
+    dataUrl: string;
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+}
 export function PlaceDetailView() {
   const { id } = useParams(); // Lấy ID từ URL
   const [place, setPlace] = useState<any>(null); // Chứa dữ liệu place
   const [loading, setLoading] = useState<boolean>(true); // Kiểm tra trạng thái loading
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate(); // Hook điều hướng
-
+  const [openDialog, setOpenDialog] = useState(false);
+  const [placeStatus, setplaceStatus] = useState('');
+  const [images, setImages] = useState<string[]>([]); 
+  const webcamRef = useRef<Webcam>(null);
   // Fetch dữ liệu Place từ API
   useEffect(() => {
     const fetchPlaceDetail = async () => {
@@ -44,32 +56,10 @@ export function PlaceDetailView() {
     fetchPlaceDetail();
   }, [id]); // Khi ID thay đổi, sẽ gọi lại API
 
+
   const handleChangeStatus = async (status: string) => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      console.error('No access token found');
-      return;
-    }
-
-    try {
-      console.log(`Changing status to: ${status}`); // Log trạng thái để kiểm tra
-      const response = await axiosInstance.put(
-        `https://api.localtour.space/api/Place/changeStatusPlace?placeid=${id}&status=${status}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        console.log(`Status updated to: ${status}`); // Log khi thành công
-        setPlace((prevPlace: any) => ({ ...prevPlace, status }));
-      }
-    } catch (error) {
-      console.error("Error changing status", error);
-    }
+    setOpenDialog(true);
+    setplaceStatus(status);
   };
 
   if (loading) {
@@ -95,6 +85,191 @@ export function PlaceDetailView() {
   const isPending = place.status === '0';  // Pending
   const isApproved = place.status === '1';  // Approved
   const isRejected = place.status === '2';  // Rejected
+  const isUnpaid = place.status === '3';
+
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setImages([]); 
+  };
+
+  const capture = async () => {
+    if (!webcamRef.current) return;
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (!imageSrc) {
+      
+      return;
+    }
+    console.log(imageSrc);
+    const { latitude, longitude } = await getCurrentLocation();
+    const timestamp = new Date().toLocaleString();
+    const annotatedImage = await annotateImage(imageSrc || "", latitude, longitude, timestamp);
+    setImages([...images, annotatedImage]);
+  };
+
+  const getCurrentLocation = (): Promise<{ latitude: number; longitude: number }> => {
+    return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+                },
+                (error) => {
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            reject("User denied the request for Geolocation.");
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            reject("Location information is unavailable.");
+                            break;
+                        case error.TIMEOUT:
+                            reject("The request to get user location timed out.");
+                            break;
+                        case 0: // Use 0 for UNKNOWN_ERROR
+                            reject("An unknown error occurred.");
+                            break;
+                        default:
+                            reject(`An error with code ${error.code} occurred.`); // Handle other error codes
+                    }
+                }
+            );
+        } else {
+            reject("Geolocation is not supported by this browser.");
+        }
+    });
+};
+  
+
+  const annotateImage = (imageSrc: string, latitude: number, longitude: number, timestamp: string) => {
+    return new Promise<string>((resolve) => { 
+      
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        img.src = imageSrc;
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) { // Check if ctx is not null
+              ctx.drawImage(img, 0, 0);
+                ctx.fillStyle = 'red';
+                ctx.font = '19px Arial';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'bottom';
+
+                ctx.fillText(`Lat: ${latitude.toFixed(6)}, Long: ${longitude.toFixed(6)}`, 16, canvas.height - 30);
+                ctx.fillText(`Time: ${timestamp}`, 16, canvas.height - 10);
+
+                resolve(canvas.toDataURL('image/png'));
+            } else {
+                console.error("Could not get canvas context.");
+                resolve(imageSrc); 
+            }
+        };
+        img.onerror = () => {
+            console.error("Error loading image for annotation.");
+            resolve(imageSrc); // Resolve with original image if there's an error
+        }
+    });
+};
+
+  const handleUploadAll = async () => {
+    if (uploading) return;
+    setUploading(true);
+    if (images.length === 0) {
+        alert('Vui lòng chụp ít nhất một ảnh trước khi tải lên.');
+        return;
+    }
+   
+    try {
+
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error('No access token found');
+        return;
+      }
+
+      const formData = new FormData();
+      if (id) {
+        formData.append('placeId', id.toString());
+      } else {
+        console.error('Place ID is not available');
+        return;
+      }
+      images.forEach((base64Image, index) => {
+        const blob = dataURLtoBlob(base64Image);
+        console.log(id);
+
+        formData.append(`files`, blob, `image_${index}.png`);
+    });
+
+    const responseModcheck = await axiosInstance.post(
+     'https://api.localtour.space/api/ModCheckPlace/CreateModCheck',
+            formData,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': `multipart/form-data;`, //Important: Set boundary
+                },
+            }
+        );
+
+
+            alert('Các ảnh đã được tải lên thành công!');
+            setImages([]); 
+            setOpenDialog(false)
+  
+
+      console.log(`Changing status to: ${placeStatus}`); // Log trạng thái để kiểm tra
+      const response = await axiosInstance.put(
+        `https://api.localtour.space/api/Place/changeStatusPlace?placeid=${id}&status=${placeStatus}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        console.log(`Status updated to: ${placeStatus}`); 
+        setPlace((prevPlace: any) => ({ ...prevPlace, status: placeStatus }));
+      }
+
+
+    } catch (error) {
+        console.error('Lỗi:', error);
+        setUploading(false);
+        alert('Đã có lỗi xảy ra.');
+    }
+  };
+
+  const dataURLtoBlob = (dataURL: string) => {
+    // Implementation from previous answer
+    const base64 = dataURL.split(',')[1];
+    const byteCharacters = atob(base64);
+    const byteArrays = [];
+
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+      const slice = byteCharacters.slice(offset, offset + 512);
+
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+
+    return new Blob(byteArrays, {type: 'image/png'});
+  };
 
   return (
     <DashboardContent>
@@ -176,9 +351,53 @@ export function PlaceDetailView() {
             >
               Rejected
             </Button>
+            
           </Box>
 
           </Card>
+
+          <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+                <DialogTitle>
+                    Chụp Ảnh
+                    <IconButton
+                        aria-label="close"
+                        onClick={handleCloseDialog}
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            color: (theme) => theme.palette.grey[500],
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+
+
+                <DialogContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Webcam audio={false} ref={webcamRef} screenshotFormat="image/png" onClick={capture}/>
+                    <Button onClick={capture} variant="contained" sx={{mt:2}}>Chụp ảnh</Button>
+                    </Box>
+                    <div className="image-list" style={{display:"flex", flexWrap: "wrap", justifyContent: "center"}}>
+                        {images.map((image, index) => (
+                            <div key={index} className="image-item" style={{margin: "10px", position: "relative"}}>
+                                <img src={image} alt={`Ảnh đã chụp ${index + 1}`} style={{maxWidth:"200px", maxHeight:"200px"}}/>
+                                <IconButton aria-label="delete" onClick={()=>{
+                                    setImages(images.filter((_, i) => i !== index))
+                                }} style={{position: "absolute", top:"0", right:"0"}}>
+                                    <CloseIcon />
+                                </IconButton>
+                            </div>
+                        ))}
+                    </div>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog}>Hủy</Button>
+                    {images.length > 0 && <Button onClick={handleUploadAll}>Tải lên</Button>}
+                </DialogActions>
+            </Dialog>
+
 
           {/* Additional Translations */}
           {place.placeTranslations.length > 1 && (
