@@ -51,7 +51,8 @@
     "react-helmet-async": "^2.0.5",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.26.1",
-    "simplebar-react": "^3.2.6"
+    "simplebar-react": "^3.2.6",
+    "react-webcam": "^7.2.0"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",
