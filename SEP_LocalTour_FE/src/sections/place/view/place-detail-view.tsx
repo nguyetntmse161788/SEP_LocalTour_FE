@@ -1,3 +1,5 @@
+/* eslint-disable arrow-body-style */
+/* eslint-disable prefer-promise-reject-errors */
 import { useState, useEffect,useRef } from 'react';  
 import { useParams, useNavigate } from 'react-router-dom'; 
 import Box from '@mui/material/Box';
@@ -11,7 +13,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import axiosInstance from 'src/utils/axiosInstance';
 import Webcam from 'react-webcam';
-import { Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import { Dialog } from '@mui/material';
+import {  DialogActions, DialogContent, DialogTitle, IconButton,TextField  } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface ImageData {
@@ -30,6 +33,8 @@ export function PlaceDetailView() {
   const [placeStatus, setplaceStatus] = useState('');
   const [images, setImages] = useState<string[]>([]); 
   const webcamRef = useRef<Webcam>(null);
+  const [openReject, setOpenReject] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
   // Fetch dữ liệu Place từ API
   useEffect(() => {
     const fetchPlaceDetail = async () => {
@@ -85,7 +90,6 @@ export function PlaceDetailView() {
   const isPending = place.status === '0';  // Pending
   const isApproved = place.status === '1';  // Approved
   const isRejected = place.status === '2';  // Rejected
-  const isUnpaid = place.status === '3';
 
 
   const handleOpenDialog = () => {
@@ -95,6 +99,9 @@ export function PlaceDetailView() {
     setOpenDialog(false);
     setImages([]); 
   };
+  const handleClose = () => {
+    setOpenReject(false);
+};
 
   const capture = async () => {
     if (!webcamRef.current) return;
@@ -110,6 +117,7 @@ export function PlaceDetailView() {
     setImages([...images, annotatedImage]);
   };
 
+  // eslint-disable-next-line arrow-body-style
   const getCurrentLocation = (): Promise<{ latitude: number; longitude: number }> => {
     return new Promise((resolve, reject) => {
         if (navigator.geolocation) {
@@ -123,9 +131,11 @@ export function PlaceDetailView() {
                 (error) => {
                     switch (error.code) {
                         case error.PERMISSION_DENIED:
+                            // eslint-disable-next-line prefer-promise-reject-errors
                             reject("User denied the request for Geolocation.");
                             break;
                         case error.POSITION_UNAVAILABLE:
+                            // eslint-disable-next-line prefer-promise-reject-errors
                             reject("Location information is unavailable.");
                             break;
                         case error.TIMEOUT:
@@ -183,7 +193,7 @@ export function PlaceDetailView() {
     if (uploading) return;
     setUploading(true);
     if (images.length === 0) {
-        alert('Vui lòng chụp ít nhất một ảnh trước khi tải lên.');
+        alert('Please take at least one photo before uploading.');
         return;
     }
    
@@ -215,7 +225,7 @@ export function PlaceDetailView() {
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    'Content-Type': `multipart/form-data;`, //Important: Set boundary
+                    'Content-Type': `multipart/form-data;`, 
                 },
             }
         );
@@ -226,7 +236,11 @@ export function PlaceDetailView() {
             setOpenDialog(false)
   
 
-      console.log(`Changing status to: ${placeStatus}`); // Log trạng thái để kiểm tra
+      console.log(`Changing status to: ${placeStatus}`); 
+
+      if(placeStatus === "Rejected"){
+        setOpenReject(true); 
+      }else{
       const response = await axiosInstance.put(
         `https://api.localtour.space/api/Place/changeStatusPlace?placeid=${id}&status=${placeStatus}`,
         {},
@@ -243,12 +257,12 @@ export function PlaceDetailView() {
         const event = new CustomEvent('updateModeratorPoints');
         window.dispatchEvent(event);
       }
-
-
+      await onSubmit(null)
+      }
     } catch (error) {
-        console.error('Lỗi:', error);
+        console.error('Error:', error);
         setUploading(false);
-        alert('Đã có lỗi xảy ra.');
+        alert('An error occurred.');
     }
   };
 
@@ -262,6 +276,7 @@ export function PlaceDetailView() {
       const slice = byteCharacters.slice(offset, offset + 512);
 
       const byteNumbers = new Array(slice.length);
+      // eslint-disable-next-line no-plusplus
       for (let i = 0; i < slice.length; i++) {
         byteNumbers[i] = slice.charCodeAt(i);
       }
@@ -272,6 +287,79 @@ export function PlaceDetailView() {
 
     return new Blob(byteArrays, {type: 'image/png'});
   };
+
+  const handleSubmit = async  () => {
+    if (rejectReason.trim() === "") {
+        alert("Please enter reason for rejection.");
+        return;
+    }
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
+
+    const response = await axiosInstance.put(
+      `https://api.localtour.space/api/Place/changeStatusPlace?placeid=${id}&status=${placeStatus}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      console.log(`Status updated to: ${placeStatus}`); 
+      setPlace((prevPlace: any) => ({ ...prevPlace, status: placeStatus }));
+    }
+
+    onSubmit(rejectReason); 
+    handleClose(); 
+    setRejectReason(''); 
+};
+
+// eslint-disable-next-line @typescript-eslint/no-shadow, consistent-return
+const onSubmit = async (rejectReason : string | null) => {
+
+  const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error('No access token found');
+        return false;
+      }
+      try {
+        const requestBody = {
+          placeId: id, 
+          rejectReason: rejectReason === null || rejectReason === undefined ? null : rejectReason.toString(),
+          isApproved: placeStatus === "Approved", 
+        };
+    
+        const response = await axiosInstance.post(
+          'https://api.localtour.space/api/Place/sendMail',
+          requestBody, 
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json', 
+            }
+          }
+        );
+    
+        if (response.status === 200) {
+         return true;
+        } 
+          return false;
+        
+      } catch (error) {
+        console.error('Error during API call:', error);
+      }
+
+}
+
+const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  setRejectReason(event.target.value); 
+};
+
 
   return (
     <DashboardContent>
@@ -353,12 +441,15 @@ export function PlaceDetailView() {
             >
               Rejected
             </Button>
-            
           </Box>
 
           </Card>
 
-          <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+          <Dialog open={openDialog} 
+          onClose={handleCloseDialog} 
+          maxWidth="md" 
+          fullWidth 
+          >
                 <DialogTitle>
                     Chụp Ảnh
                     <IconButton
@@ -379,12 +470,12 @@ export function PlaceDetailView() {
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <Webcam audio={false} ref={webcamRef} screenshotFormat="image/png" onClick={capture}/>
-                    <Button onClick={capture} variant="contained" sx={{mt:2}}>Chụp ảnh</Button>
+                    <Button onClick={capture} variant="contained" sx={{mt:2}}>Capture</Button>
                     </Box>
                     <div className="image-list" style={{display:"flex", flexWrap: "wrap", justifyContent: "center"}}>
                         {images.map((image, index) => (
                             <div key={index} className="image-item" style={{margin: "10px", position: "relative"}}>
-                                <img src={image} alt={`Ảnh đã chụp ${index + 1}`} style={{maxWidth:"200px", maxHeight:"200px"}}/>
+                                <img src={image} alt={`Images ${index + 1}`} style={{maxWidth:"200px", maxHeight:"200px"}}/>
                                 <IconButton aria-label="delete" onClick={()=>{
                                     setImages(images.filter((_, i) => i !== index))
                                 }} style={{position: "absolute", top:"0", right:"0"}}>
@@ -395,11 +486,38 @@ export function PlaceDetailView() {
                     </div>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseDialog}>Hủy</Button>
-                    {images.length > 0 && <Button onClick={handleUploadAll}>Tải lên</Button>}
+                    <Button onClick={handleCloseDialog}>Cancel</Button>
+                    {images.length > 0 && <Button onClick={handleUploadAll}>Upload</Button>}
                 </DialogActions>
             </Dialog>
-
+            <Dialog 
+            open={openReject} 
+            onClose={(event, reason) => {
+              if (reason === 'backdropClick') return; 
+              setOpenReject(false); 
+            }}
+            maxWidth="md" fullWidth
+            >
+                <DialogTitle>Reject</DialogTitle>
+                <DialogContent>
+                    <TextField
+                         autoFocus
+                         margin="dense"
+                         id="rejectReason"
+                         label="Reject Reason" 
+                         type="text"
+                         fullWidth
+                         variant="standard"
+                         value={rejectReason} 
+                         onChange={handleInputChange} 
+                         multiline 
+                         rows={4}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleSubmit}>Send</Button>
+                </DialogActions>
+            </Dialog>
 
           {/* Additional Translations */}
           {place.placeTranslations.length > 1 && (

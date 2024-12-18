@@ -52,6 +52,8 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
   const [placeIdToEdit, setPlaceIdToEdit] = useState<string>('');
   const navigate = useNavigate();  // Hook for navigation
   const [places, setPlaces] = useState<UserProps[]>([]);
+  const [openPayDialog, setOpenPayDialog] = useState(false);
+  const [placeNameToPay, setplaceNameToPay] = useState<string>('');
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -72,6 +74,14 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     setOpenEditDialog(true);
     handleClosePopover();
   };
+
+  const handleOpenPayDialog = (placeName: string) => {
+    setplaceNameToPay(placeName);
+    setOpenPayDialog(true);
+    handleClosePopover();
+  };
+
+
   // Handle Row Click
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
     if (event.target instanceof HTMLButtonElement || event.target instanceof HTMLInputElement) {
@@ -101,6 +111,37 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     }
     setOpenConfirmDialog(false);  // Close the confirmation dialog after deletion
   };
+
+ // Payment place
+ const handlePaymentPlace = async () => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    console.error('No access token found');
+    return;
+  }
+
+  try {
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/GetUrlPlaceRegister?placeId=${row.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    });
+
+    if (response.status === 200) {
+      const url = response.data; 
+      if (url) {
+        window.open(url, '_blank'); 
+      } else {
+        console.error("URL Error.");
+      }
+    }
+  
+  } catch (error) {
+    console.error("Error deleting place:", error);
+  }
+  setOpenPayDialog(false);  // Close the confirmation dialog after deletion
+};
+
 
   const handleCancelDelete = () => {
     setOpenConfirmDialog(false);  // Close the confirmation dialog
@@ -155,6 +196,12 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>
+         { 
+          (row.status === "Unpaid")  
+         && <MenuItem onClick={() => { handleOpenPayDialog(row.name); handleClosePopover(); }} sx={{ color: 'green' }}>
+            <Iconify icon="solar:wallet-money-bold-duotone" />
+            Pay
+          </MenuItem>}
         </MenuList>
       </Popover>
 
@@ -173,6 +220,22 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Pay Dialog */}
+      <Dialog open={openPayDialog} onClose={handleCancelDelete}>
+        <DialogTitle>Payment Confirmation</DialogTitle>
+        <DialogContent>
+        {`Are you sure you want to pay to ${row.placeTranslation[0]?.name}?`}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenPayDialog(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handlePaymentPlace} color="error">
+            Pay
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <UpdatePlaceForm
         open={openEditDialog}
         placeId={placeIdToEdit}
