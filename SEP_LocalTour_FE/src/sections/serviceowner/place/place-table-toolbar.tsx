@@ -96,7 +96,7 @@ export function PlaceTableToolbar({ numSelected, filterName, onFilterName, onFil
             }}
           >
             <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {['All', 'Pending', 'Approved', 'Rejected'].map((status) => (
+              {['All', 'Pending', 'Approved', 'Rejected','Unpaid'].map((status) => (
                 <Button
                   key={status}
                   variant={activeFilter === (status === 'All' ? null : status) ? 'contained' : 'outlined'}
