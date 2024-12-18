@@ -44,6 +44,8 @@ export const TagViewPage = lazy(() => import('src/pages/admin/tag-view'));
 export const SpecifyPage = lazy(() => import('src/pages/admin/specify-place'));
 export const ModCheckPage = lazy(() => import('src/pages/admin/mod-check'));
 export const ModCheckDetailPage = lazy(() => import('src/pages/admin/mod-check-detail'));
+export const CancelPage = lazy(() => import('src/pages/pay-cancel'));
+export const SuccessPage = lazy(() => import('src/pages/pay-success'));
 
 
 // ----------------------------------------------------------------------
@@ -140,6 +142,8 @@ function AppRoutes() {
 
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
+
+
       ],
     },
     {
@@ -153,6 +157,14 @@ function AppRoutes() {
     {
       path: '404',
       element: <Page404 />,
+    },
+    {
+      path: 'cancel',
+      element: <CancelPage />,
+    },
+    {
+      path: 'success',
+      element: <SuccessPage />,
     },
     {
       path: '*',
