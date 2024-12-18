@@ -26,7 +26,7 @@ import NewPlaceForm from './new-place';
 // ----------------------------------------------------------------------
 
 // Hàm fetchPlaces có sử dụng token từ localStorage
-const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi',searchTerm = '',Status:  string | null = '') => {
+const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi',searchTerm = '',Status:  string | null = '', SortOrder = 'desc') => {
   const token = localStorage.getItem('accessToken');
   console.log('Access Token:', token);  // Kiểm tra token
   
@@ -36,7 +36,7 @@ const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi',
   }
 
   try {
-    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`, {
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}&SortOrder=${SortOrder}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }
@@ -61,13 +61,15 @@ export function PlaceCreatedView() {
   const [pageNumber, setPageNumber] = useState(1);  // Lưu trang hiện tại
   const [rowsPerPage, setRowsPerPage] = useState(5);  // Sử dụng state để lưu rowsPerPage
   const [filterStatus, setFilterStatus] = useState<string | null>('');
+  const [sortOrder, setSortOrder] =  useState<string>('desc');
 
+
+  const fetchData = async () => {
+    const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode, filterName, filterStatus,sortOrder);  // Lấy cả items và totalCount
+    setPlaces(items);  // Cập nhật danh sách places
+    setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode, filterName, filterStatus);  // Lấy cả items và totalCount
-      setPlaces(items);  // Cập nhật danh sách places
-      setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
-    };
     fetchData();
   }, [pageNumber, rowsPerPage, languageCode,filterName,filterStatus]);  // Thêm rowsPerPage vào dependencies
 
@@ -94,6 +96,7 @@ export function PlaceCreatedView() {
   });
   const handleDeletePlace = (placeId: string) => {
     setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== placeId));
+    fetchData();
   };
   const handlePlaceUpdated = async (updatedPlace: UserProps) => {
     // Update the place in the list

@@ -154,7 +154,7 @@ export function PlaceDetailAll() {
                 <Typography variant="h6">Latitude: {place.latitude}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="h6">Status: {place.status === 'Approved' ? 'Approved' : place.status === 'Rejected' ? 'Rejected' : 'Pending'}</Typography>
+                <Typography variant="h6">Status: {place.status === 'Approved' ? 'Approved' : place.status === 'Rejected' ? 'Rejected' : place.status === 'Unpaid' ? 'Unpaid': place.status === 'Pending' ? 'Pending': 'Banned'}</Typography>
               </Grid>
             </Grid>
 

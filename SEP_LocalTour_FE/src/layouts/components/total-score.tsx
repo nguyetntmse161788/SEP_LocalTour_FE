@@ -24,6 +24,16 @@ export function ModeratorTotalPoints() {
     };
 
     fetchTotalPoints();
+    const handleUpdatePoints = () => {
+      fetchTotalPoints();
+    };
+  
+    window.addEventListener('updateModeratorPoints', handleUpdatePoints);
+  
+    // Cleanup listener
+    return () => {
+      window.removeEventListener('updateModeratorPoints', handleUpdatePoints);
+    };
   }, [role]);
 
   if (!Array.isArray(role) || !role.includes('Moderator')) {

@@ -42,6 +42,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     longitude: '',
     latitude: '',
     contactLink: '',
+    bRC: null as File | null,
     tags: [] as string[], // Lưu ID của các tags
     placeTranslations: [] as PlaceTranslation[], // Mảng chứa nhiều PlaceTranslation
     photoDisplay: null as File | null, // Lưu file hình ảnh cho PhotoDisplay
@@ -88,6 +89,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
         tags: [],
         placeTranslations: [],
         photoDisplay: null,
+        bRC: null,
         placeMedia: [],
         isVerified: false,
         status: '0',
@@ -107,10 +109,10 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     placeMedia: '',
     photoDisplay: '',
     tags: '',
-    placeTranslations: formData.placeTranslations.map(() => ''),
+    placeTranslations:  [],
     });
     }
-  }, [open,formData.placeTranslations]);
+  }, [open]);
   
 
   const handleLocationSelect = (longitudes : string , latitudes : string) => {
@@ -181,22 +183,43 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
       }));
     }
   };
+  const handleBRCChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files as FileList | null;
+    
+    if (files && files[0]) {
+      setFormData((prevData) => ({
+        ...prevData,
+        bRC: files[0], // Lưu lại file đầu tiên
+      }));
+    }
+  };
 
-  const handlePlaceMediaChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  
+  const handlePlaceMediaChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
     const files = event.target.files;
   
     if (files && files.length > 0) {
-      // Lưu file vào đúng vị trí trong mảng
+      // Lấy danh sách tệp mới
+      const newFiles = Array.from(files);
+  
       setFormData((prevData) => {
         const updatedPlaceMedia = [...prevData.placeMedia];
-        updatedPlaceMedia[index] = files[0]; // Cập nhật file
+  
+        // Thêm từng tệp vào danh sách tại các vị trí tiếp theo
+        newFiles.forEach((file, idx) => {
+          updatedPlaceMedia[index + idx] = file;
+        });
+  
         return { ...prevData, placeMedia: updatedPlaceMedia };
       });
     } else {
-      // Nếu không có file, gán null cho vị trí đó (nếu bạn muốn xóa file)
+      // Nếu không có file, gán null cho vị trí đó
       setFormData((prevData) => {
         const updatedPlaceMedia = [...prevData.placeMedia];
-        updatedPlaceMedia[index] = null; // Xóa file
+        updatedPlaceMedia[index] = null; // Xóa file tại vị trí
         return { ...prevData, placeMedia: updatedPlaceMedia };
       });
     }
@@ -354,7 +377,9 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
       if (formData.photoDisplay) {
         formDataToSend.append('PhotoDisplay', formData.photoDisplay);
       }
-  
+      if (formData.bRC) {
+        formDataToSend.append('BRC', formData.bRC);
+      }
       // Thêm các file PlaceMedia
       formData.placeMedia.forEach((media, index) => {
         if (media) {
@@ -610,37 +635,61 @@ const fetchWards = async (districtId: any) => {
           />
           {errors.photoDisplay && <div style={{ color: 'red' }}>{errors.photoDisplay}</div>}
         </div>
+        <div style={{ marginTop: '20px' }}>
+          <div style={{ fontWeight: 'bold' }}>BRC</div>
+          <input
+            type="file"
+            accept="image/*"
+            id="bRC"
+            onChange={handleBRCChange}
+          />
+        </div>
         
 
         {/* Place Media */}
         <div style={{ marginTop: '20px' }}>
-          <Button variant="outlined" onClick={addPlaceMedia}>
-            Add Place Media
-          </Button>
-          {formData.placeMedia.map((media, index) => (
-            <Grid container key={index} spacing={2} alignItems="center" style={{ marginTop: '10px' }}>
-              <Grid item>
-                <label htmlFor={`placeMedia-${index}`}>Media {index + 1}</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  id={`placeMedia-${index}`}
-                  onChange={(event) => handlePlaceMediaChange(event, index)}
-                />
-              </Grid>
-              <Grid item>
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={() => removePlaceMedia(index)}
-                >
-                  Remove
-                </Button>
-              </Grid>
-            </Grid>
-          ))}
-            {errors.placeMedia && <div style={{ color: 'red' }}>{errors.placeMedia}</div>}
-        </div>
+  <Button variant="outlined" onClick={addPlaceMedia}>
+    Add Place Media
+  </Button>
+  {formData.placeMedia.map((media, index) => (
+    <Grid
+      container
+      key={index}
+      spacing={2}
+      alignItems="center"
+      style={{ marginTop: '10px' }}
+    >
+      <Grid item>
+        <label htmlFor={`placeMedia-${index}`}>Media {index + 1}</label>
+        <input
+          type="file"
+          accept="image/*"
+          id={`placeMedia-${index}`}
+          multiple
+          onChange={(event) => handlePlaceMediaChange(event, index)}
+        />
+        {/* Hiển thị tên tệp nếu có */}
+        {media && media.name && (
+          <div style={{ marginTop: '10px', color: 'green' }}>
+            <strong>{media.name}</strong>
+          </div>
+        )}
+      </Grid>
+      <Grid item>
+        <Button
+          variant="contained"
+          color="error"
+          onClick={() => removePlaceMedia(index)}
+        >
+          Remove
+        </Button>
+      </Grid>
+    </Grid>
+  ))}
+  {errors.placeMedia && (
+    <div style={{ color: 'red' }}>{errors.placeMedia}</div>
+  )}
+</div>;
 
         {/* Place Translations */}
         <div style={{ marginTop: '20px' }}>

@@ -240,6 +240,8 @@ export function PlaceDetailView() {
       if (response.status === 200) {
         console.log(`Status updated to: ${placeStatus}`); 
         setPlace((prevPlace: any) => ({ ...prevPlace, status: placeStatus }));
+        const event = new CustomEvent('updateModeratorPoints');
+        window.dispatchEvent(event);
       }
 
 

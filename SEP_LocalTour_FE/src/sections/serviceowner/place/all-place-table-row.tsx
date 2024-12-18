@@ -125,14 +125,14 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
         </TableCell>
         <TableCell>{row.placeTranslation[0]?.address || 'N/A'}</TableCell>
         <TableCell>{row.placeTranslation[0]?.description || 'N/A'}</TableCell>
-        <TableCell align="center">
-          {row.status === 'Pending' ? '-' : <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />}
-        </TableCell>
-        <TableCell>
-          <Label color={row.status === 'Pending' ? 'warning' : row.status === 'Approved' ? 'success' : row.status === 'Rejected' ? 'error' : 'default'}>
-            {row.status}
-          </Label>
-        </TableCell>
+                <TableCell align="center">
+                  {row.status === 'Pending' || row.status === 'Unpaid' ? '-' : row.status === 'Banned' ? <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'error.main' }} /> :  <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />}
+                </TableCell>
+                <TableCell>
+                  <Label color={row.status === 'Pending' ? 'warning' : row.status === 'Approved' ? 'success' : row.status === 'Rejected' ? 'error': row.status ==='Unpaid' ? 'info': row.status === 'Banned' ? 'default'  : 'default'}>
+                    {row.status}
+                  </Label>
+                </TableCell>
         <TableCell align="right">
           <IconButton onClick={handleNavigateToDetail}>
             <Iconify icon="eva:arrow-forward-outline" width={22} />

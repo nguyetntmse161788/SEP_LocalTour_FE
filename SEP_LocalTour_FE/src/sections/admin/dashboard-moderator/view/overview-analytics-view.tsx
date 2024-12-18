@@ -128,7 +128,7 @@ export function OverviewAnalyticsView() {
       for (const userId of userIds) {
         try {
           const response = await fetch(
-            `https://localhost:7274/api/Statistic/GetModApprovedPlaceByMonthAsync?year=2024&userId=${userId}`
+            `https://api.localtour.space/api/Statistic/GetModApprovedPlaceByMonthAsync?year=2024&userId=${userId}`
           );
           const data = await response.json();
 
