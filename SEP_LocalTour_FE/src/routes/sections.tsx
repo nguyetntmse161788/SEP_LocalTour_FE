@@ -42,6 +42,10 @@ export const BannerViewPage = lazy(() => import('src/pages/admin/banner-view'));
 export const BannerViewDetailPage = lazy(() => import('src/pages/admin/banner-view-detail'));
 export const TagViewPage = lazy(() => import('src/pages/admin/tag-view'));
 export const SpecifyPage = lazy(() => import('src/pages/admin/specify-place'));
+export const ModCheckPage = lazy(() => import('src/pages/admin/mod-check'));
+export const ModCheckDetailPage = lazy(() => import('src/pages/admin/mod-check-detail'));
+
+
 // ----------------------------------------------------------------------
 
 const renderFallback = (
@@ -128,8 +132,9 @@ function AppRoutes() {
             { path: 'admin/bannerUser', element: <BannerViewPage /> },
             { path: 'admin/bannerUser/:id', element: <BannerViewDetailPage /> },
             { path: 'admin/tag', element: <TagViewPage /> },
-            { path: 'profile', element: <UserProfile /> }
-
+            { path: 'profile', element: <UserProfile /> },
+            { path: 'admin/modcheck', element: <ModCheckPage /> },
+            { path: 'admin/modcheck/:placeId', element: <ModCheckDetailPage /> },
           ]
           : []),
 
