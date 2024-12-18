@@ -16,6 +16,48 @@ import Webcam from 'react-webcam';
 import { Dialog } from '@mui/material';
 import {  DialogActions, DialogContent, DialogTitle, IconButton,TextField  } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+
+const CustomArrow = (props: any) => {
+  const { className, style, onClick, direction } = props;
+  const Icon = direction === 'next' ? ArrowForwardIosIcon : ArrowBackIosNewIcon;
+
+  return (
+    <div
+      className={className}
+      style={{
+        ...style,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0, 0, 0, 0.6)', // Màu nền mờ
+        borderRadius: '50%',
+        width: '40px',
+        height: '40px',
+        cursor: 'pointer',
+        boxShadow: '0px 2px 6px rgba(0,0,0,0.3)',
+        zIndex: 2,
+      }}
+      onClick={onClick}
+    >
+      {/* <Icon style={{ color: '#fff', fontSize: '20px' }} /> */}
+    </div>
+  );
+};
+
+  const settings = {
+    dots: false,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    nextArrow: <CustomArrow direction="next" />,
+    prevArrow: <CustomArrow direction="prev" />
+  };
 
 interface ImageData {
     dataUrl: string;
@@ -23,6 +65,7 @@ interface ImageData {
     longitude: number;
     timestamp: string;
 }
+
 export function PlaceDetailView() {
   const { id } = useParams(); // Lấy ID từ URL
   const [place, setPlace] = useState<any>(null); // Chứa dữ liệu place
@@ -395,6 +438,27 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
                 style={{ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'cover' }} 
               />
             </Box>
+            <Box>
+      <Typography variant="h6" sx={{ mb: 1 }}>
+        Place Media
+      </Typography>
+      <Slider {...settings}>
+        {place.placeMedia?.map((media: { url: string }, index: number) => (
+          <Box key={index} sx={{ px: 1 }}>
+            <img 
+              src={media.url} 
+              alt={`Media ${index + 1}`}
+              style={{ 
+                width: '100%',
+                height: '100px',
+                objectFit: 'cover',
+                borderRadius: '8px'
+              }} 
+            />
+          </Box>
+        ))}
+      </Slider>
+    </Box>
           </Card>
         </Grid>
 
