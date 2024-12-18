@@ -201,7 +201,7 @@ export function ModTableRow({ row, selected, onSelectRow }: ModTableRowProps) {
             <InputLabel>Province</InputLabel>
             <Select
               value={selectedProvince}
-              onChange={(e) => setSelectedProvince(e.target.value)}
+              onChange={(e : any) => setSelectedProvince(e.target.value)}
               label="Province"
             >
               {provinces.map((province) => (
@@ -218,7 +218,7 @@ export function ModTableRow({ row, selected, onSelectRow }: ModTableRowProps) {
               <InputLabel>District</InputLabel>
               <Select
                 value={selectedDistrictId}
-                onChange={(e) => setSelectedDistrictId(e.target.value)}
+                onChange={(e : any) => setSelectedDistrictId(e.target.value)}
                 label="District"
               >
                 {districtList.length > 0 ? (

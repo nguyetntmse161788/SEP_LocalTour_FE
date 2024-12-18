@@ -45,6 +45,10 @@ export const SpecifyPage = lazy(() => import('src/pages/admin/specify-place'));
 export const PlaceReportPage = lazy(() => import('src/pages/placereport'));
 export const PlaceReportDetailPage = lazy(() => import('src/pages/place-report-detail'));
 export const DashboardModeratorPage = lazy(() => import('src/pages/admin/dashboard-moderator'));
+export const ModCheckPage = lazy(() => import('src/pages/admin/mod-check'));
+export const ModCheckDetailPage = lazy(() => import('src/pages/admin/mod-check-detail'));
+
+
 // ----------------------------------------------------------------------
 
 const renderFallback = (
@@ -135,6 +139,8 @@ function AppRoutes() {
             { path: 'admin/tag', element: <TagViewPage /> },
             { path: 'profile', element: <UserProfile /> },
             { path: 'admin/dashboardmod', element: <DashboardModeratorPage /> },
+            { path: 'admin/modcheck', element: <ModCheckPage /> },
+            { path: 'admin/modcheck/:placeId', element: <ModCheckDetailPage /> },
           ]
           : []),
 
