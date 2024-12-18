@@ -25,6 +25,11 @@ export const navData = (role: string | null): NavItem[] => {
       icon: icon('ic-analytics'),
     },
     isAdmin && {
+      title: 'Dashboard Moderator',
+      path: '/admin/dashboardmod',
+      icon: icon('ic-analytics'),
+    },
+    isAdmin && {
       title: 'User',
       path: '/admin/user',
       icon: icon('ic-user'),
@@ -87,6 +92,11 @@ export const navData = (role: string | null): NavItem[] => {
     isAdmin && {
       title: 'Tag',
       path: '/admin/tag',
+      icon: icon('ic-user'),
+    },
+    isModerator && {
+      title: 'Place Report',
+      path: '/placeReport',
       icon: icon('ic-user'),
     },
     // {
