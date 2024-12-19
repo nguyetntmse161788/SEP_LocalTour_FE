@@ -58,6 +58,7 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
     tags: [] as string[],
     placeTranslations: [] as PlaceTranslation[],
     photoDisplay: null as File | null,
+    brc: null as File | null,
     placeMedia: [] as { type: string, url: string }[],
     isVerified: false,
     status: '0',
@@ -104,6 +105,7 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
           tags: placeData.tags || [],
           placeTranslations: placeData.placeTranslations || [],
           photoDisplay: placeData.photoDisplay,
+          brc: placeData.brc,
           placeMedia: placeData.placeMedia.map((media: { type: string, url: string }) => ({
             type: media.type,
             url: media.url
@@ -267,6 +269,16 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
       }));
     }
   };
+  const handleBRCChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files as FileList | null;
+    
+    if (files && files[0]) {
+      setFormData((prevData) => ({
+        ...prevData,
+        brc: files[0], // Lưu lại file đầu tiên
+      }));
+    }
+  };
 
 // Handle file input for media 
 const handlePlaceMediaChange = async (
@@ -275,48 +287,59 @@ const handlePlaceMediaChange = async (
 ) => {
   const files = event.target.files;
   if (files && files.length > 0) {
-    const file = files[0];
-    const updatedPlaceMedia = [...formData.placeMedia];
+    const updatedPlaceMedia = [...formData.placeMedia];  // Copy current media list
+   console.log('length', files.length)
     try {
-      // Gửi file đến API để lấy link
-      const formDataToSend = new FormData();
-      formDataToSend.append('files', file);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formDataToSend = new FormData();
+        formDataToSend.append('files', file);
 
-      const response = await fetch('https://api.localtour.space/api/File/createlink', {
-        method: 'POST',
-        body: formDataToSend,
-      });
+        // Gửi file đến API
+        const response = await fetch('https://api.localtour.space/api/File/createlink', {
+          method: 'POST',
+          body: formDataToSend,
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to upload file');
+        if (!response.ok) {
+          throw new Error(`Failed to upload file: ${file.name}`);
+        }
+
+        const result = await response.json();
+        let fileLink = '';
+
+        // Trích xuất link từ phản hồi API
+        if (file.type.includes('image') && result.imageUrls && result.imageUrls.length > 0) {
+          fileLink = result.imageUrls[0];
+        } else if (file.type.includes('video') && result.videoUrls && result.videoUrls.length > 0) {
+          fileLink = result.videoUrls[0];
+        } else {
+          throw new Error(`No URL returned for the uploaded file: ${file.name}`);
+        }
+
+                if (i==0) {
+          updatedPlaceMedia[index] = {
+            type: file.type.includes('image') ? 'Image' : 'Video',
+            url: fileLink,
+          };
+        }
+        updatedPlaceMedia[index + i] = {
+          type: file.type.includes('image') ? 'Image' : 'Video',
+          url: fileLink,
+        };
+
       }
+      
 
-      const result = await response.json(); // Phản hồi từ API
-      let fileLink = '';
-
-      // Kiểm tra phản hồi và trích xuất link từ mảng tương ứng
-      if (file.type.includes('image') && result.imageUrls && result.imageUrls.length > 0) {
-        fileLink = result.imageUrls[0]; // Lấy link ảnh đầu tiên
-      } else if (file.type.includes('video') && result.videoUrls && result.videoUrls.length > 0) {
-        fileLink = result.videoUrls[0]; // Lấy link video đầu tiên
-      } else {
-        throw new Error('No URL returned for the uploaded file');
-      }
-
-      // Cập nhật dữ liệu media
-      updatedPlaceMedia[index] = { 
-        type: file.type.includes('image') ? 'Image' : 'Video', 
-        url: fileLink, // URL trả về từ API
-      };
-
-      // Cập nhật state
+      // Cập nhật lại state sau khi tải lên xong
       setFormData({ ...formData, placeMedia: updatedPlaceMedia });
     } catch (error) {
-      console.error('Error uploading file:', error);
-      // Xử lý lỗi (nếu cần)
+      console.error('Error uploading files:', error);
     }
   }
 };
+
+
 
 
 // Handle removing a media item
@@ -347,7 +370,7 @@ const renderPlaceMedia = () => {
       <Grid item xs={6}>
         {!media.url && ( // Only show input and remove button when no media is selected
           <>
-            <input type="file" accept="image/*,video/*" onChange={(e) => handlePlaceMediaChange(e, index)} />
+            <input type="file" accept="image/*,video/*" multiple onChange={(e) => handlePlaceMediaChange(e, index)} />
           </>
         )}
         <Button variant="contained" color="error" onClick={() => removePlaceMedia(index)}>
@@ -490,9 +513,15 @@ const renderPlaceMedia = () => {
           }
         }
       });
-      
-      
-
+      let brcUrl = formData.brc;
+      if (formData.brc && formData.brc instanceof File) {
+        const photoFormData = new FormData();
+        photoFormData.append('file', formData.brc);
+        
+        const response = await axios.post('https://api.localtour.space/api/File/link', photoFormData);
+        brcUrl = response.data?.data; // Lấy URL trả về từ API
+      }
+      formDataToSend.append('brc', brcUrl as unknown as string);
       const response = await axios.put(
         `https://api.localtour.space/api/Place/update?placeid=${placeId}`,
         formDataToSend,
@@ -729,6 +758,54 @@ const renderPlaceMedia = () => {
   )}
    {errors.photoDisplay && <div style={{ color: 'red' }}>{errors.photoDisplay}</div>}
 </div>
+          {/* BRC*/}
+<div style={{ marginTop: '20px' }}>
+  <div style={{ fontWeight: 'bold' }}>BRC</div>
+  
+  {formData.brc ? (
+    <div style={{ position: 'relative', width: '100%', maxWidth: '200px', marginBottom: '10px' }}>
+      <img 
+        src={typeof formData.brc === 'string' 
+          ? formData.brc 
+          : URL.createObjectURL(formData.brc)} 
+        alt="Display of the place"
+        style={{
+          width: '100%',
+          height: 'auto',
+          maxHeight: '200px',
+          objectFit: 'cover',
+          borderRadius: '10px',
+        }} 
+      />
+      <Button
+        variant="contained"
+        color="error"
+        onClick={() => setFormData({ ...formData, brc: null })}
+        style={{
+          position: 'absolute',
+          top: '5px',
+          right: '5px',
+          padding: '5px',
+          minWidth: 'unset',
+          borderRadius: '50%',
+          fontSize: '16px',
+          backgroundColor: 'rgba(255, 0, 0, 0.7)',
+          color: '#fff',
+        }}
+      >
+        X
+      </Button>
+    </div>
+  ) : (
+    <input
+      type="file"
+      accept="image/*"
+      id="bRC"
+      onChange={handleBRCChange}
+    />
+  )}
+</div>
+
 
 
 

@@ -163,7 +163,7 @@ export function SignInView() {
       <TextField
         fullWidth
         name="phoneNumber"
-        label="Phone Number"
+        label="Email/Phone Number"
         value={phoneNumber}
         onChange={(e) => setPhoneNumber(e.target.value)}
         InputLabelProps={{ shrink: true }}
@@ -214,24 +214,24 @@ export function SignInView() {
     <>
       <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 5 }}>
         <Typography variant="h5">Sign in</Typography>
-        <Typography variant="body2" color="text.secondary">
+        {/* <Typography variant="body2" color="text.secondary">
           Don’t have an account?
           <Link variant="subtitle2" sx={{ ml: 0.5 }}>
             Get started
           </Link>
-        </Typography>
+        </Typography> */}
       </Box>
 
       {renderForm}
 
-      <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
+      {/* <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
         <Typography
           variant="overline"
           sx={{ color: 'text.secondary', fontWeight: 'fontWeightMedium' }}
         >
           OR
         </Typography>
-      </Divider>
+      </Divider> */}
 
       <Box gap={1} display="flex" justifyContent="center">
         <IconButton color="inherit">
