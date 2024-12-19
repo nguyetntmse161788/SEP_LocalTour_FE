@@ -108,6 +108,9 @@ export function PlaceCreatedView() {
     const { items } = await fetchPlaces(pageNumber, rowsPerPage, languageCode, filterName, filterStatus);
     setPlaces(items); 
   };
+  const handlePlacePayment = () => {
+    fetchData();
+  };
   const notFound = !dataFiltered.length && !!filterName;
 
   return (
@@ -179,6 +182,7 @@ export function PlaceCreatedView() {
                       onSelectRow={() => table.onSelectRow(row.id)}
                       onDeletePlace={handleDeletePlace}
                       onUpdatePlace={handlePlaceUpdated}
+                      onPaymentPlace = {handlePlacePayment}
                     />
                   ))}
 

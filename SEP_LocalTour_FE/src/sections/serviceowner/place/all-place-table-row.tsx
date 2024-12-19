@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef,useEffect  } from 'react';
 import { useNavigate } from 'react-router-dom';  // Thêm hook useNavigate từ React Router
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
@@ -43,9 +43,10 @@ type UserTableRowProps = {
   onSelectRow: () => void;
   onDeletePlace: any;
   onUpdatePlace: any;
+  onPaymentPlace : any;
 };
 
-export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpdatePlace }: UserTableRowProps) {
+export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpdatePlace, onPaymentPlace }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);  // State for confirmation dialog
   const [openEditDialog, setOpenEditDialog] = useState(false);  // State for the edit dialog
@@ -54,7 +55,13 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
   const [places, setPlaces] = useState<UserProps[]>([]);
   const [openPayDialog, setOpenPayDialog] = useState(false);
   const [placeNameToPay, setplaceNameToPay] = useState<string>('');
+  const [openPaymentUrlDialog, setopenPaymentUrlDialog] = useState(false);
 
+  const [iframeUrl, setIframeUrl] = useState('');
+  const iframeRef = useRef(null);
+  
+
+// eslint-disable-next-line react-hooks/exhaustive-deps
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     setOpenPopover(event.currentTarget);
@@ -130,7 +137,8 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     if (response.status === 200) {
       const url = response.data; 
       if (url) {
-        window.open(url, '_blank'); 
+        setIframeUrl(url);
+        setopenPaymentUrlDialog(true);
       } else {
         console.error("URL Error.");
       }
@@ -152,6 +160,11 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     setOpenEditDialog(false);
   };
   
+  const handlePaymentClose = () => {
+    setopenPaymentUrlDialog(false);
+    onPaymentPlace();
+  }
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected} onClick={handleRowClick}>
@@ -196,6 +209,10 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>
+          <MenuItem onClick={() => { setopenPaymentUrlDialog(true); }} sx={{ color: 'error.main' }}>
+            <Iconify icon="solar:trash-bin-trash-bold" />
+            opentttt
+          </MenuItem>
          { 
           (row.status === "Unpaid")  
          && <MenuItem onClick={() => { handleOpenPayDialog(row.name); handleClosePopover(); }} sx={{ color: 'green' }}>
@@ -218,6 +235,7 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
           <Button onClick={handleDeletePlace} color="error">
             Delete
           </Button>
+         
         </DialogActions>
       </Dialog>
       {/* Pay Dialog */}
@@ -230,11 +248,32 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
           <Button onClick={() => setOpenPayDialog(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={handlePaymentPlace} color="error">
+          <Button onClick={handlePaymentPlace} color="success">
             Pay
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Payment url Dialog */}
+      <Dialog open={openPaymentUrlDialog} onClose={(event, reason) => {
+    if (reason === 'backdropClick') {
+      return;
+    }
+    handlePaymentClose(); 
+  }}
+   fullWidth maxWidth="md">
+        <DialogTitle>Payment page
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <iframe src={iframeUrl} ref={iframeRef} 
+          width="100%" height="800" title='Payment page' />
+        </DialogContent>
+        <DialogActions>
+    <Button onClick={handlePaymentClose} color="primary">
+      Close
+    </Button>
+  </DialogActions>
+      </Dialog>
+
 
       <UpdatePlaceForm
         open={openEditDialog}
