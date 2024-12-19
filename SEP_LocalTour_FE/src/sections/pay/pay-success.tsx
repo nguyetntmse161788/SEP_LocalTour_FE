@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'; 
 
 import { RouterLink } from 'src/routes/components';
 
@@ -17,17 +18,18 @@ export function SuccessView() {
                     height: '100vh',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'flex-start', // Đưa nội dung lên trên
+                    justifyContent: 'flex-start',
                     alignItems: 'center',
                     textAlign: 'center',
-                    paddingTop: '10vh', // Thêm khoảng cách từ trên xuống
                 }}
             >
+
                 <Typography
                     variant="h1"
                     style={{
                         fontSize: '10rem',
                         lineHeight: 1,
+                        color: 'green',
                     }}
                 >
                     Payment
@@ -37,10 +39,18 @@ export function SuccessView() {
                     style={{
                         fontSize: '15rem',
                         lineHeight: 1,
+                        color: 'green', 
                     }}
                 >
                     success!
                 </Typography>
+
+                <CheckCircleIcon
+                    sx={{
+                        fontSize: '10rem',
+                        color: 'green',
+                    }}
+                />
 
                 <Button
                     component={RouterLink}
@@ -49,7 +59,7 @@ export function SuccessView() {
                     variant="contained"
                     color="inherit"
                     sx={{
-                        mt: 4, // Khoảng cách trên của nút
+                        mt: 4,
                     }}
                 >
                     Back to list
