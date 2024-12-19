@@ -1,15 +1,9 @@
-import type { CardProps } from '@mui/material/Card';
-import type { ChartOptions } from 'src/components/chart';
-
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
+import React from 'react';
+import { Card, CardHeader } from '@mui/material';
 import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
 import { Chart, useChart } from 'src/components/chart';
 
-// ----------------------------------------------------------------------
-
-type Props = CardProps & {
+type Props = {
   title?: string;
   subheader?: string;
   chart: {
@@ -18,14 +12,15 @@ type Props = CardProps & {
     series: {
       name: string;
       data: number[];
+      total: number[];
     }[];
-    options?: ChartOptions;
+    options?: any;
   };
 };
 
-export function AnalyticsWebsiteVisits({ title, subheader, chart, ...other }: Props) {
+export function AnalyticsWebsiteVisits({ title, subheader, chart }: Props) {
   const theme = useTheme();
-
+  
   const chartColors = chart.colors ?? [
     theme.palette.primary.dark,
     hexAlpha(theme.palette.primary.light, 0.64),
@@ -45,16 +40,19 @@ export function AnalyticsWebsiteVisits({ title, subheader, chart, ...other }: Pr
     },
     tooltip: {
       y: {
-        formatter: (value: number) => `${value} number of moderations`,
+        formatter: (value: number, { seriesIndex, dataPointIndex }: { seriesIndex: number, dataPointIndex: number }) => {
+          // Lấy giá trị totalPrice cho điểm dữ liệu hiện tại
+          const totalPrice = chart.series[seriesIndex].total[dataPointIndex];
+          return `Total: ${value} places\nTotal Price: ${totalPrice} VND`;
+        },
       },
     },
     ...chart.options,
   });
 
   return (
-    <Card {...other}>
+    <Card>
       <CardHeader title={title} subheader={subheader} />
-
       <Chart
         type="bar"
         series={chart.series}

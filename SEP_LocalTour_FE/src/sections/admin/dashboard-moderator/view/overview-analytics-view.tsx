@@ -22,20 +22,21 @@ const userIds = [
 ];
 interface UserStatistics {
   userId: string;
+  userName: string; 
   total: number;
   monthlyData: MonthlyData[];
 }
 
 interface MonthlyData {
   monthName: string;
-  registrationCount: number;
+  total: number;
+  totalPrice: number;
 }
 
 export function OverviewAnalyticsView() {
-  const [userRegistrations, setUserRegistrations] = useState<{
-    total: number;
-    monthlyData: MonthlyData[];
-  }>({
+  const [userRegistrations, setUserRegistrations] = useState<UserStatistics>({
+    userId:'',
+    userName:'',
     total: 0,
     monthlyData: [],
   });
@@ -48,28 +49,43 @@ export function OverviewAnalyticsView() {
   });
   const [statistics, setStatistics] = useState<UserStatistics[]>([]);
   useEffect(() => {
-    
     const fetchUserRegistrations = async () => {
       try {
-        const response = await fetch('https://api.localtour.space/api/Statistic/GetTotalModApprovedPlaceByMonthAsync?year=2024');
-        const data = await response.json();
+        const response = await fetch(
+          'https://api.localtour.space/api/Statistic/GetTotalModApprovedPlaceByMonthAsync?year=2024'
+        );
+        const data: { month: number; total: number; totalPrice: number }[] = await response.json();
 
         if (data) {
-          // Map the monthly data and convert month number to month name
-          const monthlyData: MonthlyData[] = Object.entries(data).map(([month, count]) => ({
-            monthName: new Date(0, parseInt(month, 10) - 1).toLocaleString('default', { month: 'long' }),
-            registrationCount: Number(count),
+          // Tạo mảng tất cả 12 tháng khởi tạo với giá trị 0
+          const allMonths = Array.from({ length: 12 }, (_, index) => ({
+            month: index + 1,
+            total: 0,
+            totalPrice: 0,
           }));
 
-          // Calculate the total number of registrations for the year
-          const totalRegistrations = monthlyData.reduce(
-            (total, monthData) => total + monthData.registrationCount,
-            0
-          );
+          // Ghép dữ liệu từ API vào mảng tháng
+          const mergedData = allMonths.map((defaultMonth) => {
+            const match = data.find((item) => item.month === defaultMonth.month);
+            return {
+              month: defaultMonth.month,
+              total: match ? match.total : defaultMonth.total,
+              totalPrice: match ? match.totalPrice : defaultMonth.totalPrice,
+            };
+          });
 
-          // Update the state with the monthly data and total count
+          // Map lại dữ liệu mergedData để bao gồm tên tháng
+          const monthlyData: MonthlyData[] = mergedData.map((item) => ({
+            monthName: new Date(0, item.month - 1).toLocaleString('default', { month: 'long' }),
+            total: item.total,
+            totalPrice: item.totalPrice,
+          }));
+
+          // Cập nhật trạng thái với dữ liệu tháng và tổng
           setUserRegistrations({
-            total: totalRegistrations,
+            userId: 'all',
+            userName:'',
+            total: monthlyData.reduce((total, monthData) => total + monthData.total, 0),
             monthlyData,
           });
         }
@@ -79,48 +95,55 @@ export function OverviewAnalyticsView() {
     };
 
     fetchUserRegistrations();
-  }, []); 
-  useEffect(() => {
-    
-    const fetchModeratorApprove = async () => {
-      try {
-        const response = await fetch('https://api.localtour.space/api/Statistic/GetModApprovedPlaceByMonthAsync?year=2024&userId=?');
-        const data = await response.json();
+  }, []);
 
-        if (data) {
-          // Map the monthly data and convert month number to month name
-          const monthlyData: MonthlyData[] = Object.entries(data).map(([month, count]) => ({
-            monthName: new Date(0, parseInt(month, 10) - 1).toLocaleString('default', { month: 'long' }),
-            registrationCount: Number(count),
+  // Tạo dữ liệu cho biểu đồ
+  const chartCategories = userRegistrations.monthlyData.map((data) => data.monthName);
+  const chartSeriesData = userRegistrations.monthlyData.map((data) => data.total);
+  const chartTotalPriceData = userRegistrations.monthlyData.map((data) => data.totalPrice);
+
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      const results: UserStatistics[] = [];
+
+      for (const userId of userIds) {
+        try {
+          const response = await fetch(`https://api.localtour.space/api/Statistic/GetModApprovedPlaceByMonthAsync?year=2024&userId=${userId}`);
+          const data = await response.json();
+
+          // Map dữ liệu thành danh sách các tháng
+          const monthlyData: MonthlyData[] = data.list.map((item: any) => ({
+            monthName: new Date(0, item.month - 1).toLocaleString('default', { month: 'long' }),
+            total: item.total,
+            totalPrice: item.totalPrice,
           }));
 
-          // Calculate the total number of registrations for the year
-          const totalApproves = monthlyData.reduce(
-            (total, monthData) => total + monthData.registrationCount,
-            0
-          );
+          const total = monthlyData.reduce((sum, item) => sum + item.total, 0);
 
-          // Update the state with the monthly data and total count
-          setModeratorApprove({
-            total: totalApproves,
+          results.push({
+            userId,
+            userName: data.userName || 'Unknown',
+            total,
             monthlyData,
           });
+        } catch (error) {
+          console.error(`Error fetching statistics for userId ${userId}:`, error);
         }
-      } catch (error) {
-        console.error('Error fetching user registration data:', error);
       }
+
+      setStatistics(results);
     };
 
-    fetchModeratorApprove();
-  }, []); 
+    fetchStatistics();
+  }, []);
 
 
   const { total, monthlyData } = userRegistrations;
   const categories = monthlyData.map((item) => item.monthName);
-  const series = monthlyData.map((item) => item.registrationCount);
+  const series = monthlyData.map((item) => item.total);
 
-  const chartCategories = userRegistrations.monthlyData.map((data: any) => data.monthName);
-  const chartSeriesData = userRegistrations.monthlyData.map((data: any) => data.registrationCount);
+  // const chartCategories = userRegistrations.monthlyData.map((data: any) => data.monthName);
+  // const chartSeriesData = userRegistrations.monthlyData.map((data: any) => data.registrationCount);
   useEffect(() => {
     const fetchStatistics = async () => {
       const results: UserStatistics[] = [];
@@ -132,18 +155,33 @@ export function OverviewAnalyticsView() {
           );
           const data = await response.json();
 
-          if (data) {
-            const monthlyData: MonthlyData[] = Object.entries(data).map(([month, count]) => ({
-              monthName: new Date(0, parseInt(month, 10) - 1).toLocaleString('default', { month: 'long' }),
-              registrationCount: Number(count),
+          if (data && data.list) {
+            // Tạo mảng tháng từ 1 đến 12
+            const allMonths = Array.from({ length: 12 }, (_, index) => ({
+              month: index + 1,
+              monthName: new Date(0, index).toLocaleString('default', { month: 'long' }),
+              total: 0,
+              totalPrice: 0,
             }));
 
-            const total = monthlyData.reduce((sum, item) => sum + item.registrationCount, 0);
+            // Ghép dữ liệu từ API vào mảng tháng
+            const mergedData = allMonths.map((defaultMonth) => {
+              const match = data.list.find((item: any) => item.month === defaultMonth.month);
+              return {
+                ...defaultMonth,
+                total: match ? match.total : 0,
+                totalPrice: match ? match.totalPrice : 0,
+              };
+            });
+
+            // Tính tổng các phê duyệt trong năm
+            const total = mergedData.reduce((sum, item) => sum + item.total, 0);
 
             results.push({
               userId,
+              userName: data.userName || 'Unknown',
               total,
-              monthlyData,
+              monthlyData: mergedData,
             });
           }
         } catch (error) {
@@ -156,7 +194,6 @@ export function OverviewAnalyticsView() {
 
     fetchStatistics();
   }, []);
-
   // Group statistics into pairs for displaying 2 users per row
   const groupedStatistics = statistics.reduce<UserStatistics[][]>((acc, stat, index) => {
     if (index % 2 === 0) acc.push([]);
@@ -179,8 +216,9 @@ export function OverviewAnalyticsView() {
             categories: chartCategories,
             series: [
               {
-                name: 'Censored',
+                name: '',
                 data: chartSeriesData,
+                total: chartTotalPriceData,
               },
             ],
           }}
@@ -192,20 +230,21 @@ export function OverviewAnalyticsView() {
       {groupedStatistics.map((group, rowIndex) => (
         <Grid container item xs={12} spacing={3} key={`row-${rowIndex}`}>
           {group.map((stat) => (
-            <Grid item xs={12} md={6} key={stat.userId}>
+            <Grid item xs={12} md={6} key={stat.userName}>
               <Paper elevation={3} style={{ padding: '16px' }}>
                 <Typography variant="h6" gutterBottom>
-                  User ID: {stat.userId}
+                  User Name: {stat.userName}
                 </Typography>
-                <Typography>Total Approvals: {stat.total}</Typography>
+                <Typography>Total Approvals: {stat.total} places</Typography>
                 <AnalyticsWebsiteVisits
                   title="Monthly Approvals"
                   chart={{
                     categories: stat.monthlyData.map((data) => data.monthName),
                     series: [
                       {
-                        name: 'Approvals',
-                        data: stat.monthlyData.map((data) => data.registrationCount),
+                        name: '',
+                        data: stat.monthlyData.map((data) => data.total),
+                        total: stat.monthlyData.map((data) => data.totalPrice),
                       },
                     ],
                   }}
