@@ -88,13 +88,9 @@ return (
       <TableCell>{row.placeTranslation[0]?.description || 'N/A'}</TableCell>
       <TableCell>{row.wardName || 'N/A'}</TableCell>
 
-      <TableCell align="center">
-        {row.status === 'Pending' ? (
-          '-'
-        ) : (
-          <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />
-        )}
-      </TableCell>
+              <TableCell align="center">
+                {row.status === 'Pending' || row.status === 'Unpaid' ? '-' : <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />}
+              </TableCell>
 
       <TableCell>
   <Label 
@@ -102,6 +98,8 @@ return (
       row.status === 'Pending' ? 'warning' :
       row.status === 'Approved' ? 'success' :
       row.status === 'Rejected' ? 'error' :
+      row.status === 'Unpaid' ? 'info' :
+      row.status === 'Banned' ? 'default' :
       'default'
     }
   >

@@ -43,15 +43,6 @@ const CustomArrow = (props: any) => {
     </div>
   );
 };
-  const settings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 3,
-    slidesToScroll: 1,
-    nextArrow: <CustomArrow direction="next" />,
-    prevArrow: <CustomArrow direction="prev" />
-  };
 
 export function PlaceDetailView() {
   const { id } = useParams(); // Lấy ID từ URL
@@ -133,9 +124,15 @@ export function PlaceDetailView() {
     );
   }
 
-  const isPending = place.status === '0';  // Pending
-  const isApproved = place.status === '1';  // Approved
-  const isRejected = place.status === '2';  // Rejected
+  const settings = {
+    dots: false,
+    infinite: true, // Vô hạn khi có nhiều hơn 1 ảnh
+    speed: 500,
+    slidesToShow: 3, // 3 ảnh nếu có nhiều ảnh, 1 nếu chỉ có 1 ảnh
+    slidesToScroll: 1,
+    nextArrow: place.placeMedia?.length > 1 ? <CustomArrow direction="next" /> : <CustomArrow direction="next" />, // Ẩn mũi tên nếu chỉ có 1 ảnh
+    prevArrow: place.placeMedia?.length > 1 ? <CustomArrow direction="prev" /> : <CustomArrow direction="prev"/>, // Ẩn mũi tên nếu chỉ có 1 ảnh
+  };
 
   return (
     <DashboardContent>
@@ -176,7 +173,10 @@ export function PlaceDetailView() {
         Place Media
       </Typography>
       <Slider {...settings}>
-        {place.placeMedia?.map((media: { url: string }, index: number) => (
+      {(place.placeMedia?.length === 1
+    ? new Array(3).fill(place.placeMedia[0]) // Tạo mảng với 3 ảnh giống nhau
+    : place.placeMedia
+  ).map((media: { url: string }, index: number) => (
           <Box key={index} sx={{ px: 1 }}>
             <img 
               src={media.url} 

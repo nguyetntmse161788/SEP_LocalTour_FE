@@ -49,15 +49,7 @@ const CustomArrow = (props: any) => {
   );
 };
 
-  const settings = {
-    dots: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 3,
-    slidesToScroll: 1,
-    nextArrow: <CustomArrow direction="next" />,
-    prevArrow: <CustomArrow direction="prev" />
-  };
+
 
 interface ImageData {
     dataUrl: string;
@@ -130,9 +122,15 @@ export function PlaceDetailView() {
     );
   }
 
-  const isPending = place.status === '0';  // Pending
-  const isApproved = place.status === '1';  // Approved
-  const isRejected = place.status === '2';  // Rejected
+  const settings = {
+    dots: false,
+    infinite: true, // Vô hạn khi có nhiều hơn 1 ảnh
+    speed: 500,
+    slidesToShow: 3, // 3 ảnh nếu có nhiều ảnh, 1 nếu chỉ có 1 ảnh
+    slidesToScroll: 1,
+    nextArrow: place.placeMedia?.length > 1 ? <CustomArrow direction="next" /> : <CustomArrow direction="next" />, // Ẩn mũi tên nếu chỉ có 1 ảnh
+    prevArrow: place.placeMedia?.length > 1 ? <CustomArrow direction="prev" /> : <CustomArrow direction="prev"/>, // Ẩn mũi tên nếu chỉ có 1 ảnh
+  };
 
 
   const handleOpenDialog = () => {
@@ -443,7 +441,10 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         Place Media
       </Typography>
       <Slider {...settings}>
-        {place.placeMedia?.map((media: { url: string }, index: number) => (
+      {(place.placeMedia?.length === 1
+    ? new Array(3).fill(place.placeMedia[0]) // Tạo mảng với 3 ảnh giống nhau
+    : place.placeMedia
+  ).map((media: { url: string }, index: number) => (
           <Box key={index} sx={{ px: 1 }}>
             <img 
               src={media.url} 
@@ -483,7 +484,7 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
                 <Typography variant="h6">Latitude: {place.latitude}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="h6">Status: {place.status === 'Approved' ? 'Approved' : place.status === 'Rejected' ? 'Rejected' : 'Pending'}</Typography>
+                <Typography variant="h6">Status: {place.status === 'Approved' ? 'Approved' : place.status === 'Rejected' ? 'Rejected' : place.status === 'Unpaid' ? 'Unpaid': place.status === 'Pending' ? 'Pending': 'Banned'}</Typography>
               </Grid>
             </Grid>
 
@@ -493,7 +494,7 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
               variant="contained"
               color="success"
               onClick={() => handleChangeStatus('Approved')}  // Approve
-              disabled={place.status === 'Approved'} // Disable if already Approved
+              disabled={place.status === 'Approved'|| place.status === 'Unpaid'} // Disable if already Approved
             >
               Approved
             </Button>
@@ -501,7 +502,7 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
               variant="contained"
               color="error"
               onClick={() => handleChangeStatus('Rejected')}  // Reject
-              disabled={place.status === 'Rejected'} // Disable if already Rejected
+              disabled={place.status === 'Rejected'|| place.status === 'Unpaid'} // Disable if already Rejected
             >
               Rejected
             </Button>
