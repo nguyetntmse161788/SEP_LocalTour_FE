@@ -209,10 +209,10 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>
-          <MenuItem onClick={() => { setopenPaymentUrlDialog(true); }} sx={{ color: 'error.main' }}>
+          {/* <MenuItem onClick={() => { setopenPaymentUrlDialog(true); }} sx={{ color: 'error.main' }}>
             <Iconify icon="solar:trash-bin-trash-bold" />
             opentttt
-          </MenuItem>
+          </MenuItem> */}
          { 
           (row.status === "Unpaid")  
          && <MenuItem onClick={() => { handleOpenPayDialog(row.name); handleClosePopover(); }} sx={{ color: 'green' }}>
