@@ -48,6 +48,31 @@ export function ReportTableRow({ row, selected, onSelectRow, onStatusUpdate }: R
         updatedData, 
         { headers: { Authorization: `Bearer ${token} `} }
       );
+      if(newStatus =='Accepted')
+      {
+      const currentDate: Date = new Date(); // Lấy thời gian hiện tại
+      const endDate: Date = new Date(currentDate); // Sao chép thời gian hiện tại
+      endDate.setDate(currentDate.getDate() + 3); // Thêm 3 ngày
+      
+      // Định dạng `endDate` thành chuỗi ISO để gửi qua API
+      const formattedEndDate: string = endDate.toISOString();
+      
+      const responses = await axiosInstance.put(
+        `https://api.localtour.space/api/User/BanUser?userId=${row.userId}&endDate=${formattedEndDate}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    }
+    if(newStatus =='Rejected')
+      {
+      const responses = await axiosInstance.post(
+        `https://api.localtour.space/api/User/UnBan/${row.userId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    }
       alert(`Report has been updated to: ${newStatus}`);
       
       // Re-fetch the report data after update

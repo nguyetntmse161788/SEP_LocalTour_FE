@@ -136,7 +136,7 @@ export function PlaceCreatedView() {
         progress: undefined,
         theme: "light",
         });}
-
+fetchData();
   };
   const notFound = !dataFiltered.length && !!filterName;
 

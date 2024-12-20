@@ -80,7 +80,7 @@ export function PlaceReportDetailView() {
     }
     try {
       const response = await axiosInstance.put(
-        `https://api.localtour.space/api/PlaceReport/changeStatusPlaceReport?placeid=${place.id}&status=Approved`,
+        `https://api.localtour.space/api/PlaceReport/changeStatusPlaceReport?placereportid=${report.id}&status=Approved`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -155,7 +155,7 @@ export function PlaceReportDetailView() {
           <Card sx={{ p: 3, boxShadow: 3, mb: 2 }}>
             <Typography variant="h6" mb={2}>Report Information</Typography>
             <Typography variant="body1"><strong>Report Date:</strong> {new Date(report.reportDate).toLocaleString()}</Typography>
-            <Typography variant="body1"><strong>Status:</strong> {report.status}</Typography>
+            {/* <Typography variant="body1"><strong>Status:</strong> {report.status}</Typography> */}
             <Typography variant="body1"><strong>Content:</strong> {report.content}</Typography>
           </Card>
         </Grid>
