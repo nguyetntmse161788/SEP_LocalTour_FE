@@ -13,7 +13,7 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import { ReportProps, ReportTableRow } from '../report-table-row';
 import { applyFilter2, getComparator } from '../../user/utils';
-import { useTable } from '../../user/view';
+import { useTable } from 'src/sections/user/view';
 
 export function ReportUserView() {
   const [userReports, setUserReports] = useState<ReportProps[]>([]);

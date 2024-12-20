@@ -1,86 +1,92 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import Table from '@mui/material/Table';
-import Button from '@mui/material/Button';
-import TableBody from '@mui/material/TableBody';
-import Typography from '@mui/material/Typography';
-import TableContainer from '@mui/material/TableContainer';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
+import {
+  Box,
+  Card,
+  Table,
+  Button,
+  TableBody,
+  Typography,
+  TableContainer,
+  TablePagination,
+  TableRow,
+  TableCell,
+} from '@mui/material';
 
-import { DashboardContent } from 'src/layouts/dashboard';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-
 import { TableNoData } from '../table-no-data';
 import { UserTableRow } from '../user-table-row';
 import { UserTableHead } from '../user-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
-
 import type { UserProps } from '../user-table-row';
-
-// ----------------------------------------------------------------------
+import { useTable } from 'src/sections/user/view';
 
 export function UserView() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProps[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const [bannedUsers, setBannedUsers] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filterName, setFilterName] = useState('');
-  const table = useTable(); // Hook to manage table state
+  const table = useTable();
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setError('No access token found. Please log in.');
-      setLoading(false);
-      navigate('/login');
-      return;
-    }
-
-    const decodedToken = JSON.parse(atob(token.split('.')[1]));
-    const currentTime = Math.floor(Date.now() / 1000);
-
-    if (decodedToken.exp < currentTime) {
-      setError('Token has expired. Please log in again.');
-      setLoading(false);
-      navigate('/sign-in');
+    if (!token || isTokenExpired(token)) {
+      navigateToLogin('Token is invalid or expired.');
       return;
     }
 
     fetchUsers(token);
+    fetchBannedUsers(token);
   }, [navigate]);
+
+  const isTokenExpired = (token: string): boolean => {
+    const decodedToken = JSON.parse(atob(token.split('.')[1]));
+    return decodedToken.exp < Math.floor(Date.now() / 1000);
+  };
+
+  const navigateToLogin = (message: string) => {
+    setError(message);
+    setLoading(false);
+    localStorage.removeItem('accessToken');
+    navigate('/login');
+  };
 
   const fetchUsers = async (token: string) => {
     try {
-      const response = await axios.get('https://api.localtour.space/api/User/getlist', {
+      const { data } = await axios.get('https://api.localtour.space/api/User/getlist', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Fetched Users:', response.data);
-      setUsers([...response.data]);
-    } catch (err) {
-      setError('Failed to fetch users');
+      setUsers(data);
+    } catch {
+      setError('Failed to fetch users.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtered data based on search input
-  const dataFiltered = applyFilter({
+  const fetchBannedUsers = async (token: string) => {
+    try {
+      const { data } = await axios.get('https://api.localtour.space/api/User/getUserBan', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBannedUsers(data.map((user: { userId: string }) => user.userId));
+    } catch {
+      console.error('Failed to fetch banned users.');
+    }
+  };
+
+  const filteredData = applyFilter({
     inputData: users,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
   });
 
-  const notFound = !dataFiltered.length && !!filterName;
-
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Typography>Loading...</Typography>;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -93,7 +99,6 @@ export function UserView() {
           }}
           numSelected={0}
         />
-
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>
@@ -105,7 +110,7 @@ export function UserView() {
                 onSort={table.onSort}
                 headLabel={[
                   { id: 'avatar', label: 'Avatar' },
-                  { id: 'username', label: 'User name' },
+                  { id: 'username', label: 'User Name' },
                   { id: 'email', label: 'Email' },
                   { id: 'fullname', label: 'Full Name' },
                   { id: 'phone', label: 'Phone' },
@@ -113,23 +118,8 @@ export function UserView() {
                   { id: 'button', label: 'Action' },
                 ]}
               />
-
               <TableBody>
-                {loading && (
-                  <TableRow>
-                    <TableCell colSpan={8} align="center">Loading...</TableCell>
-                  </TableRow>
-                )}
-
-                {error && (
-                  <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ color: 'error.main' }}>
-                      {error}
-                    </TableCell>
-                  </TableRow>
-                )}
-
-                {dataFiltered
+                {filteredData
                   .slice(
                     table.page * table.rowsPerPage,
                     table.page * table.rowsPerPage + table.rowsPerPage
@@ -138,22 +128,22 @@ export function UserView() {
                     <UserTableRow
                       key={row.id}
                       row={row}
+                      isBanned={bannedUsers.includes(row.id)}
+                      setBannedUsers={setBannedUsers} // Pass it as a prop
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
                     />
-                  ))}
 
+                  ))}
                 <TableEmptyRows
                   height={68}
                   emptyRows={emptyRows(table.page, table.rowsPerPage, users.length)}
                 />
-
-                {notFound && <TableNoData searchQuery={filterName} />}
+                {!filteredData.length && <TableNoData searchQuery={filterName} />}
               </TableBody>
             </Table>
           </TableContainer>
         </Scrollbar>
-
         <TablePagination
           component="div"
           page={table.page}
@@ -166,55 +156,4 @@ export function UserView() {
       </Card>
     </Box>
   );
-}
-
-export function useTable() {
-  const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('username');
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-
-  const onSort = useCallback((id: string) => {
-    const isAsc = orderBy === id && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(id);
-  }, [order, orderBy]);
-
-  const onSelectRow = useCallback(
-    (inputValue: string) => {
-      setSelected((prev) =>
-        prev.includes(inputValue)
-          ? prev.filter((value) => value !== inputValue)
-          : [...prev, inputValue]
-      );
-    },
-    []
-  );
-
-  const onResetPage = useCallback(() => setPage(0), []);
-  const onChangePage = useCallback((_: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const onChangeRowsPerPage = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRowsPerPage(parseInt(event.target.value, 10));
-      onResetPage();
-    },
-    [onResetPage]
-  );
-
-  return {
-    page,
-    order,
-    orderBy,
-    rowsPerPage,
-    selected,
-    onSort,
-    onSelectRow,
-    onResetPage,
-    onChangePage,
-    onChangeRowsPerPage,
-  };
 }
