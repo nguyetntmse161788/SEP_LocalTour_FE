@@ -6,6 +6,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 
 import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
+import React from 'react';
 
 
 // ----------------------------------------------------------------------
@@ -203,7 +204,7 @@ export function OverviewAnalyticsView() {
           subheader="(+%) than last year"
           additionalContent={
             <Typography variant="h5" style={{ marginTop: '8px' }}>
-              Total Approved: {statistics.reduce((total, stat) => total + stat.total, 0)} places
+              Total registrations: {statistics.reduce((total, stat) => total + stat.total, 0)} places
             </Typography>
           }
           chart={{
@@ -229,9 +230,9 @@ export function OverviewAnalyticsView() {
                 <Typography variant="h6" gutterBottom>
                   User Name: {stat.userName}
                 </Typography>
-                <Typography>Total Approvals: {stat.total} places</Typography>
+                <Typography> Total registrations: {stat.total} places</Typography>
                 <AnalyticsWebsiteVisits
-                  title="Monthly Approvals"
+                  title="Monthly registrations"
                   chart={{
                     categories: stat.monthlyData.map((data) => data.monthName),
                     series: [
