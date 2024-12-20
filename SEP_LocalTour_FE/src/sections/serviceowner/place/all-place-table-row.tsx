@@ -20,7 +20,6 @@ import { Iconify } from 'src/components/iconify';
 import axios from 'axios';
 import UpdatePlaceForm from './view/update-place';
 
-
 // ----------------------------------------------------------------------
 
 export type UserProps = {
@@ -56,10 +55,21 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
   const [openPayDialog, setOpenPayDialog] = useState(false);
   const [placeNameToPay, setplaceNameToPay] = useState<string>('');
   const [openPaymentUrlDialog, setopenPaymentUrlDialog] = useState(false);
-
+  const [isProcessed, setIsProcessed] = useState(false);
   const [iframeUrl, setIframeUrl] = useState('');
   const iframeRef = useRef(null);
   
+  useEffect(() => {
+    const channel = new BroadcastChannel('payment-status');
+
+    channel.onmessage = (event) => {
+      setopenPaymentUrlDialog(false);
+      onPaymentPlace(event.data.payment);
+      setIsProcessed(true);
+    };
+    return () => channel.close(); 
+
+  }, [isProcessed, onPaymentPlace]);
 
 // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -126,7 +136,6 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     console.error('No access token found');
     return;
   }
-
   try {
     const response = await axiosInstance.get(`https://api.localtour.space/api/Place/GetUrlPlaceRegister?placeId=${row.id}`, {
       headers: {
@@ -162,7 +171,6 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
   
   const handlePaymentClose = () => {
     setopenPaymentUrlDialog(false);
-    onPaymentPlace();
   }
 
   return (
@@ -209,10 +217,6 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>
-          {/* <MenuItem onClick={() => { setopenPaymentUrlDialog(true); }} sx={{ color: 'error.main' }}>
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            opentttt
-          </MenuItem> */}
          { 
           (row.status === "Unpaid")  
          && <MenuItem onClick={() => { handleOpenPayDialog(row.name); handleClosePopover(); }} sx={{ color: 'green' }}>

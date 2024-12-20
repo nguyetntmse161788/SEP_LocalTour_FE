@@ -2,11 +2,17 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CancelIcon from '@mui/icons-material/Cancel';
-
+import React from 'react';
 import { RouterLink } from 'src/routes/components';
 import { SimpleLayout } from 'src/layouts/simple';
 
 export function CancelView() {
+    React.useEffect(() => {
+        const channel = new BroadcastChannel('payment-status');
+        channel.postMessage({ payment: 'cancel', timestamp: Date.now() });
+        return () => channel.close(); 
+    }, []);
+
     return (
         <SimpleLayout content={{ compact: true }}>
             <Box
