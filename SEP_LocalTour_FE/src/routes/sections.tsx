@@ -7,7 +7,8 @@ import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { CurrentPage } from 'src/layouts/components/currentpage';
 import { PrivateRoute } from 'src/sections/auth/privateroute';
-import { refreshAccessToken } from 'src/utils/auth';
+import { isTokenExpired, refreshAccessToken } from 'src/utils/auth';
+import { useRouter } from './hooks';
 
 // ----------------------------------------------------------------------
 
@@ -47,7 +48,7 @@ export const PlaceReportDetailPage = lazy(() => import('src/pages/place-report-d
 export const DashboardModeratorPage = lazy(() => import('src/pages/admin/dashboard-moderator'));
 export const ModCheckPage = lazy(() => import('src/pages/admin/mod-check'));
 export const ModCheckDetailPage = lazy(() => import('src/pages/admin/mod-check-detail'));
-
+export const DashboardServiceOwnerPage = lazy(() => import('src/pages/admin/dashboard-service-owner'));
 
 // ----------------------------------------------------------------------
 
@@ -73,6 +74,38 @@ function AppRoutes() {
       return [];
     }
   })();
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        let token = localStorage.getItem('accessToken');
+
+        // Chuyển hướng nếu không có token
+        if (!token) {
+          router.push('/sign-in');
+          return;
+        }
+
+        // Kiểm tra và làm mới token nếu cần
+        if (isTokenExpired(token)) {
+          try {
+            token = await refreshAccessToken(); // Sử dụng await để làm mới token
+            localStorage.setItem('accessToken', token); // Cập nhật token mới vào localStorage
+          } catch (error) {
+            console.error('Unable to refresh access token:', error);
+            router.push('/sign-in');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking token:', error);
+        router.push('/sign-in');
+      }
+    };
+
+    checkToken();
+  }, [router]);
   return useRoutes([
     {
       path: '/',
@@ -141,6 +174,7 @@ function AppRoutes() {
             { path: 'admin/dashboardmod', element: <DashboardModeratorPage /> },
             { path: 'admin/modcheck', element: <ModCheckPage /> },
             { path: 'admin/modcheck/:placeId', element: <ModCheckDetailPage /> },
+            { path: 'admin/dashboardowner', element: <DashboardServiceOwnerPage /> },
           ]
           : []),
 

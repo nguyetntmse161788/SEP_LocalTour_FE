@@ -6,6 +6,7 @@ export function ModeratorTotalPoints() {
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const role = JSON.parse(localStorage.getItem('role') || '[]');
   const token = localStorage.getItem('accessToken');
+  
 
   useEffect(() => {
     const fetchTotalPoints = async () => {
