@@ -27,7 +27,7 @@ export function PrivateRoute({ children }: PrivateRouteProps) {
   }
   if (isTokenExpired(token)) {
     try {
-     refreshAccessToken();
+    //  refreshAccessToken();
      return <>{children}</>;
     } catch (error) {
       console.error('Failed to auto-refresh token:', error);

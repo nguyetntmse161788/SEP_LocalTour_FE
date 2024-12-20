@@ -14,6 +14,7 @@ import { _myAccount } from 'src/_mock';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { isTokenExpired, refreshAccessToken } from 'src/utils/auth';
+import axiosInstance from 'src/utils/axiosInstance';
 // ----------------------------------------------------------------------
 export type AccountPopoverProps = IconButtonProps & {
   data?: {
@@ -69,16 +70,16 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
           router.push('/sign-in');
           return;
         }
-        if (isTokenExpired(token)) {
-          try {
-            token = await refreshAccessToken();  // Refresh the access token if it's expired
-          } catch (error) {
-            console.error('Unable to refresh access token');
-            throw new Error('Token refresh failed');
-          }
-        }
+        // if (isTokenExpired(token)) {
+        //   try {
+        //     token = await refreshAccessToken();  // Refresh the access token if it's expired
+        //   } catch (error) {
+        //     console.error('Unable to refresh access token');
+        //     throw new Error('Token refresh failed');
+        //   }
+        // }
         
-        const response = await axios.get(
+        const response = await axiosInstance.get(
           `https://api.localtour.space/api/User/getProfile?userId=${userId}`,
           {
             headers: {

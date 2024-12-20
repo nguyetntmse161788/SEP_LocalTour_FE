@@ -224,16 +224,16 @@ export function SignInView() {
 
       {renderForm}
 
-      {/* <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
+      <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
         <Typography
           variant="overline"
           sx={{ color: 'text.secondary', fontWeight: 'fontWeightMedium' }}
         >
-          OR
+          
         </Typography>
-      </Divider> */}
+      </Divider>
 
-      <Box gap={1} display="flex" justifyContent="center">
+      {/* <Box gap={1} display="flex" justifyContent="center">
         <IconButton color="inherit">
           <Iconify icon="logos:google-icon" />
         </IconButton>
@@ -243,7 +243,7 @@ export function SignInView() {
         <IconButton color="inherit">
           <Iconify icon="ri:twitter-x-fill" />
         </IconButton>
-      </Box>
+      </Box> */}
     </>
   );
 }

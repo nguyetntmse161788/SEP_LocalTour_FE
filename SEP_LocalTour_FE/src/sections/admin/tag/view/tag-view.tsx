@@ -123,7 +123,7 @@ export function TagView() {
           startIcon={<Iconify icon="mingcute:add-line" />}
           onClick={() => setOpenNewTagForm(true)}
         >
-          New Banner
+          New Tag
         </Button>
       </Box>
 

@@ -209,13 +209,13 @@ export function PlaceDetailView() {
             const ctx = canvas.getContext('2d');
             if (ctx) { // Check if ctx is not null
               ctx.drawImage(img, 0, 0);
-                ctx.fillStyle = 'red';
-                ctx.font = '19px Arial';
+                ctx.fillStyle = 'green';
+                ctx.font = '26px Arial';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'bottom';
 
-                ctx.fillText(`Lat: ${latitude.toFixed(6)}, Long: ${longitude.toFixed(6)}`, 16, canvas.height - 30);
-                ctx.fillText(`Time: ${timestamp}`, 16, canvas.height - 10);
+                ctx.fillText(`Lat: ${latitude.toFixed(6)}, Long: ${longitude.toFixed(6)}`, 50, canvas.height - 40);
+                ctx.fillText(`Time: ${timestamp}`, 50, canvas.height - 10);
 
                 resolve(canvas.toDataURL('image/png'));
             } else {
