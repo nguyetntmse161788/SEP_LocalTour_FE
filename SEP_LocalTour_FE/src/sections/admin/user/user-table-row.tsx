@@ -1,13 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import TableRow from '@mui/material/TableRow';
-import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import { Iconify } from 'src/components/iconify';
 import { TableCell } from '@mui/material';
+import { useEffect, useState } from 'react';
 
 export type UserProps = {
   id: string;
@@ -20,102 +17,94 @@ export type UserProps = {
   gender: 'Male' | 'Female' | 'Other';
   profilePictureUrl: string;
   role: string;
-  roles: string[]; // Thêm role vào đối tượng UserProps
+  roles: string[];
   endDate: Date;
 };
 
 type UserTableRowProps = {
+  key: string; // Make sure to include the key property if it's required
   row: UserProps;
+  isBanned: boolean; // Add isBanned to the props type
+  setBannedUsers: React.Dispatch<React.SetStateAction<string[]>>;
   selected: boolean;
   onSelectRow: () => void;
 };
 
-export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
-  
+export function UserTableRow({
+  row,
+  setBannedUsers,
+  selected,
+  onSelectRow,
+}: UserTableRowProps) {
   const navigate = useNavigate();
+  const [isBanned, setIsBanned] = useState<boolean>(false);
 
-  const handleSetRole = async (userId: string, username: string, roles: string[]) => {
-    console.log(row);
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        alert('No token found. Please log in.');
-        navigate('/sign-in');
-        return;
-      }
-
-      // Decode token and check expiration
-      const decodedToken = JSON.parse(atob(token.split('.')[1]));
-      const currentTime = Math.floor(Date.now() / 1000);
-
-      if (decodedToken.exp < currentTime) {
-        alert('Token has expired. Please log in again.');
-        localStorage.removeItem('accessToken');
-        navigate('/login');
-        return;
-      }
-
-      // Proceed with fetching user profile
-      const response = await axios.get(`https://api.localtour.space/api/User/getProfile?userId=${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const userProfile = response.data;
-      navigate('/admin/role', {
-        state: {
-          user: userProfile,
-          userId,
-          username,
-          roles,
-          // role,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-      alert('Error fetching user profile. Please try again.');
+  // Validate token
+  const validateToken = (): string | null => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      alert('No token found. Please log in.');
+      navigate('/sign-in');
+      return null;
     }
-    console.log('Updated Roles:', roles);
-    console.log("Roles from localStorage:", roles);
 
+    const decodedToken = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    if (decodedToken.exp < currentTime) {
+      alert('Token has expired. Please log in again.');
+      localStorage.removeItem('accessToken');
+      navigate('/login');
+      return null;
+    }
+
+    return token;
   };
 
+  // Fetch the list of banned users and check if the current user is banned
+  useEffect(() => {
+    const fetchBannedUsers = async () => {
+      const token = validateToken();
+      if (!token) return;
+
+      try {
+        const response = await axios.get('https://api.localtour.space/api/User/getUserBan', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const bannedUsers = response.data; // Assuming response is an array of banned user IDs
+        console.log('Banned Users:', bannedUsers); // Debugging line
+
+        if (bannedUsers.includes(row.id)) {
+          setIsBanned(true);
+        } else {
+          setIsBanned(false);
+        }
+      } catch (error) {
+        console.error('Error fetching banned users:', error);
+        alert('Error fetching banned users. Please try again.');
+      }
+    };
+
+    fetchBannedUsers();
+  }, [row.id]); // Re-run when the row.id changes
+
+  // Handle unban user
   const handleUnbanUser = async (userId: string) => {
+    const token = validateToken();
+    if (!token) return;
+
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        alert('No token found. Please log in.');
-        navigate('/sign-in');
-        return;
-      }
-  
-      const decodedToken = JSON.parse(atob(token.split('.')[1]));
-      const currentTime = Math.floor(Date.now() / 1000);
-  
-      if (decodedToken.exp < currentTime) {
-        alert('Token has expired. Please log in again.');
-        localStorage.removeItem('accessToken');
-        navigate('/login');
-        return;
-      }
-  
-      // Construct the unban URL dynamically using the userId
-      const url = `https://api.localtour.space/api/User/UnBan/${userId}`;
-  
-      // Log to verify the URL and token
-      console.log('Unban URL:', url);
-  
-      // Send the unban request
-      const response = await axios.post(url, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
+      const response = await axios.post(
+        `https://api.localtour.space/api/User/UnBan/${userId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       if (response.status === 200) {
         alert('User has been unbanned successfully.');
-        window.location.reload();
+        setIsBanned(false);
+        setBannedUsers((prev: string[]) => prev.filter((userId) => userId !== userId));
       } else {
         alert('Failed to unban user. Please try again.');
       }
@@ -124,46 +113,21 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
       alert('Error unbanning user. Please try again.');
     }
   };
-  
   const handleBanUser = async (userId: string, username: string, endDate: Date) => {
+    const token = validateToken();
+    if (!token) return;
+
+    console.log('Banning user with ID:', userId); // Debugging line
+
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        alert('No token found. Please log in.');
-        navigate('/sign-in');
-        return;
-      }
-
-      // Decode token và kiểm tra thời hạn
-      const decodedToken = JSON.parse(atob(token.split('.')[1])); // Decode JWT
-      const currentTime = Math.floor(Date.now() / 1000); // Lấy thời gian hiện tại (seconds)
-
-      if (decodedToken.exp < currentTime) {
-        alert('Token has expired. Please log in again.');
-        localStorage.removeItem('accessToken'); // Xóa token hết hạn
-        navigate('/sign-in');
-        return;
-      }
-
-      // Gọi API để kiểm tra user trước khi điều hướng
       const response = await axios.get(`https://api.localtour.space/api/User/getProfile?userId=${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.status === 200) {
         const userProfile = response.data;
-
-        // Điều hướng đến trang ban user
-        navigate('/admin/ban', {
-          state: {
-            user: userProfile,
-            userId,
-            username,
-            endDate,
-          },
-        });
+        navigate('/admin/ban', { state: { user: userProfile, userId, username, endDate } });
+        console.log('Navigating to ban user:', userProfile); // Debugging line
       } else {
         alert('User profile not found. Please try again.');
       }
@@ -175,38 +139,43 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
 
   return (
     <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
-      {/* <TableCell padding="checkbox">
-        <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
-      </TableCell> */}
       <TableCell>
         <Avatar alt={row.fullName} src={row.profilePictureUrl} />
       </TableCell>
-      {/* <TableCell>{row.id}</TableCell> */}
       <TableCell>{row.username}</TableCell>
       <TableCell>{row.email}</TableCell>
       <TableCell>{row.fullName}</TableCell>
       <TableCell>{row.phoneNumber}</TableCell>
-      {/* <TableCell>{row.dateOfBirth}</TableCell>
-      <TableCell>{row.address}</TableCell> */}
       <TableCell>{row.roles.join(', ')}</TableCell>
       <TableCell>
-        <Button variant="outlined" color="primary" sx={{ margin: '0 5px' }} onClick={() => handleSetRole(row.id, row.username, row.roles)}>
-          Set Role
-        </Button>
-        <Button
-          variant="outlined" color="error" sx={{ margin: '0 5px' }} onClick={() => handleBanUser(row.id, row.username, row.endDate)}
-        >
-          Ban
-        </Button>
-
         <Button
           variant="outlined"
-          color="success"
+          color="primary"
           sx={{ margin: '0 5px' }}
-          onClick={() => handleUnbanUser(row.id)} // Trigger unban on click
+          onClick={() => navigate('/admin/role', { state: { user: row, userId: row.id, roles: row.roles } })}
         >
-          Unban
+          Set Role
         </Button>
+
+        {isBanned ? (
+          <Button
+            variant="outlined"
+            color="success"
+            sx={{ margin: '0 5px' }}
+            onClick={() => handleUnbanUser(row.id)}
+          >
+            Unban
+          </Button>
+        ) : (
+          <Button
+            variant="outlined"
+            color="error"
+            sx={{ margin: '0 5px' }}
+            onClick={() => handleBanUser(row.id, row.username, row.endDate)}
+          >
+            Ban
+          </Button>
+        )}
       </TableCell>
     </TableRow>
   );
