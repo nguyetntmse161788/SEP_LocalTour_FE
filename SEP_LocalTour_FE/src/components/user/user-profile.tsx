@@ -36,6 +36,7 @@ export function UserProfile() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [stats, setStats] = useState<any>(null);
+  const [role, setRole] = useState<string | null>(null); 
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -67,9 +68,10 @@ export function UserProfile() {
             },
           }
         );
-
+        const userRole = localStorage.getItem('role');
         setUser(response.data);
         setStats(statsResponse.data);
+        setRole(userRole);
       } catch (error) {
         console.error('Error fetching user profile:', error);
       } finally {
@@ -96,7 +98,9 @@ export function UserProfile() {
     );
   }
   
-
+  const isServiceOwner = role?.includes('Service Owner');
+  const isAdmin = role?.includes('Administrator');
+  const isMod = role?.includes('Moderator');
   return (
     <Box
       display="flex"
@@ -107,29 +111,58 @@ export function UserProfile() {
       <Paper elevation={3} sx={{ width: '100%', maxWidth: 800, p: 4, borderRadius: 2 }}>
         <Grid container spacing={3}>
           {/* Avatar Section */}
-          <Grid item xs={12} md={12}>
-  <AnalyticsWidgetSummary
-    title="Total expenditure"
-    total={stats.totalPrice}
-    icon={
-      <Avatar
-        src={user.userProfileImage}
-        alt={user.fullName}
-        sx={{
-          width: 50,  // Increase the width
-          height: 50, // Increase the height
-          border: '4px solid',
-          borderColor: 'primary.main',
-        }}
-      />
-    }
-    chart={{
-      series: [],
-      categories: [],
-    }}
-    color="success"
-  />
-</Grid>
+          {isServiceOwner && (
+            <Grid item xs={12} md={12}>
+              <AnalyticsWidgetSummary
+                title="Total expenditure"
+                total={stats.totalPrice}
+                icon={
+                  <Avatar
+                    src={user.userProfileImage}
+                    alt={user.fullName}
+                    sx={{
+                      width: 50,  // Increase the width
+                      height: 50, // Increase the height
+                      border: '4px solid',
+                      borderColor: 'primary.main',
+                    }}
+                  />
+                }
+                chart={{
+                  series: [],
+                  categories: [],
+                }}
+                color="success"
+              />
+            </Grid>
+          )}
+          {isAdmin && (
+            <Avatar
+              src={user.userProfileImage}
+              alt={user.fullName}
+              sx={{
+                width: 150,
+                height: 150,
+                border: '4px solid',
+                borderColor: 'primary.main',
+                marginBottom: 2,
+              }}
+            />
+          )}
+                    {isMod && (
+            <Avatar
+              src={user.userProfileImage}
+              alt={user.fullName}
+              sx={{
+                width: 150,
+                height: 150,
+                border: '4px solid',
+                borderColor: 'primary.main',
+                marginBottom: 2,
+              }}
+            />
+          )}
+
 
 
 
