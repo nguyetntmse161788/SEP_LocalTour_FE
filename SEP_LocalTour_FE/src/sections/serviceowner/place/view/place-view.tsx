@@ -17,7 +17,7 @@ import { TableNoData } from '../table-no-data';
 import { PlaceTableRow } from '../place-table-row';
 import { PlaceTableHead } from '../place-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
-import { PlaceTableToolbar } from '../place-table-toolbar';
+import { PlaceTableToolbar } from '../all-place-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
 import type { UserProps } from '../place-table-row';
 
@@ -60,13 +60,13 @@ export function PlaceView() {
   const [rowsPerPage, setRowsPerPage] = useState(5);  // Sử dụng state để lưu rowsPerPage
   const [filterStatus, setFilterStatus] = useState<string | null>('');
 
-  useEffect(() => {
     const fetchData = async () => {
       const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode,filterName,filterStatus);  // Lấy dữ liệu theo trang, số dòng và ngôn ngữ
       setPlaces(items);  // Cập nhật danh sách places
       setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
     };
-    fetchData();
+  useEffect(() => {
+fetchData();
   }, [pageNumber, rowsPerPage, languageCode, filterName,filterStatus]);  // Chạy lại khi các giá trị này thay đổi
 
   const table = useTable();
@@ -80,6 +80,7 @@ export function PlaceView() {
   });
   const handleDeletePlace = (placeId: string) => {
     setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== placeId));
+    fetchData();
   };
   const handlePlaceUpdated = (updatedPlace: UserProps) => {
     setPlaces((prevPlaces) =>

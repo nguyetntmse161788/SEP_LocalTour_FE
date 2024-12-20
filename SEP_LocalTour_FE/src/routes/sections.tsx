@@ -7,7 +7,8 @@ import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import { CurrentPage } from 'src/layouts/components/currentpage';
 import { PrivateRoute } from 'src/sections/auth/privateroute';
-import { refreshAccessToken } from 'src/utils/auth';
+import { isTokenExpired, refreshAccessToken } from 'src/utils/auth';
+import { useRouter } from './hooks';
 
 // ----------------------------------------------------------------------
 
@@ -42,11 +43,14 @@ export const BannerViewPage = lazy(() => import('src/pages/admin/banner-view'));
 export const BannerViewDetailPage = lazy(() => import('src/pages/admin/banner-view-detail'));
 export const TagViewPage = lazy(() => import('src/pages/admin/tag-view'));
 export const SpecifyPage = lazy(() => import('src/pages/admin/specify-place'));
+export const PlaceReportPage = lazy(() => import('src/pages/placereport'));
+export const PlaceReportDetailPage = lazy(() => import('src/pages/place-report-detail'));
+export const DashboardModeratorPage = lazy(() => import('src/pages/admin/dashboard-moderator'));
 export const ModCheckPage = lazy(() => import('src/pages/admin/mod-check'));
 export const ModCheckDetailPage = lazy(() => import('src/pages/admin/mod-check-detail'));
 export const CancelPage = lazy(() => import('src/pages/pay-cancel'));
 export const SuccessPage = lazy(() => import('src/pages/pay-success'));
-
+export const DashboardServiceOwnerPage = lazy(() => import('src/pages/admin/dashboard-service-owner'));
 
 // ----------------------------------------------------------------------
 
@@ -72,6 +76,38 @@ function AppRoutes() {
       return [];
     }
   })();
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        let token = localStorage.getItem('accessToken');
+
+        // Chuyển hướng nếu không có token
+        if (!token) {
+          router.push('/sign-in');
+          return;
+        }
+
+        // Kiểm tra và làm mới token nếu cần
+        if (isTokenExpired(token)) {
+          try {
+            token = await refreshAccessToken(); // Sử dụng await để làm mới token
+            localStorage.setItem('accessToken', token); // Cập nhật token mới vào localStorage
+          } catch (error) {
+            console.error('Unable to refresh access token:', error);
+            router.push('/sign-in');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking token:', error);
+        router.push('/sign-in');
+      }
+    };
+
+    checkToken();
+  }, [router]);
   return useRoutes([
     {
       path: '/',
@@ -98,7 +134,9 @@ function AppRoutes() {
             { path: 'place', element: <PlacePage /> },
             { path: 'place/:id', element: <PlaceViewPage /> },
             { path: 'event', element: <EventPage /> },
-            { path: 'profile', element: <UserProfile /> }
+            { path: 'profile', element: <UserProfile /> },
+            { path: 'placeReport', element: <PlaceReportPage /> },
+            { path: 'placeReport/:id', element: <PlaceReportDetailPage /> }
 
           ]
           : []),
@@ -135,8 +173,10 @@ function AppRoutes() {
             { path: 'admin/bannerUser/:id', element: <BannerViewDetailPage /> },
             { path: 'admin/tag', element: <TagViewPage /> },
             { path: 'profile', element: <UserProfile /> },
+            { path: 'admin/dashboardmod', element: <DashboardModeratorPage /> },
             { path: 'admin/modcheck', element: <ModCheckPage /> },
             { path: 'admin/modcheck/:placeId', element: <ModCheckDetailPage /> },
+            { path: 'admin/dashboardowner', element: <DashboardServiceOwnerPage /> },
           ]
           : []),
 

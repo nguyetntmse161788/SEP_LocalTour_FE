@@ -12,7 +12,10 @@ interface NewPlaceFormProps {
   onClose: () => void;
   onPlaceCreated: (newPlace: UserProps) => void;
 }
-
+interface PlaceMedia {
+  type: string,
+  url: string,
+}
 interface PlaceTranslation {
   languageCode: string;
   name: string;
@@ -42,10 +45,11 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     longitude: '',
     latitude: '',
     contactLink: '',
+    brc: null as File | null,
     tags: [] as string[], // Lưu ID của các tags
     placeTranslations: [] as PlaceTranslation[], // Mảng chứa nhiều PlaceTranslation
     photoDisplay: null as File | null, // Lưu file hình ảnh cho PhotoDisplay
-    placeMedia: [] as (File | null)[], // Mảng chứa nhiều file hình ảnh cho PlaceMedia (cho phép null)
+    placeMedia: [] as { type: string, url: string }[],
     isVerified: false,
     status: '0',
   });
@@ -88,6 +92,7 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
         tags: [],
         placeTranslations: [],
         photoDisplay: null,
+        brc: null,
         placeMedia: [],
         isVerified: false,
         status: '0',
@@ -107,10 +112,10 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     placeMedia: '',
     photoDisplay: '',
     tags: '',
-    placeTranslations: formData.placeTranslations.map(() => ''),
+    placeTranslations:  [],
     });
     }
-  }, [open,formData.placeTranslations]);
+  }, [open]);
   
 
   const handleLocationSelect = (longitudes : string , latitudes : string) => {
@@ -181,24 +186,73 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
       }));
     }
   };
+  const handleBRCChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files as FileList | null;
+    
+    if (files && files[0]) {
+      setFormData((prevData) => ({
+        ...prevData,
+        brc: files[0], // Lưu lại file đầu tiên
+      }));
+    }
+  };
 
-  const handlePlaceMediaChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const files = event.target.files;
   
+  const handlePlaceMediaChange = async (
+    event: React.ChangeEvent<HTMLInputElement>, 
+    index: number
+  ) => {
+    const files = event.target.files;
     if (files && files.length > 0) {
-      // Lưu file vào đúng vị trí trong mảng
-      setFormData((prevData) => {
-        const updatedPlaceMedia = [...prevData.placeMedia];
-        updatedPlaceMedia[index] = files[0]; // Cập nhật file
-        return { ...prevData, placeMedia: updatedPlaceMedia };
-      });
-    } else {
-      // Nếu không có file, gán null cho vị trí đó (nếu bạn muốn xóa file)
-      setFormData((prevData) => {
-        const updatedPlaceMedia = [...prevData.placeMedia];
-        updatedPlaceMedia[index] = null; // Xóa file
-        return { ...prevData, placeMedia: updatedPlaceMedia };
-      });
+      const updatedPlaceMedia = [...formData.placeMedia];  // Copy current media list
+     console.log('length', files.length)
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const formDataToSend = new FormData();
+          formDataToSend.append('files', file);
+  
+          // Gửi file đến API
+          const response = await fetch('https://api.localtour.space/api/File/createlink', {
+            method: 'POST',
+            body: formDataToSend,
+          });
+  
+          if (!response.ok) {
+            throw new Error(`Failed to upload file: ${file.name}`);
+          }
+  
+          const result = await response.json();
+          let fileLink = '';
+  
+          // Trích xuất link từ phản hồi API
+          if (file.type.includes('image') && result.imageUrls && result.imageUrls.length > 0) {
+            fileLink = result.imageUrls[0];
+          } else if (file.type.includes('video') && result.videoUrls && result.videoUrls.length > 0) {
+            fileLink = result.videoUrls[0];
+          } else {
+            throw new Error(`No URL returned for the uploaded file: ${file.name}`);
+          }
+  
+                  if (i==0) {
+            updatedPlaceMedia[index] = {
+              type: file.type.includes('image') ? 'Image' : 'Video',
+              url: fileLink,
+            };
+          }
+          updatedPlaceMedia[index + i] = {
+            type: file.type.includes('image') ? 'Image' : 'Video',
+            url: fileLink,
+          };
+  
+        }
+        
+  
+        // Cập nhật lại state sau khi tải lên xong
+        setFormData({ ...formData, placeMedia: updatedPlaceMedia });
+      } catch (error) {
+        console.error('Error uploading files:', error);
+      }
     }
   };
 
@@ -231,21 +285,44 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
     });
   };
 
-  // Hàm xử lý thêm một ảnh mới vào PlaceMedia
-  const addPlaceMedia = () => {
-    setFormData((prevData) => ({
-      ...prevData,
-      placeMedia: [...prevData.placeMedia, null], // Thêm một phần tử null vào mảng placeMedia
-    }));
-  };
+// Handle removing a media item
+const removePlaceMedia = (index: number) => {
+  const updatedPlaceMedia = formData.placeMedia.filter((_, i) => i !== index);
+  setFormData({ ...formData, placeMedia: updatedPlaceMedia });
+};
 
-  // Hàm xử lý xóa một ảnh trong PlaceMedia
-  const removePlaceMedia = (index: number) => {
-    setFormData((prevData) => {
-      const updatedPlaceMedia = prevData.placeMedia.filter((_, i) => i !== index);
-      return { ...prevData, placeMedia: updatedPlaceMedia };
-    });
-  };
+// Render media based on its type (Image or Video)
+const renderPlaceMedia = () => {
+  return formData.placeMedia.map((media, index) => (
+    <Grid container key={index} spacing={2} alignItems="center">
+      <Grid item xs={6}>
+        {media.url ? (
+          media.type === 'Image' ? (
+            <img src={media.url} alt="Media" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }} />
+          ) : (
+            <video width="100%" height="auto" controls>
+              <source src={media.url} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          )
+        ) : (
+          // No media preview for a new item
+          <div>No media selected</div>
+        )}
+      </Grid>
+      <Grid item xs={6}>
+        {!media.url && ( // Only show input and remove button when no media is selected
+          <>
+            <input type="file" accept="image/*,video/*" multiple onChange={(e) => handlePlaceMediaChange(e, index)} />
+          </>
+        )}
+        <Button variant="contained" color="error" onClick={() => removePlaceMedia(index)}>
+          Remove
+        </Button>
+      </Grid>
+    </Grid>
+  ));
+};
 
   // Hàm xử lý tags (khi người dùng chọn tag)
   const handleTagsChange = (event: React.ChangeEvent<{}>, newValue: { id: string; tagName: string }[]) => {
@@ -354,11 +431,17 @@ function NewPlaceForm({ open, onClose, onPlaceCreated }: NewPlaceFormProps) {
       if (formData.photoDisplay) {
         formDataToSend.append('PhotoDisplay', formData.photoDisplay);
       }
-  
+      if (formData.brc) {
+        formDataToSend.append('BRC', formData.brc);
+      }
       // Thêm các file PlaceMedia
-      formData.placeMedia.forEach((media, index) => {
-        if (media) {
-          formDataToSend.append('PlaceMedia', media);  // Không cần thêm chỉ mục, vì API có thể nhận được mảng các file
+      formData.placeMedia.forEach((media) => {
+        if (media.url) {
+          if (typeof media.url === 'string') {
+            formDataToSend.append('PlaceMedia', media.url);
+          } else {
+            formDataToSend.append('PlaceMedia', media.url);
+          }
         }
       });
   
@@ -610,37 +693,26 @@ const fetchWards = async (districtId: any) => {
           />
           {errors.photoDisplay && <div style={{ color: 'red' }}>{errors.photoDisplay}</div>}
         </div>
+        <div style={{ marginTop: '20px' }}>
+          <div style={{ fontWeight: 'bold' }}>BRC</div>
+          <input
+            type="file"
+            accept="image/*"
+            id="brc"
+            onChange={handleBRCChange}
+          />
+        </div>
         
 
         {/* Place Media */}
-        <div style={{ marginTop: '20px' }}>
-          <Button variant="outlined" onClick={addPlaceMedia}>
-            Add Place Media
-          </Button>
-          {formData.placeMedia.map((media, index) => (
-            <Grid container key={index} spacing={2} alignItems="center" style={{ marginTop: '10px' }}>
-              <Grid item>
-                <label htmlFor={`placeMedia-${index}`}>Media {index + 1}</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  id={`placeMedia-${index}`}
-                  onChange={(event) => handlePlaceMediaChange(event, index)}
-                />
-              </Grid>
-              <Grid item>
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={() => removePlaceMedia(index)}
-                >
-                  Remove
-                </Button>
-              </Grid>
-            </Grid>
-          ))}
-            {errors.placeMedia && <div style={{ color: 'red' }}>{errors.placeMedia}</div>}
+        <div>
+          <h4>Place Media</h4>
+          {renderPlaceMedia()}
+          {errors.placeMedia && <div style={{ color: 'red' }}>{errors.placeMedia}</div>}
         </div>
+        <Button variant="contained" color="primary" onClick={() => setFormData({ ...formData, placeMedia: [...formData.placeMedia, { type: '', url: '' }] })}>
+                  Add Media
+        </Button>
 
         {/* Place Translations */}
         <div style={{ marginTop: '20px' }}>
