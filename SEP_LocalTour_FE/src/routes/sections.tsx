@@ -81,11 +81,19 @@ function AppRoutes() {
   useEffect(() => {
     const checkToken = async () => {
       try {
+        if(router.pathname === '/success'){
+          router.push('/success');
+          return;
+        }
+        if(router.pathname === '/cancel'){
+          router.push('/cancel');
+          return;
+        }
         let token = localStorage.getItem('accessToken');
-
+      
         // Chuyển hướng nếu không có token
         if (!token) {
-          router.push('/sign-in');
+         router.push('/sign-in');
           return;
         }
 
@@ -100,6 +108,9 @@ function AppRoutes() {
             return;
           }
         }
+
+
+
       } catch (error) {
         console.error('Error checking token:', error);
         router.push('/sign-in');
@@ -108,7 +119,7 @@ function AppRoutes() {
 
     checkToken();
   }, [router]);
-  return useRoutes([
+  return useRoutes([ 
     {
       path: '/',
       element: (
