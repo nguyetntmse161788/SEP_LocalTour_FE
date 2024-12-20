@@ -48,6 +48,8 @@ export const PlaceReportDetailPage = lazy(() => import('src/pages/place-report-d
 export const DashboardModeratorPage = lazy(() => import('src/pages/admin/dashboard-moderator'));
 export const ModCheckPage = lazy(() => import('src/pages/admin/mod-check'));
 export const ModCheckDetailPage = lazy(() => import('src/pages/admin/mod-check-detail'));
+export const CancelPage = lazy(() => import('src/pages/pay-cancel'));
+export const SuccessPage = lazy(() => import('src/pages/pay-success'));
 export const DashboardServiceOwnerPage = lazy(() => import('src/pages/admin/dashboard-service-owner'));
 
 // ----------------------------------------------------------------------
@@ -180,6 +182,8 @@ function AppRoutes() {
 
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
+
+
       ],
     },
     {
@@ -193,6 +197,14 @@ function AppRoutes() {
     {
       path: '404',
       element: <Page404 />,
+    },
+    {
+      path: 'cancel',
+      element: <CancelPage />,
+    },
+    {
+      path: 'success',
+      element: <SuccessPage />,
     },
     {
       path: '*',
