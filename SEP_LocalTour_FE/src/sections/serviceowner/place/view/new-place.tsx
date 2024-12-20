@@ -431,7 +431,7 @@ const renderPlaceMedia = () => {
       if (formData.photoDisplay) {
         formDataToSend.append('PhotoDisplay', formData.photoDisplay);
       }
-      if (formData.brc) {
+      if (formData.brc !== null && formData.brc !== undefined) {
         formDataToSend.append('BRC', formData.brc);
       }
       // Thêm các file PlaceMedia

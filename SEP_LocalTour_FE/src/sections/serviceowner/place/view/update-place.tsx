@@ -273,9 +273,16 @@ function UpdatePlaceForm({ open, onClose, placeId, onPlaceUpdated }: UpdatePlace
     const files = event.target.files as FileList | null;
     
     if (files && files[0]) {
+      // Only update formData if a file is selected
       setFormData((prevData) => ({
         ...prevData,
-        brc: files[0], // Lưu lại file đầu tiên
+        brc: files[0], // Save the first file
+      }));
+    } else {
+      // If no file is selected, ensure brc is not set
+      setFormData((prevData) => ({
+        ...prevData,
+        brc: null, // Clear the brc field when no file is selected
       }));
     }
   };
@@ -520,8 +527,8 @@ const renderPlaceMedia = () => {
         
         const response = await axios.post('https://api.localtour.space/api/File/link', photoFormData);
         brcUrl = response.data?.data; // Lấy URL trả về từ API
+        formDataToSend.append('brc', brcUrl as unknown as string);
       }
-      formDataToSend.append('brc', brcUrl as unknown as string);
       const response = await axios.put(
         `https://api.localtour.space/api/Place/update?placeid=${placeId}`,
         formDataToSend,
