@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { isTokenExpired, refreshAccessToken } from 'src/utils/auth';
+import { AnalyticsWidgetSummary } from './analytics-widget-summary';
 
 interface User {
   fullName: string;
@@ -34,7 +35,8 @@ interface User {
 export function UserProfile() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  
+  const [stats, setStats] = useState<any>(null);
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -57,8 +59,17 @@ export function UserProfile() {
             },
           }
         );
+        const statsResponse = await axios.get(
+          'https://api.localtour.space/api/Statistic/GetTotalPlaceAsync',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         setUser(response.data);
+        setStats(statsResponse.data);
       } catch (error) {
         console.error('Error fetching user profile:', error);
       } finally {
@@ -84,6 +95,7 @@ export function UserProfile() {
       </Typography>
     );
   }
+  
 
   return (
     <Box
@@ -95,20 +107,31 @@ export function UserProfile() {
       <Paper elevation={3} sx={{ width: '100%', maxWidth: 800, p: 4, borderRadius: 2 }}>
         <Grid container spacing={3}>
           {/* Avatar Section */}
-          <Grid item xs={12} textAlign="center">
-            <Avatar
-              src={user.userProfileImage}
-              alt={user.fullName}
-              sx={{
-                width: 150,
-                height: 150,
-                border: '4px solid',
-                borderColor: 'primary.main',
-                marginBottom: 2,
-              }}
-            />
+          <Grid item xs={12} md={12}>
+  <AnalyticsWidgetSummary
+    title="Total expenditure"
+    total={stats.totalPrice}
+    icon={
+      <Avatar
+        src={user.userProfileImage}
+        alt={user.fullName}
+        sx={{
+          width: 50,  // Increase the width
+          height: 50, // Increase the height
+          border: '4px solid',
+          borderColor: 'primary.main',
+        }}
+      />
+    }
+    chart={{
+      series: [],
+      categories: [],
+    }}
+    color="success"
+  />
+</Grid>
 
-          </Grid>
+
 
           <Divider sx={{ width: '100%' }} />
 
@@ -140,38 +163,6 @@ export function UserProfile() {
           </Grid>
 
           <Divider sx={{ width: '100%' }} />
-
-          {/* Summary Section */}
-          <Grid item container xs={12} spacing={2}>
-            <Grid item xs={6}>
-              <Typography variant="body1">
-                <strong>Followers:</strong> {user.totalFollowers}
-              </Typography>
-              <Typography variant="body1">
-                <strong>Following:</strong> {user.totalFollowed}
-              </Typography>
-            </Grid>
-            <Grid item xs={6} textAlign="center">
-              <Typography variant="body1">
-                <strong>Posts:</strong> {user.totalPosteds}
-              </Typography>
-              <Typography variant="body1">
-                <strong>Reviews:</strong> {user.totalReviews}
-              </Typography>
-            </Grid>
-          </Grid>
-
-          {/* Button Section */}
-          <Grid item xs={12}>
-            {/* <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={() => console.log('Edit Profile Clicked')}
-            >
-              Edit Profile
-            </Button> */}
-          </Grid>
         </Grid>
       </Paper>
     </Box>
