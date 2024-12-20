@@ -95,21 +95,6 @@ export function PlaceTableToolbar({ numSelected, filterName, onFilterName, onFil
               horizontal: 'right',
             }}
           >
-            <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {['All', 'Pending', 'Approved', 'Rejected', 'Unpaid', 'Banned'].map((status) => (
-                <Button
-                  key={status}
-                  variant={activeFilter === (status === 'All' ? null : status) ? 'contained' : 'outlined'}
-                  onClick={() => handleFilterClick(status === 'All' ? null : status)}
-                  sx={{
-                    color: activeFilter === (status === 'All' ? null : status) ? 'text.primary' : 'text.secondary',
-                    borderColor: 'text.secondary',
-                  }}
-                >
-                  {status}
-                </Button>
-              ))}
-            </Box>
           </Popover>
         </>
       )}

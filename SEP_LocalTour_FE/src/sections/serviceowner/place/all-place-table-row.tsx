@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef,useEffect  } from 'react';
 import { useNavigate } from 'react-router-dom';  // Thêm hook useNavigate từ React Router
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
@@ -43,16 +43,25 @@ type UserTableRowProps = {
   onSelectRow: () => void;
   onDeletePlace: any;
   onUpdatePlace: any;
+  onPaymentPlace : any;
 };
 
-export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpdatePlace }: UserTableRowProps) {
+export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpdatePlace, onPaymentPlace }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);  // State for confirmation dialog
   const [openEditDialog, setOpenEditDialog] = useState(false);  // State for the edit dialog
   const [placeIdToEdit, setPlaceIdToEdit] = useState<string>('');
   const navigate = useNavigate();  // Hook for navigation
   const [places, setPlaces] = useState<UserProps[]>([]);
+  const [openPayDialog, setOpenPayDialog] = useState(false);
+  const [placeNameToPay, setplaceNameToPay] = useState<string>('');
+  const [openPaymentUrlDialog, setopenPaymentUrlDialog] = useState(false);
 
+  const [iframeUrl, setIframeUrl] = useState('');
+  const iframeRef = useRef(null);
+  
+
+// eslint-disable-next-line react-hooks/exhaustive-deps
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     setOpenPopover(event.currentTarget);
@@ -72,6 +81,14 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     setOpenEditDialog(true);
     handleClosePopover();
   };
+
+  const handleOpenPayDialog = (placeName: string) => {
+    setplaceNameToPay(placeName);
+    setOpenPayDialog(true);
+    handleClosePopover();
+  };
+
+
   // Handle Row Click
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
     if (event.target instanceof HTMLButtonElement || event.target instanceof HTMLInputElement) {
@@ -102,6 +119,38 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     setOpenConfirmDialog(false);  // Close the confirmation dialog after deletion
   };
 
+ // Payment place
+ const handlePaymentPlace = async () => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    console.error('No access token found');
+    return;
+  }
+
+  try {
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/GetUrlPlaceRegister?placeId=${row.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    });
+
+    if (response.status === 200) {
+      const url = response.data; 
+      if (url) {
+        setIframeUrl(url);
+        setopenPaymentUrlDialog(true);
+      } else {
+        console.error("URL Error.");
+      }
+    }
+  
+  } catch (error) {
+    console.error("Error deleting place:", error);
+  }
+  setOpenPayDialog(false);  // Close the confirmation dialog after deletion
+};
+
+
   const handleCancelDelete = () => {
     setOpenConfirmDialog(false);  // Close the confirmation dialog
   };
@@ -111,6 +160,11 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     setOpenEditDialog(false);
   };
   
+  const handlePaymentClose = () => {
+    setopenPaymentUrlDialog(false);
+    onPaymentPlace();
+  }
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected} onClick={handleRowClick}>
@@ -125,14 +179,14 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
         </TableCell>
         <TableCell>{row.placeTranslation[0]?.address || 'N/A'}</TableCell>
         <TableCell>{row.placeTranslation[0]?.description || 'N/A'}</TableCell>
-        <TableCell align="center">
-          {row.status === 'Pending' ? '-' : <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />}
-        </TableCell>
-        <TableCell>
-          <Label color={row.status === 'Pending' ? 'warning' : row.status === 'Approved' ? 'success' : row.status === 'Rejected' ? 'error' : 'default'}>
-            {row.status}
-          </Label>
-        </TableCell>
+                <TableCell align="center">
+                  {row.status === 'Pending' || row.status === 'Unpaid' ? '-' : row.status === 'Banned' ? <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'error.main' }} /> :  <Iconify width={22} icon="solar:check-circle-bold" sx={{ color: 'success.main' }} />}
+                </TableCell>
+                <TableCell>
+                  <Label color={row.status === 'Pending' ? 'warning' : row.status === 'Approved' ? 'success' : row.status === 'Rejected' ? 'error': row.status ==='Unpaid' ? 'info': row.status === 'Banned' ? 'default'  : 'default'}>
+                    {row.status}
+                  </Label>
+                </TableCell>
         <TableCell align="right">
           <IconButton onClick={handleNavigateToDetail}>
             <Iconify icon="eva:arrow-forward-outline" width={22} />
@@ -155,6 +209,16 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>
+          <MenuItem onClick={() => { setopenPaymentUrlDialog(true); }} sx={{ color: 'error.main' }}>
+            <Iconify icon="solar:trash-bin-trash-bold" />
+            opentttt
+          </MenuItem>
+         { 
+          (row.status === "Unpaid")  
+         && <MenuItem onClick={() => { handleOpenPayDialog(row.name); handleClosePopover(); }} sx={{ color: 'green' }}>
+            <Iconify icon="solar:wallet-money-bold-duotone" />
+            Pay
+          </MenuItem>}
         </MenuList>
       </Popover>
 
@@ -171,8 +235,46 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
           <Button onClick={handleDeletePlace} color="error">
             Delete
           </Button>
+         
         </DialogActions>
       </Dialog>
+      {/* Pay Dialog */}
+      <Dialog open={openPayDialog} onClose={handleCancelDelete}>
+        <DialogTitle>Payment Confirmation</DialogTitle>
+        <DialogContent>
+        {`Are you sure you want to pay to ${row.placeTranslation[0]?.name}?`}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenPayDialog(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handlePaymentPlace} color="success">
+            Pay
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Payment url Dialog */}
+      <Dialog open={openPaymentUrlDialog} onClose={(event, reason) => {
+    if (reason === 'backdropClick') {
+      return;
+    }
+    handlePaymentClose(); 
+  }}
+   fullWidth maxWidth="md">
+        <DialogTitle>Payment page
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <iframe src={iframeUrl} ref={iframeRef} 
+          width="100%" height="800" title='Payment page' />
+        </DialogContent>
+        <DialogActions>
+    <Button onClick={handlePaymentClose} color="primary">
+      Close
+    </Button>
+  </DialogActions>
+      </Dialog>
+
+
       <UpdatePlaceForm
         open={openEditDialog}
         placeId={placeIdToEdit}

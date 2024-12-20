@@ -8,139 +8,123 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import axios from 'axios';
-
 import axiosInstance from 'src/utils/axiosInstance';
+
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableNoData } from '../table-no-data';
-import { PlaceTableRow } from '../all-place-table-row';
+import { PlaceTableRow } from '../place-table-row';
 import { PlaceTableHead } from '../place-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
 import { PlaceTableToolbar } from '../place-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
-import type { UserProps } from '../place-table-row';
-import NewPlaceForm from './new-place';
-
+import type { PlaceReportProps } from '../place-table-row';
 
 // ----------------------------------------------------------------------
 
-// Hàm fetchPlaces có sử dụng token từ localStorage
-const fetchPlaces = async (pageNumber = 1, rowsPerPage = 5, languageCode = 'vi',searchTerm = '',Status:  string | null = '', SortOrder = 'desc') => {
+// Hàm fetchPlaces không cần truyền filterStatus vào API
+const fetchPlaces = async (
+  pageNumber = 1,
+  rowsPerPage = 5,
+  languageCode = 'vi',
+  searchTerm = '',
+  Status: string | null = '',
+  districtIds: number[] = []  // Add districtIds parameter
+) => {
   const token = localStorage.getItem('accessToken');
   console.log('Access Token:', token);  // Kiểm tra token
   
   if (!token) {
     console.error('No access token found');
-    return { items: [], totalCount: 0 };  // Trả về totalCount là 0 nếu không có token
+    return { items: [], totalCount: 0 };  // Return empty data if no token
   }
 
   try {
-    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}&SortOrder=${SortOrder}`, {
+    // Start building the URL
+    let url = `https://api.localtour.space/api/PlaceReport/getAllByMod?Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`;
+    
+    // If districtIds is not empty, append the DistrictNCityIds query parameter
+    if (districtIds.length > 0) {
+      url += `&DistrictNCityIds=${districtIds.join('&DistrictNCityIds=')}`;
+    }
+
+    // Make the GET request
+    const response = await axiosInstance.get(url, {
       headers: {
-        Authorization: `Bearer ${token}`,
-      }
+        Authorization: `Bearer ${token}`,  // Include token for authentication
+      },
     });
-    console.log('API Response:', response.data);  // Kiểm tra dữ liệu trả về
+
+    console.log('API Response:', response.data);  // Log the response data
+
     return {
-      items: response.data.items,  // Danh sách items
-      totalCount: response.data.totalCount,  // Tổng số items
+      items: response.data.items,  // List of places
+      totalCount: response.data.totalCount,  // Total count of records
     };
   } catch (error) {
     console.error("Error fetching places", error);
-    return { items: [], totalCount: 0 };  // Trả về mảng rỗng và totalCount là 0 nếu có lỗi
+    return { items: [], totalCount: 0 };  // Return empty data if there's an error
   }
 };
 
-export function PlaceCreatedView() {
-  const [places, setPlaces] = useState<UserProps[]>([]);
+
+export function PlaceReportView() {
+  const [places, setPlaces] = useState<PlaceReportProps[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);  // Lưu tổng số lượng bản ghi
   const [filterName, setFilterName] = useState('');
-  const [languageCode, setLanguageCode] = useState<string>('vi');
-  const [openNewPlaceForm, setOpenNewPlaceForm] = useState(false);
+  const [languageCode, setLanguageCode] = useState<string>('vi'); // Ngôn ngữ mặc định là Vietnamese
   const [pageNumber, setPageNumber] = useState(1);  // Lưu trang hiện tại
   const [rowsPerPage, setRowsPerPage] = useState(5);  // Sử dụng state để lưu rowsPerPage
   const [filterStatus, setFilterStatus] = useState<string | null>('');
-  const [sortOrder, setSortOrder] =  useState<string>('desc');
+  const [selectedDistricts, setSelectedDistricts] = useState<number[]>([]);  // State to store selected district IDs
 
-
+  const userId = localStorage.getItem('userId');
   const fetchData = async () => {
-    const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode, filterName, filterStatus,sortOrder);  // Lấy cả items và totalCount
+    const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode,filterName,filterStatus,selectedDistricts);  // Lấy dữ liệu theo trang, số dòng và ngôn ngữ
     setPlaces(items);  // Cập nhật danh sách places
     setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
   };
   useEffect(() => {
-    fetchData();
-  }, [pageNumber, rowsPerPage, languageCode,filterName,filterStatus]);  // Thêm rowsPerPage vào dependencies
+     fetchData();
+  }, [pageNumber, rowsPerPage, languageCode, filterName,filterStatus,selectedDistricts]);  // Chạy lại khi các giá trị này thay đổi
 
-  const handlePlaceCreated = async (newPlace: UserProps) => {
-    const placeWithImageAndStatus = {
-      ...newPlace,
-      status: newPlace.status ?? '0',  // Default to '0' if status is null/undefined
-      isVerified: newPlace.isVerified ?? false,
-      photoDisplay: newPlace.photoDisplay
-    };
-    setPlaces((prevPlaces) => [...prevPlaces, placeWithImageAndStatus ]); // Thêm place mới vào đầu danh sách
-    setTotalCount((prevCount) => prevCount + 1); // Tăng tổng số lượng bản ghi
-    const { items, totalCount: fetchedTotalCount } = await fetchPlaces(pageNumber, rowsPerPage, languageCode);
-    setPlaces(items);  // Cập nhật lại danh sách places
-    setTotalCount(fetchedTotalCount); 
-  };
   const table = useTable();
 
-  const dataFiltered: UserProps[] = applyFilter({
+  // Áp dụng bộ lọc sau khi cập nhật dữ liệu
+  const dataFiltered: PlaceReportProps[] = applyFilter({
     inputData: places,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
-    filterStatus,
+    filterStatus,  // Lọc trên client
   });
-  const handleDeletePlace = (placeId: string) => {
-    setPlaces(prevPlaces => prevPlaces.filter(place => place.id !== placeId));
-    fetchData();
-  };
-  const handlePlaceUpdated = async (updatedPlace: UserProps) => {
-    // Update the place in the list
-    setPlaces((prevPlaces) =>
-      prevPlaces.map((place) =>
-        place.id === updatedPlace.id ? updatedPlace : place
-      )
-    );
-    const { items } = await fetchPlaces(pageNumber, rowsPerPage, languageCode, filterName, filterStatus);
-    setPlaces(items); 
-  };
-  const handlePlacePayment = () => {
-    fetchData();
-  };
   const notFound = !dataFiltered.length && !!filterName;
-
+  const handleRefresh = () => {
+    fetchData();
+  };
   return (
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Places
+          Place Report
         </Typography>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={() => setOpenNewPlaceForm(true)} // Hiển thị form khi nhấn
-        >
-          New place
-        </Button>
       </Box>
 
       <Card>
         <PlaceTableToolbar
-          numSelected={table.selected.length}
-          filterName={filterName}
-          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setFilterName(event.target.value);
-            setPageNumber(1);
-          }}
-          onFilterStatus={(status) => {
-            setFilterStatus(status || ''); 
-            setPageNumber(1);
-          }}
+            numSelected={table.selected.length}
+            filterName={filterName}
+            onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setFilterName(event.target.value); // Cập nhật giá trị tìm kiếm
+              setPageNumber(1); // Reset về trang đầu tiên
+            }}
+            onFilterStatus={(status) => {
+              setFilterStatus(status || ''); 
+              setPageNumber(1);
+            }}
+            userId={userId || ''}
+            onDistrictSelect={setSelectedDistricts}
+            
         />
 
         <Scrollbar>
@@ -159,10 +143,11 @@ export function PlaceCreatedView() {
                   )
                 }
                 headLabel={[
-                  { id: 'name', label: 'Name' },
-                  { id: 'address', label: 'Address' },
-                  { id: 'description', label: 'Description' },
-                  { id: 'isVerify', label: 'isVerify' },
+                  { id: 'id', label: 'Id' },
+                  { id: 'userReportId', label: 'User Report' },
+                  { id: 'placeId', label: 'Place' },
+                  { id: 'reportDate', label: 'Report Date' },
+                  { id: 'content', label: 'Content' },
                   { id: 'status', label: 'Status' },
                   { id: 'View details', label: 'View details' },
                   { id: '' },
@@ -180,9 +165,7 @@ export function PlaceCreatedView() {
                       row={row}
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
-                      onDeletePlace={handleDeletePlace}
-                      onUpdatePlace={handlePlaceUpdated}
-                      onPaymentPlace = {handlePlacePayment}
+                      onRefresh={handleRefresh}
                     />
                   ))}
 
@@ -199,22 +182,17 @@ export function PlaceCreatedView() {
 
         <TablePagination
           component="div"
-          page={pageNumber - 1}  // Chỉnh lại để bắt đầu từ trang 0
+          page={pageNumber - 1}  // Sử dụng pageNumber - 1 vì TablePagination bắt đầu từ 0
           count={totalCount}  // Dùng totalCount thay vì places.length
-          rowsPerPage={rowsPerPage}  // Cập nhật rowsPerPage
-          onPageChange={(event, newPage) => setPageNumber(newPage + 1)}  // Sử dụng pageNumber + 1
+          rowsPerPage={rowsPerPage}  // Sử dụng rowsPerPage
+          onPageChange={(event, newPage) => setPageNumber(newPage + 1)}  // Chỉnh lại pageNumber để bắt đầu từ 1
           rowsPerPageOptions={[5, 10, 25]}
           onRowsPerPageChange={(event) => {
-            setRowsPerPage(parseInt(event.target.value, 10));  // Cập nhật rowsPerPage
-            setPageNumber(1);  // Reset trang về 1 khi thay đổi số dòng trên mỗi trang
+            setRowsPerPage(parseInt(event.target.value, 10));  // Cập nhật số dòng mỗi trang
+            setPageNumber(1);  // Reset trang về 1 khi thay đổi số dòng
           }}
         />
       </Card>
-      <NewPlaceForm
-        open={openNewPlaceForm}
-        onClose={() => setOpenNewPlaceForm(false)}
-        onPlaceCreated={handlePlaceCreated} // Đóng form
-      />
     </DashboardContent>
   );
 }
@@ -250,39 +228,20 @@ export function useTable() {
       const newSelected = selected.includes(inputValue)
         ? selected.filter((value) => value !== inputValue)
         : [...selected, inputValue];
-
       setSelected(newSelected);
     },
     [selected]
   );
 
-  const onResetPage = useCallback(() => {
-    setPage(0);
-  }, []);
-
-  const onChangePage = useCallback((event: unknown, newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const onChangeRowsPerPage = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRowsPerPage(parseInt(event.target.value, 10));
-      onResetPage();
-    },
-    [onResetPage]
-  );
-
   return {
-    page,
     order,
-    onSort,
     orderBy,
-    selected,
     rowsPerPage,
-    onSelectRow,
-    onResetPage,
-    onChangePage,
+    selected,
+    page,
+    onSort,
     onSelectAllRows,
-    onChangeRowsPerPage,
+    onSelectRow,
+    onResetPage: () => setPage(0),
   };
 }

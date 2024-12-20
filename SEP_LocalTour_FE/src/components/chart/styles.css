@@ -9,6 +9,7 @@
     color: var(--palette-text-primary);
     box-shadow: var(--customShadows-dropdown);
     background-color: rgba(var(--palette-background-defaultChannel) / 0.9);
+    white-space: pre-wrap !important; 
   }
   .apexcharts-xaxistooltip {
     border-radius: 10px;

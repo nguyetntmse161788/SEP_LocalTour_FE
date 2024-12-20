@@ -42,6 +42,9 @@ export const BannerViewPage = lazy(() => import('src/pages/admin/banner-view'));
 export const BannerViewDetailPage = lazy(() => import('src/pages/admin/banner-view-detail'));
 export const TagViewPage = lazy(() => import('src/pages/admin/tag-view'));
 export const SpecifyPage = lazy(() => import('src/pages/admin/specify-place'));
+export const PlaceReportPage = lazy(() => import('src/pages/placereport'));
+export const PlaceReportDetailPage = lazy(() => import('src/pages/place-report-detail'));
+export const DashboardModeratorPage = lazy(() => import('src/pages/admin/dashboard-moderator'));
 export const ModCheckPage = lazy(() => import('src/pages/admin/mod-check'));
 export const ModCheckDetailPage = lazy(() => import('src/pages/admin/mod-check-detail'));
 export const CancelPage = lazy(() => import('src/pages/pay-cancel'));
@@ -98,7 +101,9 @@ function AppRoutes() {
             { path: 'place', element: <PlacePage /> },
             { path: 'place/:id', element: <PlaceViewPage /> },
             { path: 'event', element: <EventPage /> },
-            { path: 'profile', element: <UserProfile /> }
+            { path: 'profile', element: <UserProfile /> },
+            { path: 'placeReport', element: <PlaceReportPage /> },
+            { path: 'placeReport/:id', element: <PlaceReportDetailPage /> }
 
           ]
           : []),
@@ -135,6 +140,7 @@ function AppRoutes() {
             { path: 'admin/bannerUser/:id', element: <BannerViewDetailPage /> },
             { path: 'admin/tag', element: <TagViewPage /> },
             { path: 'profile', element: <UserProfile /> },
+            { path: 'admin/dashboardmod', element: <DashboardModeratorPage /> },
             { path: 'admin/modcheck', element: <ModCheckPage /> },
             { path: 'admin/modcheck/:placeId', element: <ModCheckDetailPage /> },
           ]

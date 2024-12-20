@@ -210,10 +210,6 @@ export function OverviewAnalyticsView() {
   const categories = monthlyData.map((item) => item.monthName);
   const series = monthlyData.map((item) => item.registrationCount);
 
-  // Convert percent to number
-  // const percent = ((total - 0 / 1) * 100).toFixed(2); // This is a string, so parse it as a float
-  // const percentAsNumber = parseFloat(percent);
-
   const chartCategories = userRegistrations.monthlyData.map((data: any) => data.monthName);
   const chartSeriesData = userRegistrations.monthlyData.map((data: any) => data.registrationCount);
 

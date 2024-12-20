@@ -42,7 +42,7 @@ const fetchPlaces = async (
 
   try {
     // Start building the URL
-    let url = `https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}`;
+    let url = `https://api.localtour.space/api/Place/getAllByRole?LanguageCode=${languageCode}&Page=${pageNumber}&Size=${rowsPerPage}&SearchTerm=${encodeURIComponent(searchTerm)}&Status=${Status}&SortOrder=desc`;
     
     // If districtIds is not empty, append the DistrictNCityIds query parameter
     if (districtIds.length > 0) {

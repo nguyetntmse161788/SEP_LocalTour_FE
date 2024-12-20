@@ -12,7 +12,38 @@ import axiosInstance from 'src/utils/axiosInstance';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { NewActivityForm } from './new-activity-form'; // Import NewEventForm
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 
+const CustomArrow = (props: any) => {
+  const { className, style, onClick, direction } = props;
+  const Icon = direction === 'next' ? ArrowForwardIosIcon : ArrowBackIosNewIcon;
+
+  return (
+    <div
+      className={className}
+      style={{
+        ...style,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0, 0, 0, 0.6)', // Màu nền mờ
+        borderRadius: '50%',
+        width: '40px',
+        height: '40px',
+        cursor: 'pointer',
+        boxShadow: '0px 2px 6px rgba(0,0,0,0.3)',
+        zIndex: 2,
+      }}
+      onClick={onClick}
+    >
+      {/* <Icon style={{ color: '#fff', fontSize: '20px' }} /> */}
+    </div>
+  );
+};
 
 
 export function PlaceDetailView() {
@@ -114,9 +145,16 @@ export function PlaceDetailView() {
     );
   }
 
-  const isPending = place.status === '0';  // Pending
-  const isApproved = place.status === '1';  // Approved
-  const isRejected = place.status === '2';  // Rejected
+  const settings = {
+    dots: false,
+    infinite: true, // Vô hạn khi có nhiều hơn 1 ảnh
+    speed: 500,
+    slidesToShow: 3, // 3 ảnh nếu có nhiều ảnh, 1 nếu chỉ có 1 ảnh
+    slidesToScroll: 1,
+    nextArrow: place.placeMedia?.length > 1 ? <CustomArrow direction="next" /> : <CustomArrow direction="next" />, // Ẩn mũi tên nếu chỉ có 1 ảnh
+    prevArrow: place.placeMedia?.length > 1 ? <CustomArrow direction="prev" /> : <CustomArrow direction="prev"/>, // Ẩn mũi tên nếu chỉ có 1 ảnh
+  };
+
 
   return (
     <DashboardContent>
@@ -151,6 +189,30 @@ export function PlaceDetailView() {
               style={{ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'cover' }} 
             />
             </Box>
+            <Box>
+      <Typography variant="h6" sx={{ mb: 1 }}>
+        Place Media
+      </Typography>
+      <Slider {...settings}>
+      {(place.placeMedia?.length === 1
+    ? new Array(3).fill(place.placeMedia[0]) // Tạo mảng với 3 ảnh giống nhau
+    : place.placeMedia
+  ).map((media: { url: string }, index: number) => (
+          <Box key={index} sx={{ px: 1 }}>
+            <img 
+              src={media.url} 
+              alt={`Media ${index + 1}`}
+              style={{ 
+                width: '100%',
+                height: '100px',
+                objectFit: 'cover',
+                borderRadius: '8px'
+              }} 
+            />
+          </Box>
+        ))}
+      </Slider>
+    </Box>
           </Card>
         </Grid>
 
