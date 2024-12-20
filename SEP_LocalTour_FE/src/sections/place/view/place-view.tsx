@@ -87,6 +87,12 @@ export function PlaceView() {
       setTotalCount(fetchedTotalCount);  // Cập nhật totalCount
     };
     fetchData();
+    const interval = setInterval(() => {
+      fetchData();
+    }, 3000);  // Fetch every 5 seconds
+
+    // Clear interval when the component is unmounted
+    return () => clearInterval(interval);
   }, [pageNumber, rowsPerPage, languageCode, filterName,filterStatus,selectedDistricts]);  // Chạy lại khi các giá trị này thay đổi
 
   const table = useTable();
