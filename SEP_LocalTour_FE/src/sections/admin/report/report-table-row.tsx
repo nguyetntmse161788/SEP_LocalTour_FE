@@ -36,15 +36,15 @@ export function ReportTableRow({ row, selected, onSelectRow, onStatusUpdate }: R
     try {
       const updatedData = {
         id: row.id,
-        userReportId: row.userReportId,
-        userId: row.userId,
-        content: row.content,
-        reportDate: row.reportDate,
+        // userReportId: row.userReportId,
+        // userId: row.userId,
+        // content: row.content,
+        // reportDate: row.reportDate,
         status: newStatus, // Cập nhật trạng thái
       };
 
       await axiosInstance.put(
-        `https://api.localtour.space/api/UserReport/${id}`,
+        `https://api.localtour.space/api/UserReport`,
         updatedData, 
         { headers: { Authorization: `Bearer ${token} `} }
       );
@@ -80,6 +80,7 @@ export function ReportTableRow({ row, selected, onSelectRow, onStatusUpdate }: R
           color="success"
           size="small"
           onClick={() => updateReportStatus(row.id, 'Accepted')}
+          disabled={row.status === 'Accepted'}
         >
           Accept
         </Button>
@@ -89,6 +90,7 @@ export function ReportTableRow({ row, selected, onSelectRow, onStatusUpdate }: R
           size="small"
           onClick={() => updateReportStatus(row.id, 'Rejected')}
           style={{ marginLeft: '8px' }}
+          disabled={row.status === 'Rejected'}
         >
           Reject
         </Button>
