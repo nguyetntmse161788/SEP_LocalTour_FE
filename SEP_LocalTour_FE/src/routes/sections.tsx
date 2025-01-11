@@ -81,14 +81,14 @@ function AppRoutes() {
   useEffect(() => {
     const checkToken = async () => {
       try {
-        if(router.pathname === '/success'){
-          router.push('/success');
-          return;
-        }
-        if(router.pathname === '/cancel'){
-          router.push('/cancel');
-          return;
-        }
+        // if(router.pathname === '/success'){
+        //   router.push('/success');
+        //   return;
+        // }
+        // if(router.pathname === '/cancel'){
+        //   router.push('/cancel');
+        //   return;
+        // }
         let token = localStorage.getItem('accessToken');
       
         // Chuyển hướng nếu không có token
@@ -164,7 +164,8 @@ function AppRoutes() {
               { path: 'owner/activity/place/:id', element: <ServiceOwnerActivityViewPage /> },
               { path: 'owner/banner', element: <BannerListPage /> },
               { path: 'owner/usertranfer', element: <UserTranferPage /> },
-              { path: 'profile', element: <UserProfile /> }
+              { path: 'profile', element: <UserProfile /> },
+              { path: 'cancle' }
             ]
           : []),
         ...(userRole.includes('Administrator')

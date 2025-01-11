@@ -108,35 +108,35 @@ export function PlaceCreatedView() {
     const { items } = await fetchPlaces(pageNumber, rowsPerPage, languageCode, filterName, filterStatus);
     setPlaces(items); 
   };
-  const handlePlacePayment = (statusPayment:String) => {
-    console.log(statusPayment);
-    toast.dismiss();
+  const handlePlacePayment =  (placeId: string, statusPayment: string)  => {
+  //   console.log(statusPayment);
+  //   toast.dismiss();
 
-   if(statusPayment === 'success')
-    {
-      toast.success('Payment success', {
-      position: "bottom-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: false,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-      });}
-    if(statusPayment === 'cancel')
-      { 
-        toast.error('Payment fail', {
-        position: "bottom-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: false,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        });}
-fetchData();
+  //  if(statusPayment === 'success')
+  //   {
+  //     toast.success('Payment success', {
+  //     position: "bottom-right",
+  //     autoClose: 5000,
+  //     hideProgressBar: false,
+  //     closeOnClick: false,
+  //     pauseOnHover: false,
+  //     draggable: true,
+  //     progress: undefined,
+  //     theme: "light",
+  //     });}
+  //   if(statusPayment === 'cancel')
+  //     { 
+  //       toast.error('Payment fail', {
+  //       position: "bottom-right",
+  //       autoClose: 5000,
+  //       hideProgressBar: false,
+  //       closeOnClick: false,
+  //       pauseOnHover: false,
+  //       draggable: true,
+  //       progress: undefined,
+  //       theme: "light",
+  //       });}
+// fetchData();
   };
   const notFound = !dataFiltered.length && !!filterName;
 
@@ -209,7 +209,7 @@ fetchData();
                       onSelectRow={() => table.onSelectRow(row.id)}
                       onDeletePlace={handleDeletePlace}
                       onUpdatePlace={handlePlaceUpdated}
-                      onPaymentPlace = {handlePlacePayment}
+                      onPaymentPlace={(statusPayment: any) => handlePlacePayment(row.id, statusPayment)} 
                     />
                   ))}
 

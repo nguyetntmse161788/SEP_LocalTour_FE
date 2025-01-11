@@ -70,28 +70,38 @@ export function PlaceDetailView() {
   const webcamRef = useRef<Webcam>(null);
   const [openReject, setOpenReject] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [modCheckImages, setModCheckImages] = useState<string[]>([]);
   // Fetch dữ liệu Place từ API
-  useEffect(() => {
-    const fetchPlaceDetail = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        console.error('No access token found');
-        return;
-      }
+  const fetchPlaceDetail = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
 
-      try {
-        const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setPlace(response.data); // Lưu dữ liệu place
-        setLoading(false); // Đặt loading thành false khi đã lấy dữ liệu
-      } catch (error) {
-        console.error("Error fetching place details", error);
-        setLoading(false);
-      }
-    };
+    try {
+      const response = await axiosInstance.get(`https://api.localtour.space/api/Place/getPlaceById?languageCode=vi&placeid=${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const responses = await axiosInstance.get(`https://api.localtour.space/api/ModCheckPlace/GetAll?PlaceId=${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setPlace(response.data); // Lưu dữ liệu place
+      const modCheckItems = responses.data.items || [];
+      const modeCheckImages = modCheckItems.flatMap((item: { modeCheckImages: string[] }) => item.modeCheckImages || []);
+      setModCheckImages(modeCheckImages);
+      setLoading(false); // Đặt loading thành false khi đã lấy dữ liệu
+    } catch (error) {
+      console.error("Error fetching place details", error);
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    
 
     fetchPlaceDetail();
   }, [id]); // Khi ID thay đổi, sẽ gọi lại API
@@ -275,7 +285,7 @@ export function PlaceDetailView() {
             alert('Các ảnh đã được tải lên thành công!');
             setImages([]); 
             setOpenDialog(false)
-  
+            // fetchPlaceDetail();
 
       console.log(`Changing status to: ${placeStatus}`); 
 
@@ -299,6 +309,7 @@ export function PlaceDetailView() {
         window.dispatchEvent(event);
       }
       await onSubmit(null)
+      fetchPlaceDetail();
       }
     } catch (error) {
         console.error('Error:', error);
@@ -358,6 +369,7 @@ export function PlaceDetailView() {
     onSubmit(rejectReason); 
     handleClose(); 
     setRejectReason(''); 
+    fetchPlaceDetail();
 };
 
 // eslint-disable-next-line @typescript-eslint/no-shadow, consistent-return
@@ -494,7 +506,7 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
               variant="contained"
               color="success"
               onClick={() => handleChangeStatus('Approved')}  // Approve
-              disabled={place.status === 'Approved'|| place.status === 'Unpaid'} // Disable if already Approved
+              disabled={place.status === 'Approved'|| place.status === 'Unpaid'|| place.status === 'Rejected'} // Disable if already Approved
             >
               Approved
             </Button>
@@ -502,7 +514,7 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
               variant="contained"
               color="error"
               onClick={() => handleChangeStatus('Rejected')}  // Reject
-              disabled={place.status === 'Rejected'|| place.status === 'Unpaid'} // Disable if already Rejected
+              disabled={place.status === 'Rejected'|| place.status === 'Unpaid'|| place.status === 'Approved'} // Disable if already Rejected
             >
               Rejected
             </Button>
@@ -600,6 +612,36 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           )}
         </Grid>
       </Grid>
+      <Grid item xs={12}>
+  <Card sx={{ p: 2, boxShadow: 3 }}>
+    <Typography variant="h6" sx={{ mb: 2 }}>
+      Moderator Check Images
+    </Typography>
+    {modCheckImages.length > 0 ? (
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        {modCheckImages.map((url, index) => (
+          <img
+            key={index}
+            src={url}
+            alt={`Mod Check ${index + 1}`}
+            style={{
+              width: '150px',
+              height: '150px',
+              objectFit: 'cover',
+              borderRadius: '8px',
+              boxShadow: '0px 2px 6px rgba(0,0,0,0.2)',
+            }}
+          />
+        ))}
+      </Box>
+    ) : (
+      <Typography variant="body2" color="textSecondary">
+        No Mod Check images available.
+      </Typography>
+    )}
+  </Card>
+</Grid>
+
       {place.placeActivities?.length > 0 && (
   <Box mt={4}>
     {/* Tiêu đề Place Activity */}
@@ -679,6 +721,7 @@ const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         </Grid>
       ))}
     </Grid>
+    
   </Box>
 )}
     </DashboardContent>

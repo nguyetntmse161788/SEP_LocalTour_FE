@@ -19,6 +19,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import axios from 'axios';
 import UpdatePlaceForm from './view/update-place';
+import { toast } from 'react-toastify';
 
 // ----------------------------------------------------------------------
 
@@ -58,18 +59,45 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
   const [isProcessed, setIsProcessed] = useState(false);
   const [iframeUrl, setIframeUrl] = useState('');
   const iframeRef = useRef(null);
-  
+  const [placeIdToPay, setPlaceIdToPay] = useState<string>('');
+  const [processedRows, setProcessedRows] = useState<Record<string, boolean>>({});
+  const [processedPlaceId, setProcessedPlaceId] = useState<string | null>(null);
+  console.log('Component Rendered');
   useEffect(() => {
+    if (!placeIdToPay) return;
     const channel = new BroadcastChannel('payment-status');
-
+  
     channel.onmessage = (event) => {
-      setopenPaymentUrlDialog(false);
-      onPaymentPlace(event.data.payment);
-      setIsProcessed(true);
+      console.log('Component Rendered', event.data.placeId);
+      console.log('Component ', event.data.status);
+      console.log('placeIdToPay ', placeIdToPay);
+      if (event.data.placeId && event.data.placeId === placeIdToPay) {
+        setProcessedPlaceId(event.data.placeId);
+        
+        if (event.data.status === 'cancel') {
+          setopenPaymentUrlDialog(false);
+          setIframeUrl('');
+          toast.error(`Payment has been canceled`, {
+            position: 'top-right',
+            autoClose: 5000,
+          });
+        } else if (event.data.status === 'success') {
+          setopenPaymentUrlDialog(false);
+          toast.success(`Payment successful!`, {
+            position: 'top-right',
+            autoClose: 5000,
+          });
+        }
+      }
     };
-    return () => channel.close(); 
-
-  }, [isProcessed, onPaymentPlace]);
+  
+    return () => {
+      channel.close();
+    };
+  }, [placeIdToPay]);
+  
+  
+  
 
 // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -86,16 +114,18 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     event.stopPropagation();
     navigate(`/owner/created/${row.id}`);
   };
-  const handleOpenEditDialog = (placeId: string) => {
+  const handleOpenEditDialog = (placeId: string, event: React.MouseEvent<HTMLLIElement>) => {
+    event.stopPropagation();
     setPlaceIdToEdit(placeId);
     setOpenEditDialog(true);
     handleClosePopover();
   };
 
-  const handleOpenPayDialog = (placeName: string) => {
+  const handleOpenPayDialog = (placeName: string,placeId : string) => {
     setplaceNameToPay(placeName);
     setOpenPayDialog(true);
     handleClosePopover();
+    setPlaceIdToPay(placeId);
   };
 
 
@@ -137,7 +167,7 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
     return;
   }
   try {
-    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/GetUrlPlaceRegister?placeId=${row.id}`, {
+    const response = await axiosInstance.get(`https://api.localtour.space/api/Place/GetUrlPlaceRegister?placeId=${placeIdToPay}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }
@@ -148,6 +178,13 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
       if (url) {
         setIframeUrl(url);
         setopenPaymentUrlDialog(true);
+        // const channel = new BroadcastChannel('payment-status');
+        // channel.postMessage({ placeId: placeIdToPay, placeName: placeNameToPay, status: 'created' })
+        localStorage.setItem('paymentData', JSON.stringify({
+          placeIdToPay,
+          placeNameToPay,
+      }));
+      
       } else {
         console.error("URL Error.");
       }
@@ -171,6 +208,15 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
   
   const handlePaymentClose = () => {
     setopenPaymentUrlDialog(false);
+    // toast.error('Payment failed!', {
+    //   position: "top-right",
+    //   autoClose: 5000,
+    //   hideProgressBar: false,
+    //   closeOnClick: true,
+    //   pauseOnHover: true,
+    //   draggable: true,
+    //   progress: undefined,
+    // });
   }
 
   return (
@@ -209,7 +255,7 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
 
       <Popover open={!!openPopover} anchorEl={openPopover} onClose={handleClosePopover}>
         <MenuList disablePadding sx={{ p: 0.5, gap: 0.5, width: 140, display: 'flex', flexDirection: 'column' }}>
-          <MenuItem onClick={() => { handleOpenEditDialog(row.id); handleClosePopover(); }}>
+          <MenuItem onClick={(event) => { handleOpenEditDialog(row.id, event); handleClosePopover(); }}>
             <Iconify icon="solar:pen-bold" />
             Edit
           </MenuItem>
@@ -219,7 +265,7 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
           </MenuItem>
          { 
           (row.status === "Unpaid")  
-         && <MenuItem onClick={() => { handleOpenPayDialog(row.name); handleClosePopover(); }} sx={{ color: 'green' }}>
+         && <MenuItem onClick={() => { handleOpenPayDialog(row.name, row.id); handleClosePopover(); }} sx={{ color: 'green' }}>
             <Iconify icon="solar:wallet-money-bold-duotone" />
             Pay
           </MenuItem>}
@@ -272,19 +318,22 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
           width="100%" height="800" title='Payment page' />
         </DialogContent>
         <DialogActions>
-    <Button onClick={handlePaymentClose} color="primary">
+    {/* <Button onClick={handlePaymentClose} color="primary">
       Close
-    </Button>
+    </Button> */}
   </DialogActions>
       </Dialog>
 
 
-      <UpdatePlaceForm
-        open={openEditDialog}
-        placeId={placeIdToEdit}
-        onClose={() => setOpenEditDialog(false)}
-        onPlaceUpdated={handlePlaceUpdated}
-      />
+      {openEditDialog && (
+  <UpdatePlaceForm
+    open={openEditDialog}
+    placeId={placeIdToEdit}
+    onClose={() => setOpenEditDialog(false)}
+    onPlaceUpdated={handlePlaceUpdated}
+  />
+)}
+
     </>
   );
 }

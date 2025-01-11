@@ -138,14 +138,14 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
             <Iconify icon="eva:arrow-forward-outline" width={22} />
           </IconButton>
         </TableCell>
-        <TableCell align="right">
+        {/* <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>
             <Iconify icon="eva:more-vertical-fill" width={22} />
           </IconButton>
-        </TableCell>
+        </TableCell> */}
       </TableRow>
 
-      <Popover open={!!openPopover} anchorEl={openPopover} onClose={handleClosePopover}>
+      {/* <Popover open={!!openPopover} anchorEl={openPopover} onClose={handleClosePopover}>
         <MenuList disablePadding sx={{ p: 0.5, gap: 0.5, width: 140, display: 'flex', flexDirection: 'column' }}>
           <MenuItem onClick={() => { handleOpenEditDialog(row.id); handleClosePopover(); }}>
             <Iconify icon="solar:pen-bold" />
@@ -156,10 +156,10 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
             Delete
           </MenuItem>
         </MenuList>
-      </Popover>
+      </Popover> */}
 
       {/* Confirmation Dialog */}
-      <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
+      {/* <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
           Are you sure you want to delete this place?
@@ -178,7 +178,7 @@ export function PlaceTableRow({ row, selected, onSelectRow, onDeletePlace,onUpda
         placeId={placeIdToEdit}
         onClose={() => setOpenEditDialog(false)}
         onPlaceUpdated={handlePlaceUpdated}
-      />
+      /> */}
     </>
   );
 }
